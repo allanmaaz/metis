@@ -3,37 +3,46 @@ import { MarketSession, MarketStatus } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
-export async function getCurrentMarketSession(eventId: string): Promise<MarketSession> {
+export async function getCurrentMarketSession(eventId?: string): Promise<MarketSession> {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('market_sessions')
         .select('*')
-        .eq('event_id', eventId)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+
+      if (eventId && eventId !== 'e1') {
+        query = query.or(`event_id.eq.${eventId},event_id.eq.e1`);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (!error && data) {
         return data as MarketSession;
       }
     } catch (err) {
-      console.error('Error fetching market session:', err);
+      console.error('Error fetching market session from Supabase:', err);
     }
   }
 
   const db = getMockDB();
-  const session = db.marketSessions
-    .filter((s) => s.event_id === eventId)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  const sortedSessions = [...db.marketSessions].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const matched = eventId
+    ? sortedSessions.find((s) => s.event_id === eventId || s.event_id === 'e1' || eventId === 'e1')
+    : sortedSessions[0];
 
   return (
-    session || {
+    matched ||
+    sortedSessions[0] || {
       id: 'ms_default',
-      event_id: eventId,
+      event_id: eventId || 'e1',
       status: 'OPEN',
       started_at: new Date().toISOString(),
-      ends_at: new Date(Date.now() + 30 * 60000).toISOString(),
+      ends_at: null,
       started_by: null,
       ended_by: null,
       created_at: new Date().toISOString(),

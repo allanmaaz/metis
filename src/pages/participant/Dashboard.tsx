@@ -175,23 +175,51 @@ export const Dashboard: React.FC = () => {
             : 'bg-white border border-slate-200/80 shadow-xs'
         }`}
       >
-        {/* Left: Market Status */}
+        {/* Left: Dynamic Market Status */}
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-black text-emerald-500 uppercase tracking-wide font-mono">
-            MARKET OPEN
+          <span
+            className={`w-2 h-2 rounded-full ${
+              session?.status === 'OPEN'
+                ? 'bg-emerald-500 animate-pulse'
+                : session?.status === 'PAUSED'
+                ? 'bg-amber-500 animate-pulse'
+                : session?.status === 'FROZEN'
+                ? 'bg-cyan-400'
+                : 'bg-rose-500'
+            }`}
+          />
+          <span
+            className={`text-xs font-black uppercase tracking-wide font-mono ${
+              session?.status === 'OPEN'
+                ? 'text-emerald-500'
+                : session?.status === 'PAUSED'
+                ? 'text-amber-500'
+                : session?.status === 'FROZEN'
+                ? 'text-cyan-400'
+                : 'text-rose-500'
+            }`}
+          >
+            MARKET {session?.status || 'OPEN'}
           </span>
         </div>
 
-        {/* Right: Session Countdown */}
+        {/* Right: Session Countdown / Status */}
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
             <Clock className="w-3.5 h-3.5" />
           </div>
           <div className="flex flex-col text-right">
-            <span className="text-[9px] text-slate-400 font-medium">Session closes in</span>
+            <span className="text-[9px] text-slate-400 font-medium">
+              {session?.status === 'OPEN' ? 'Session closes in' : 'Session Status'}
+            </span>
             <span className="text-xs font-black font-mono text-orange-500">
-              {timer.formatted === '00:00' ? '02 : 14 : 32' : timer.formatted}
+              {session?.ends_at
+                ? timer.isExpired
+                  ? 'Expired'
+                  : timer.formatted
+                : session?.status === 'OPEN'
+                ? 'No limit'
+                : session?.status || 'Closed'}
             </span>
           </div>
         </div>
@@ -244,7 +272,7 @@ export const Dashboard: React.FC = () => {
               }`}
             >
               {isLoss ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-              <span>{formatWealth(Math.abs(pnlVal))} ({pnlPct}%)</span>
+              <span>{formatWealth(Math.abs(pnlVal))} ({Number(pnlPct).toFixed(1)}%)</span>
             </div>
 
             <div className="text-[10px] text-slate-400 font-mono">
