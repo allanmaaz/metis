@@ -22,29 +22,37 @@ function saveDeletedNewsId(idOrHeadline: string) {
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
   const db = getMockDB();
   const deletedSet = getDeletedNewsIds();
-  const localPublished = db.news.filter(
-    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
-  );
 
-  if (isSupabaseConfigured && eventId && isValidUuid(eventId)) {
+  if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('news')
         .select('*')
         .eq('is_published', true)
-        .eq('event_id', eventId)
         .order('published_at', { ascending: false });
+
+      if (eventId && isValidUuid(eventId)) {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data, error } = await query;
 
       if (!error && data && data.length > 0) {
         const filteredRemote = (data as NewsItem[]).filter(
           (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
         );
+        db.news = filteredRemote;
+        saveMockDB(db);
         return filteredRemote;
       }
     } catch (err) {
       // Fallback to local database
     }
   }
+
+  const localPublished = db.news.filter(
+    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
+  );
 
   return localPublished.sort(
     (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
@@ -58,9 +66,14 @@ export async function publishNews(data: {
   sector: string;
   admin_id?: string;
 }): Promise<{ success: boolean; data?: NewsItem; error?: string }> {
+  const db = getMockDB();
+  const targetEventId = isValidUuid(data.event_id)
+    ? data.event_id
+    : (db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111');
+
   const newItem: NewsItem = {
     id: `n_${Date.now()}`,
-    event_id: data.event_id,
+    event_id: targetEventId,
     headline: data.headline.trim(),
     body: data.body.trim(),
     sector: data.sector.trim(),
@@ -70,11 +83,10 @@ export async function publishNews(data: {
   };
 
   // 1. Always save to local mock DB for instant offline & cross-tab sync
-  const db = getMockDB();
   db.news.unshift(newItem);
   db.auditLogs.unshift({
     id: `al_${Date.now()}`,
-    event_id: data.event_id,
+    event_id: targetEventId,
     actor_type: 'ADMIN',
     actor_id: data.admin_id || null,
     action: 'NEWS_PUBLISHED',
@@ -92,12 +104,12 @@ export async function publishNews(data: {
   broadcastRealtimeEvent('NEWS_UPDATED', newItem);
 
   // 2. Also insert into remote Supabase database if configured
-  if (isSupabaseConfigured && isValidUuid(data.event_id)) {
+  if (isSupabaseConfigured) {
     try {
       const { data: created, error } = await supabase
         .from('news')
         .insert({
-          event_id: data.event_id,
+          event_id: targetEventId,
           headline: data.headline.trim(),
           body: data.body.trim(),
           sector: data.sector.trim(),
@@ -109,6 +121,9 @@ export async function publishNews(data: {
         .maybeSingle();
 
       if (!error && created) {
+        const idx = db.news.findIndex((n) => n.id === newItem.id);
+        if (idx >= 0) db.news[idx] = created as NewsItem;
+        saveMockDB(db);
         return { success: true, data: created as NewsItem };
       }
     } catch (err: any) {

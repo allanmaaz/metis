@@ -32,6 +32,23 @@ export const News: React.FC = () => {
   // Universal Real-Time Sync
   useRealtimeSubscription(['NEWS_UPDATED'], loadNews, 1500);
 
+  // Instant 0ms reactive listener for newly published news wires
+  useEffect(() => {
+    const handleNewsUpdate = (e: any) => {
+      const payload = e.detail;
+      if (payload && payload.headline) {
+        setNews((prev) => {
+          if (prev.some((n) => n.id === payload.id || n.headline === payload.headline)) return prev;
+          return [payload, ...prev];
+        });
+      }
+      loadNews();
+    };
+
+    window.addEventListener('metis_news_updated', handleNewsUpdate);
+    return () => window.removeEventListener('metis_news_updated', handleNewsUpdate);
+  }, [loadNews]);
+
   const sectors = ['ALL', ...Array.from(new Set(news.map((n) => n.sector).filter(Boolean) as string[]))];
 
   const filteredNews = news.filter((item) => {
