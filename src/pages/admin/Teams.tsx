@@ -211,273 +211,469 @@ export const AdminTeams: React.FC = () => {
         />
       </div>
 
-      {/* Teams Table Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto min-h-[240px]">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
-              <tr>
-                <th className="py-3.5 px-6 whitespace-nowrap">Team Name</th>
-                <th className="py-3.5 px-6 whitespace-nowrap">Access Credentials</th>
-                <th className="py-3.5 px-6 whitespace-nowrap text-center">Registered Members</th>
-                <th className="py-3.5 px-6 text-right whitespace-nowrap">Available Cash</th>
-                <th className="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
-                <th className="py-3.5 px-6 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedTeams.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <div className="max-w-sm mx-auto space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
-                        <Users2 className="w-6 h-6" />
-                      </div>
-                      <h3 className="font-extrabold text-base text-slate-800">
-                        {teams.length === 0 ? 'No Teams Registered Yet' : 'No matching teams found'}
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        {teams.length === 0
-                          ? 'Get started by registering your first competing team to generate their unique code and access PIN.'
-                          : 'Try adjusting your search terms.'}
-                      </p>
-                      {teams.length === 0 && (
-                        <button
-                          onClick={() => setIsCreateModalOpen(true)}
-                          className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-sm hover:opacity-95 transition-opacity"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>Register First Team</span>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedTeams.map((team) => {
-                  const members = membersMap[team.id] || [];
-                  const isEliminated = team.status === 'ELIMINATED';
-                  const isDisabled = team.status === 'DISABLED';
-                  const isPinVisible = visiblePins[team.id];
+      {/* 1. Mobile / Tablet Cards View (Visible on screens < lg) */}
+      <div className="block lg:hidden space-y-3">
+        {paginatedTeams.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 text-sm font-medium border border-slate-200/80">
+            {teams.length === 0 ? 'No Teams Registered Yet' : 'No matching teams found'}
+          </div>
+        ) : (
+          paginatedTeams.map((team) => {
+            const members = membersMap[team.id] || [];
+            const isEliminated = team.status === 'ELIMINATED';
+            const isDisabled = team.status === 'DISABLED';
+            const isPinVisible = visiblePins[team.id];
 
-                  return (
-                    <tr
-                      key={team.id}
-                      className={`hover:bg-slate-50/80 transition-colors group ${
-                        isEliminated ? 'opacity-50 bg-slate-50/40' : ''
-                      }`}
-                    >
-                      {/* 1. Team Name */}
-                      <td className="py-4 px-6 align-middle whitespace-nowrap">
-                        <span className="font-extrabold text-base text-slate-900 tracking-tight block">
+            return (
+              <div
+                key={team.id}
+                className={`bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3 transition-colors ${
+                  isEliminated ? 'opacity-60 bg-slate-50/60' : ''
+                }`}
+              >
+                {/* Header: Avatar, Name & Status + 3-dots */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-orange-500/20 shrink-0">
+                      {team.name.charAt(0) || 'T'}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-base text-slate-900 truncate">
                           {team.name}
                         </span>
-                      </td>
-
-                      {/* 2. Access Credentials */}
-                      <td className="py-4 px-6 align-middle whitespace-nowrap">
-                        <div className="space-y-1.5">
-                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block font-mono">
-                            Team Code
-                          </span>
-                          {/* Code Pill with Copy */}
-                          <div className="inline-flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs min-w-[150px]">
-                            <span className="whitespace-nowrap font-mono">{team.team_code}</span>
-                            <button
-                              onClick={() => copyToClipboard(team.team_code, team.id)}
-                              className="text-slate-400 hover:text-orange-600 transition-colors"
-                              title="Copy team code"
-                            >
-                              {copiedCodeId === team.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          </div>
-
-                          {/* PIN with Eye Toggle & Regenerate */}
-                          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 pt-0.5">
-                            <span>
-                              PIN: {isPinVisible ? team.pin_hash || '4821' : '••••'}
-                            </span>
-                            <button
-                              onClick={() => togglePinVisibility(team.id)}
-                              className="text-slate-400 hover:text-slate-700 transition-colors"
-                              title={isPinVisible ? 'Hide PIN' : 'Show PIN'}
-                            >
-                              {isPinVisible ? (
-                                <EyeOff className="w-3.5 h-3.5" />
-                              ) : (
-                                <Eye className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleRegeneratePin(team.id)}
-                              className="text-slate-400 hover:text-orange-500 transition-colors"
-                              title="Regenerate PIN"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 3. Registered Members */}
-                      <td className="py-4 px-6 align-middle whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRosterTeam(team)}
-                          title="Click to view team members"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-orange-50 text-slate-800 hover:text-orange-600 font-extrabold text-xs font-mono border border-slate-200/80 hover:border-orange-200 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span
+                          className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full font-mono border ${
+                            isEliminated
+                              ? 'bg-rose-50 text-rose-600 border-rose-200'
+                              : isDisabled
+                              ? 'bg-amber-50 text-amber-600 border-amber-200'
+                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          }`}
                         >
-                          <Users2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-orange-500 transition-colors" />
-                          <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
-                          <span className="text-[10px] text-orange-500 font-sans font-bold ml-0.5 group-hover:translate-x-0.5 transition-transform">›</span>
-                        </button>
-                      </td>
+                          {team.status}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-mono">
+                          {isEliminated ? 'Eliminated' : 'Round 2'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                      {/* 4. Available Cash */}
-                      <td className="py-4 px-6 align-middle text-right font-mono whitespace-nowrap">
-                        <div className="font-black text-base text-slate-900">
-                          {formatCurrency(team.cash_balance)}
-                        </div>
-                        <div className="text-[11px] text-slate-400 font-sans font-medium">
-                          ({formatWealth(team.cash_balance)})
-                        </div>
-                      </td>
+                  {/* 3-dots Menu Button */}
+                  <div className="relative shrink-0">
+                    <button
+                      onClick={() =>
+                        setActiveMenuTeamId(
+                          activeMenuTeamId === team.id ? null : team.id
+                        )
+                      }
+                      className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200/80 flex items-center justify-center transition-all shadow-2xs"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
 
-                      {/* 5. Status */}
-                      <td className="py-4 px-6 align-middle text-center whitespace-nowrap">
-                        <div className="inline-flex flex-col items-center gap-0.5">
-                          <span
-                            className={`text-[10px] font-black uppercase px-3 py-1 rounded-full font-mono border ${
+                    {/* Dropdown Menu */}
+                    {activeMenuTeamId === team.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-30"
+                          onClick={() => setActiveMenuTeamId(null)}
+                        />
+                        <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                          <button
+                            onClick={() => {
+                              handleRegenerateCode(team.id);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                            <span>Regenerate Code</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleRegeneratePin(team.id);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                            <span>Regenerate PIN</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleToggleStatus(team);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
                               isEliminated
-                                ? 'bg-rose-50 text-rose-600 border-rose-200'
-                                : isDisabled
-                                ? 'bg-amber-50 text-amber-600 border-amber-200'
-                                : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                                ? 'text-emerald-600 hover:bg-emerald-50'
+                                : 'text-rose-600 hover:bg-rose-50'
                             }`}
                           >
-                            {team.status}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-medium font-mono">
-                            {isEliminated ? 'Eliminated' : 'Round 2'}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* 6. Actions */}
-                      <td className="py-4 px-6 align-middle text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2 relative">
-                          <div className="flex flex-col gap-1.5">
-                            {/* Adjust Cash Button */}
-                            <button
-                              onClick={() => setActiveAdjustTeam(team)}
-                              disabled={isEliminated}
-                              className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50"
-                            >
-                              <span className="text-orange-500 font-black">$</span>
-                              <span>Adjust Cash</span>
-                            </button>
-
-                            {/* View Details Button */}
-                            <button
-                              onClick={() => setSelectedDetailTeam(team)}
-                              className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 transition-all flex items-center gap-1.5 shadow-xs"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-slate-400" />
-                              <span>View Details</span>
-                            </button>
-                          </div>
-
-                          {/* 3-dots Menu Button */}
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setActiveMenuTeamId(
-                                  activeMenuTeamId === team.id ? null : team.id
-                                )
-                              }
-                              className="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 border border-slate-200/80 flex items-center justify-center transition-all shadow-xs"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {activeMenuTeamId === team.id && (
+                            {isEliminated ? (
                               <>
-                                <div
-                                  className="fixed inset-0 z-30"
-                                  onClick={() => setActiveMenuTeamId(null)}
-                                />
-                                <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
-                                  <button
-                                    onClick={() => {
-                                      handleRegenerateCode(team.id);
-                                      setActiveMenuTeamId(null);
-                                    }}
-                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-                                    <span>Regenerate Code</span>
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleRegeneratePin(team.id);
-                                      setActiveMenuTeamId(null);
-                                    }}
-                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-                                    <span>Regenerate PIN</span>
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleToggleStatus(team);
-                                      setActiveMenuTeamId(null);
-                                    }}
-                                    className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
-                                      isEliminated
-                                        ? 'text-emerald-600 hover:bg-emerald-50'
-                                        : 'text-rose-600 hover:bg-rose-50'
-                                    }`}
-                                  >
-                                    {isEliminated ? (
-                                      <>
-                                        <UserCheck className="w-3.5 h-3.5" />
-                                        <span>Restore Team</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <UserX className="w-3.5 h-3.5" />
-                                        <span>Eliminate Team</span>
-                                      </>
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDeleteTeam(team);
-                                      setActiveMenuTeamId(null);
-                                    }}
-                                    className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    <span>Delete Team</span>
-                                  </button>
-                                </div>
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Restore Team</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserX className="w-3.5 h-3.5" />
+                                <span>Eliminate Team</span>
                               </>
                             )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteTeam(team);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Team</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Credentials Bar */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Code:</span>
+                    <span className="font-black text-orange-600">{team.team_code}</span>
+                    <button
+                      onClick={() => copyToClipboard(team.team_code, team.id)}
+                      className="text-slate-400 hover:text-orange-600 p-0.5"
+                      title="Copy code"
+                    >
+                      {copiedCodeId === team.id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-slate-600">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">PIN:</span>
+                    <span className="font-bold">{isPinVisible ? team.pin_hash || '4821' : '••••'}</span>
+                    <button
+                      onClick={() => togglePinVisibility(team.id)}
+                      className="text-slate-400 hover:text-slate-700 p-0.5"
+                      title={isPinVisible ? 'Hide PIN' : 'Show PIN'}
+                    >
+                      {isPinVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Key Metrics: Roster & Cash */}
+                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 items-center">
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Members</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRosterTeam(team)}
+                      className="inline-flex items-center gap-1 text-xs font-black text-slate-800 hover:text-orange-600 mt-0.5 cursor-pointer"
+                    >
+                      <Users2 className="w-3.5 h-3.5 text-orange-500" />
+                      <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
+                      <span className="text-orange-500 font-bold">›</span>
+                    </button>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Available Cash</span>
+                    <span className="font-black text-xs sm:text-sm text-slate-900 font-mono">
+                      {formatWealth(team.cash_balance)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Row Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => setActiveAdjustTeam(team)}
+                    disabled={isEliminated}
+                    className="py-2 px-3 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    <span className="font-black">$</span>
+                    <span>Adjust Cash</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedDetailTeam(team)}
+                    className="py-2 px-3 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-slate-400" />
+                    <span>View Details</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 2. Desktop Table View (Visible on screens >= lg) */}
+      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <table className="w-full text-left text-sm table-fixed">
+          <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
+            <tr>
+              <th className="py-3.5 px-5 w-[28%]">Team & Status</th>
+              <th className="py-3.5 px-5 w-[26%]">Access Credentials</th>
+              <th className="py-3.5 px-5 w-[16%] text-center">Members</th>
+              <th className="py-3.5 px-5 w-[16%] text-right">Available Cash</th>
+              <th className="py-3.5 px-5 w-[14%] text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {paginatedTeams.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-20 text-center">
+                  <div className="max-w-sm mx-auto space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
+                      <Users2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-extrabold text-base text-slate-800">
+                      {teams.length === 0 ? 'No Teams Registered Yet' : 'No matching teams found'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {teams.length === 0
+                        ? 'Get started by registering your first competing team to generate their unique code and access PIN.'
+                        : 'Try adjusting your search terms.'}
+                    </p>
+                    {teams.length === 0 && (
+                      <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-sm hover:opacity-95 transition-opacity"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Register First Team</span>
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              paginatedTeams.map((team) => {
+                const members = membersMap[team.id] || [];
+                const isEliminated = team.status === 'ELIMINATED';
+                const isDisabled = team.status === 'DISABLED';
+                const isPinVisible = visiblePins[team.id];
+
+                return (
+                  <tr
+                    key={team.id}
+                    className={`hover:bg-slate-50/80 transition-colors group ${
+                      isEliminated ? 'opacity-50 bg-slate-50/40' : ''
+                    }`}
+                  >
+                    {/* 1. Team & Status */}
+                    <td className="py-4 px-5 align-middle">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-orange-500/20 shrink-0">
+                          {team.name.charAt(0) || 'T'}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-sm text-slate-900 tracking-tight truncate block">
+                            {team.name}
+                          </span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span
+                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full font-mono border ${
+                                isEliminated
+                                  ? 'bg-rose-50 text-rose-600 border-rose-200'
+                                  : isDisabled
+                                  ? 'bg-amber-50 text-amber-600 border-amber-200'
+                                  : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                              }`}
+                            >
+                              {team.status}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-mono">
+                              {isEliminated ? 'Eliminated' : 'Round 2'}
+                            </span>
                           </div>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </div>
+                    </td>
+
+                    {/* 2. Access Credentials */}
+                    <td className="py-4 px-5 align-middle">
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs">
+                          <span className="truncate">{team.team_code}</span>
+                          <button
+                            onClick={() => copyToClipboard(team.team_code, team.id)}
+                            className="text-slate-400 hover:text-orange-600 transition-colors"
+                            title="Copy team code"
+                          >
+                            {copiedCodeId === team.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* PIN */}
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                          <span>PIN: {isPinVisible ? team.pin_hash || '4821' : '••••'}</span>
+                          <button
+                            onClick={() => togglePinVisibility(team.id)}
+                            className="text-slate-400 hover:text-slate-700"
+                            title={isPinVisible ? 'Hide PIN' : 'Show PIN'}
+                          >
+                            {isPinVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
+                          <button
+                            onClick={() => handleRegeneratePin(team.id)}
+                            className="text-slate-400 hover:text-orange-500"
+                            title="Regenerate PIN"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* 3. Registered Members */}
+                    <td className="py-4 px-5 align-middle text-center">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRosterTeam(team)}
+                        title="Click to view team members"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-orange-50 text-slate-800 hover:text-orange-600 font-extrabold text-xs font-mono border border-slate-200/80 hover:border-orange-200 transition-all cursor-pointer group"
+                      >
+                        <Users2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-orange-500 transition-colors" />
+                        <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
+                        <span className="text-[10px] text-orange-500 font-bold">›</span>
+                      </button>
+                    </td>
+
+                    {/* 4. Available Cash */}
+                    <td className="py-4 px-5 align-middle text-right font-mono">
+                      <div className="font-black text-sm text-slate-900">
+                        {formatWealth(team.cash_balance)}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-sans">
+                        {formatCurrency(team.cash_balance)}
+                      </div>
+                    </td>
+
+                    {/* 5. Actions */}
+                    <td className="py-4 px-5 align-middle text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setActiveAdjustTeam(team)}
+                          disabled={isEliminated}
+                          title="Adjust Team Cash"
+                          className="p-2 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all flex items-center justify-center shadow-2xs disabled:opacity-50 cursor-pointer"
+                        >
+                          <span className="text-orange-600 font-black text-xs">$</span>
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedDetailTeam(team)}
+                          title="View Full Team Overview"
+                          className="p-2 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80 transition-all flex items-center justify-center shadow-2xs cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 3-dots Menu Button */}
+                        <div className="relative">
+                          <button
+                            onClick={() =>
+                              setActiveMenuTeamId(
+                                activeMenuTeamId === team.id ? null : team.id
+                              )
+                            }
+                            className="p-2 rounded-xl bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 border border-slate-200/80 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                          >
+                            <MoreVertical className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Dropdown Menu */}
+                          {activeMenuTeamId === team.id && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-30"
+                                onClick={() => setActiveMenuTeamId(null)}
+                              />
+                              <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                                <button
+                                  onClick={() => {
+                                    handleRegenerateCode(team.id);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                  <span>Regenerate Code</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleRegeneratePin(team.id);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                  <span>Regenerate PIN</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleToggleStatus(team);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
+                                    isEliminated
+                                      ? 'text-emerald-600 hover:bg-emerald-50'
+                                      : 'text-rose-600 hover:bg-rose-50'
+                                  }`}
+                                >
+                                  {isEliminated ? (
+                                    <>
+                                      <UserCheck className="w-3.5 h-3.5" />
+                                      <span>Restore Team</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserX className="w-3.5 h-3.5" />
+                                      <span>Eliminate Team</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDeleteTeam(team);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Delete Team</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
 
         {/* Bottom Pagination Bar */}
         <div className="p-4 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-medium">
