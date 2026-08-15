@@ -216,7 +216,6 @@ export const AdminStocks: React.FC = () => {
             type="text"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            placeholder="e.g. VALKYRIE, CYBER"
             autoFocus
           />
 
@@ -225,7 +224,6 @@ export const AdminStocks: React.FC = () => {
             type="text"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="e.g. Valkyrie Aerospace Technologies"
           />
 
           <Input
@@ -233,7 +231,6 @@ export const AdminStocks: React.FC = () => {
             type="text"
             value={sector}
             onChange={(e) => setSector(e.target.value)}
-            placeholder="e.g. Defence & Aerospace"
           />
 
           <Input
@@ -241,7 +238,6 @@ export const AdminStocks: React.FC = () => {
             type="number"
             value={priceStr}
             onChange={(e) => setPriceStr(e.target.value)}
-            placeholder="100"
           />
 
           {createError && (

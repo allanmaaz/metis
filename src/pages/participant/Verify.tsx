@@ -129,7 +129,6 @@ export const Verify: React.FC = () => {
                   type="text"
                   value={teamCode}
                   onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. ALPHA-7K29"
                   className="font-mono font-bold text-center uppercase"
                 />
 
@@ -142,7 +141,6 @@ export const Verify: React.FC = () => {
                     setName(e.target.value);
                     setError(null);
                   }}
-                  placeholder="e.g. Mohammed Maaz"
                   autoFocus
                 />
 
@@ -156,7 +154,6 @@ export const Verify: React.FC = () => {
                     setPin(e.target.value);
                     setError(null);
                   }}
-                  placeholder="••••"
                   className="font-mono text-center tracking-widest text-lg"
                   leftIcon={<Lock className="w-4 h-4" />}
                 />

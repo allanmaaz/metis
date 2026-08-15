@@ -120,7 +120,7 @@ export const CashAdjustModal: React.FC<CashAdjustModalProps> = ({
           ))}
         </div>
 
-        {/* Amount input */}
+        {/* Amount Input */}
         <Input
           label="Adjustment Amount (in Rupees)"
           type="number"
@@ -130,7 +130,6 @@ export const CashAdjustModal: React.FC<CashAdjustModalProps> = ({
             setAmountStr(e.target.value);
             setError(null);
           }}
-          placeholder="e.g. 10000000 for ₹1 Cr"
         />
 
         {/* Resulting cash preview */}
@@ -154,7 +153,6 @@ export const CashAdjustModal: React.FC<CashAdjustModalProps> = ({
             setReason(e.target.value);
             setError(null);
           }}
-          placeholder="e.g. Technical correction, penalty, bonus round reward"
         />
 
         {/* Error Alert */}

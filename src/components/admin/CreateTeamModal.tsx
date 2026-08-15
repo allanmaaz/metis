@@ -100,7 +100,6 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
             setTeamName(e.target.value);
             setError(null);
           }}
-          placeholder="e.g. Alpha, Bulls, Titans, Valkyrie"
           autoFocus
         />
 
@@ -110,7 +109,6 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
           type="number"
           value={capitalStr}
           onChange={(e) => setCapitalStr(e.target.value)}
-          placeholder="100000000 for ₹10 Cr"
         />
 
         {/* Members List */}

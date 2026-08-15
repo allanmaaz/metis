@@ -162,7 +162,6 @@ export const NewsPublisherModal: React.FC<NewsPublisherModalProps> = ({
                 setHeadline(e.target.value);
                 setError(null);
               }}
-              placeholder="e.g. Government Announces ₹25,000 Cr Subsidy for Commercial EVs"
               autoFocus
             />
 
@@ -178,7 +177,6 @@ export const NewsPublisherModal: React.FC<NewsPublisherModalProps> = ({
                   setBody(e.target.value);
                   setError(null);
                 }}
-                placeholder="Provide objective information without explicitly instructing participants to buy or sell..."
                 className="w-full bg-slate-900/80 text-white placeholder:text-slate-500 border border-slate-700/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
               />
             </div>

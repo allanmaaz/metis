@@ -161,7 +161,6 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g., EV Subsidy news announced"
           />
         </div>
 

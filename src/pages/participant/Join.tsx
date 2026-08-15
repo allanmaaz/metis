@@ -61,7 +61,6 @@ export const Join: React.FC = () => {
                 setTeamCode(e.target.value.toUpperCase());
                 setError(null);
               }}
-              placeholder="e.g. ALPHA-7K29"
               className="text-center font-mono font-bold tracking-widest text-lg uppercase"
               autoFocus
             />

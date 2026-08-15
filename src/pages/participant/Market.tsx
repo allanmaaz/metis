@@ -136,7 +136,7 @@ export const Market: React.FC = () => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
           <input
             type="text"
-            placeholder="Search companies by name or ticker (e.g. NOVA, FINEDGE)..."
+            placeholder="Search stocks by name or symbol..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-900/80 text-white placeholder:text-slate-500 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500 transition-colors"
