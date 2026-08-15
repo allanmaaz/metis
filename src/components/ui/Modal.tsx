@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className={`relative w-full ${maxWidthStyles[maxWidth]} rounded-3xl p-6 sm:p-7 overflow-hidden z-10 shadow-2xl transition-colors duration-200 ${
+            className={`relative w-full ${maxWidthStyles[maxWidth]} max-h-[92vh] flex flex-col rounded-3xl p-5 sm:p-6 overflow-hidden z-10 shadow-2xl transition-colors duration-200 ${
               isDark
                 ? 'bg-[#131B2E] border border-white/10 text-white shadow-black/80'
                 : 'bg-white border border-slate-200/90 text-slate-900 shadow-slate-900/20'
@@ -72,7 +72,7 @@ export const Modal: React.FC<ModalProps> = ({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className={`absolute top-5 right-5 p-2 rounded-full transition-colors ${
+              className={`absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-full transition-colors z-20 cursor-pointer ${
                 isDark
                   ? 'text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700'
                   : 'text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200'
@@ -83,8 +83,8 @@ export const Modal: React.FC<ModalProps> = ({
             </button>
 
             {/* Header */}
-            <div className="mb-4 pr-8">
-              <h3 className={`text-xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <div className="mb-3.5 pr-8 shrink-0">
+              <h3 className={`text-lg sm:text-xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {title}
               </h3>
               {subtitle && (
@@ -94,8 +94,10 @@ export const Modal: React.FC<ModalProps> = ({
               )}
             </div>
 
-            {/* Content */}
-            <div className={isDark ? 'text-slate-200' : 'text-slate-700'}>{children}</div>
+            {/* Scrollable Content Body */}
+            <div className={`overflow-y-auto overscroll-contain flex-1 pr-1 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+              {children}
+            </div>
           </motion.div>
         </div>
       )}

@@ -221,7 +221,7 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
               </div>
 
               {/* Scrollable Stocks List */}
-              <div className="max-h-48 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
+              <div className="max-h-36 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
                 {/* Custom Stock Option */}
                 <div
                   onClick={() => handleSelectPreset('CUSTOM')}
