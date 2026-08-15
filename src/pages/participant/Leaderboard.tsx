@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getLeaderboard } from '../../services/leaderboard';
 import { LeaderboardEntry } from '../../types';
 import { Trophy, Crown, Radio, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -7,6 +8,9 @@ import { formatCurrency, formatWealth, formatPercent } from '../../lib/formattin
 
 export const Leaderboard: React.FC = () => {
   const { participant } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   const loadLeaderboard = useCallback(async () => {
@@ -28,27 +32,33 @@ export const Leaderboard: React.FC = () => {
   const qualificationCutoff = participant?.event.qualification_count || 5;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto pb-6">
+    <div className="space-y-4 max-w-md mx-auto pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <Trophy className="w-6 h-6 text-amber-500" />
             Live Standings
           </h2>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-400 font-medium">
             Ranked strictly by Total Wealth (Cash + Live Portfolio Valuation)
           </p>
         </div>
 
-        <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600">
+        <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
           <Radio className="w-3 h-3 animate-pulse" />
           <span>LIVE</span>
         </div>
       </div>
 
       {/* Leaderboard Table Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden divide-y divide-slate-100">
+      <div
+        className={`rounded-3xl border overflow-hidden divide-y ${
+          isDark
+            ? 'bg-[#131B2E] border-white/5 divide-white/5 shadow-md'
+            : 'bg-white border-slate-200/80 divide-slate-100 shadow-xs'
+        }`}
+      >
         {entries.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-xs font-medium">
             No rankings available yet.
@@ -66,9 +76,13 @@ export const Leaderboard: React.FC = () => {
                 <div
                   className={`p-3.5 flex items-center justify-between gap-3 transition-colors ${
                     isMyTeam
-                      ? 'bg-orange-50/60 border-l-4 border-l-orange-500'
+                      ? isDark
+                        ? 'bg-orange-500/10 border-l-4 border-l-orange-500'
+                        : 'bg-orange-50/70 border-l-4 border-l-orange-500'
                       : isEliminated
-                      ? 'opacity-40 bg-slate-50/40'
+                      ? 'opacity-40 bg-slate-500/5'
+                      : isDark
+                      ? 'hover:bg-white/5'
                       : 'hover:bg-slate-50/60'
                   }`}
                 >
@@ -83,7 +97,11 @@ export const Leaderboard: React.FC = () => {
                         <span
                           className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black font-mono ${
                             isQualified
-                              ? 'bg-orange-50 text-orange-600 border border-orange-200'
+                              ? isDark
+                                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                : 'bg-orange-50 text-orange-600 border border-orange-200'
+                              : isDark
+                              ? 'text-slate-400 bg-white/5'
                               : 'text-slate-400 bg-slate-100'
                           }`}
                         >
@@ -94,7 +112,7 @@ export const Leaderboard: React.FC = () => {
 
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-black text-sm text-slate-900 tracking-tight truncate">
+                        <span className={`font-black text-sm tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
                           {entry.team_name}
                         </span>
                         {isMyTeam && (
@@ -111,15 +129,15 @@ export const Leaderboard: React.FC = () => {
 
                   {/* Wealth & Return */}
                   <div className="text-right shrink-0">
-                    <div className="font-black text-sm font-mono text-slate-900">
+                    <div className={`font-black text-sm font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {formatWealth(entry.total_wealth)}
                     </div>
                     <div
                       className={`text-[10px] font-bold font-mono flex items-center justify-end gap-0.5 ${
                         entry.today_pnl_pct > 0
-                          ? 'text-emerald-600'
+                          ? 'text-emerald-500'
                           : entry.today_pnl_pct < 0
-                          ? 'text-rose-600'
+                          ? 'text-rose-500'
                           : 'text-slate-400'
                       }`}
                     >
@@ -137,7 +155,13 @@ export const Leaderboard: React.FC = () => {
 
                 {/* Qualification Cutoff Marker */}
                 {isCutoffLine && (
-                  <div className="px-4 py-1.5 bg-amber-50/70 border-y border-amber-200/60 flex items-center justify-between text-[10px] font-extrabold uppercase font-mono text-amber-700">
+                  <div
+                    className={`px-4 py-1.5 flex items-center justify-between text-[10px] font-extrabold uppercase font-mono ${
+                      isDark
+                        ? 'bg-amber-500/10 border-y border-amber-500/20 text-amber-400'
+                        : 'bg-amber-50 border-y border-amber-200 text-amber-700'
+                    }`}
+                  >
                     <span>--- TOP {qualificationCutoff} ADVANCE TO FINALS ---</span>
                     <span>CUTOFF</span>
                   </div>

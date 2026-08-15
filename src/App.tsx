@@ -54,11 +54,14 @@ const DynamicRoot: React.FC = () => {
   return <Landing />;
 };
 
+import { ThemeProvider } from './context/ThemeContext';
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             {/* If on admin subdomain, root "/" renders Admin directly */}
             {isAdminDomain ? (
@@ -136,8 +139,9 @@ export function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </QueryClientProvider>
-  );
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 }
 
 // Wrapper to render Admin Login or Admin Dashboard on root

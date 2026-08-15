@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getTeamHoldings, getTeamPortfolioSummary } from '../../services/portfolio';
 import { getTeamTrades, sellStock } from '../../services/trade';
 import { getCurrentMarketSession } from '../../services/market';
 import { Holding, PortfolioSummary, Trade, MarketSession } from '../../types';
-import { HoldingCard } from '../../components/portfolio/HoldingCard';
 import { SellModal } from '../../components/market/SellModal';
-import { formatCurrency, formatWealth, formatPercent, formatQuantity, formatClockTime } from '../../lib/formatting';
+import { formatCurrency, formatWealth, formatPercent, formatClockTime } from '../../lib/formatting';
 import {
   Briefcase,
-  TrendingUp,
-  TrendingDown,
   History,
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
   Coins,
-  Receipt,
   ShieldCheck,
 } from 'lucide-react';
 
 export const Portfolio: React.FC = () => {
   const { participant } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -58,10 +58,6 @@ export const Portfolio: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadPortfolio]);
 
-  const handleSellHolding = (holding: Holding) => {
-    setActiveSellHolding(holding);
-  };
-
   const handleConfirmSell = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
     const res = await sellStock(participant.team.id, stockId, quantity, participant.member.id);
@@ -82,14 +78,14 @@ export const Portfolio: React.FC = () => {
   const isProfitable = totalPnL >= 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
+    <div className="space-y-4 max-w-md mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
+        <h1 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
           <Briefcase className="w-6 h-6 text-orange-500" />
           Team Portfolio
         </h1>
-        <p className="text-xs text-slate-500 font-medium">
+        <p className="text-xs text-slate-400 font-medium">
           Live equity holdings, cost-basis valuations, and completed trade execution history.
         </p>
       </div>
@@ -98,8 +94,8 @@ export const Portfolio: React.FC = () => {
         <div
           className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs ${
             tradeMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -108,13 +104,19 @@ export const Portfolio: React.FC = () => {
       )}
 
       {/* Summary Wealth Card */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+      <div
+        className={`p-5 rounded-3xl space-y-4 border ${
+          isDark
+            ? 'bg-[#131B2E] border-white/5 shadow-md'
+            : 'bg-white border-slate-200/80 shadow-xs'
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
               Total Team Wealth
             </span>
-            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 mt-0.5">
+            <div className={`text-2xl sm:text-3xl font-black font-display mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {formatWealth(totalWealth)}
             </div>
           </div>
@@ -123,7 +125,11 @@ export const Portfolio: React.FC = () => {
           <div
             className={`flex items-center gap-1 text-xs font-black px-3 py-1 rounded-xl border ${
               isProfitable
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                ? isDark
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                : isDark
+                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 : 'bg-rose-50 text-rose-600 border-rose-200'
             }`}
           >
@@ -133,23 +139,23 @@ export const Portfolio: React.FC = () => {
         </div>
 
         {/* 2-Column Cash & Portfolio Grid */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+        <div className={`grid grid-cols-2 gap-3 pt-2 border-t ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+          <div className={`p-3 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
               <Wallet className="w-3.5 h-3.5 text-orange-500" />
               <span>Available Cash</span>
             </div>
-            <div className="text-sm font-black font-mono text-slate-900 mt-1">
+            <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {formatWealth(cashBalance)}
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+          <div className={`p-3 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
             <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
               <Coins className="w-3.5 h-3.5 text-orange-500" />
               <span>Invested Value</span>
             </div>
-            <div className="text-sm font-black font-mono text-slate-900 mt-1">
+            <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {formatWealth(portfolioVal)}
             </div>
           </div>
@@ -157,9 +163,15 @@ export const Portfolio: React.FC = () => {
       </div>
 
       {/* Active Holdings */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+      <div
+        className={`p-5 rounded-3xl space-y-3 border ${
+          isDark
+            ? 'bg-[#131B2E] border-white/5 shadow-md'
+            : 'bg-white border-slate-200/80 shadow-xs'
+        }`}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+          <h3 className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <Coins className="w-4 h-4 text-orange-500" />
             <span>Active Holdings ({holdings.length})</span>
           </h3>
@@ -182,29 +194,31 @@ export const Portfolio: React.FC = () => {
               return (
                 <div
                   key={holding.id}
-                  className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/60 flex items-center justify-between gap-2"
+                  className={`p-3.5 rounded-2xl border flex items-center justify-between gap-2 ${
+                    isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50/70 border-slate-200/60'
+                  }`}
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-sm text-slate-900">
+                      <span className={`font-black text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {holding.stock.symbol}
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">
                         {holding.quantity.toLocaleString('en-IN')} shares
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">
                       Avg: {formatCurrency(holding.average_cost)} · Cur: {formatCurrency(holding.stock.current_price)}
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <div className="text-sm font-black font-mono text-slate-900">
+                    <div className={`text-sm font-black font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {formatCurrency(curValue)}
                     </div>
                     <div
                       className={`text-[10px] font-bold font-mono ${
-                        isUp ? 'text-emerald-600' : 'text-rose-600'
+                        isUp ? 'text-emerald-500' : 'text-rose-500'
                       }`}
                     >
                       {isUp ? '+' : ''}{formatCurrency(pnl)} ({formatPercent(pnlPct)})
@@ -218,9 +232,15 @@ export const Portfolio: React.FC = () => {
       </div>
 
       {/* Trade Execution History */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+      <div
+        className={`p-5 rounded-3xl space-y-3 border ${
+          isDark
+            ? 'bg-[#131B2E] border-white/5 shadow-md'
+            : 'bg-white border-slate-200/80 shadow-xs'
+        }`}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+          <h3 className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <History className="w-4 h-4 text-orange-500" />
             <span>Recent Trades ({trades.length})</span>
           </h3>
@@ -237,20 +257,22 @@ export const Portfolio: React.FC = () => {
               return (
                 <div
                   key={trade.id}
-                  className="p-3 rounded-2xl bg-slate-50/70 border border-slate-200/60 flex items-center justify-between text-xs font-mono"
+                  className={`p-3 rounded-2xl border flex items-center justify-between text-xs font-mono ${
+                    isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50/70 border-slate-200/60'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${
                         isBuy
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                          : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                       }`}
                     >
                       {trade.side}
                     </span>
                     <div className="font-sans">
-                      <span className="font-black text-slate-900">
+                      <span className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {trade.stock?.symbol || 'STOCK'}
                       </span>
                       <span className="text-[10px] text-slate-400 block font-mono">
@@ -260,7 +282,7 @@ export const Portfolio: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <div className="font-bold text-slate-900">
+                    <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {trade.quantity.toLocaleString('en-IN')} @ {formatCurrency(trade.price)}
                     </div>
                     <div className="text-[10px] text-slate-400">

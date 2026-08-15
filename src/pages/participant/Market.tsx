@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getStocks } from '../../services/stock';
 import { getCurrentMarketSession } from '../../services/market';
 import { getTeamHoldings, getTeamPortfolioSummary } from '../../services/portfolio';
@@ -8,11 +9,13 @@ import { Stock, MarketSession, Holding, PortfolioSummary } from '../../types';
 import { StockCard } from '../../components/market/StockCard';
 import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
-import { formatWealth } from '../../lib/formatting';
 import { Search, BarChart2, ShieldCheck } from 'lucide-react';
 
 export const Market: React.FC = () => {
   const { participant } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [session, setSession] = useState<MarketSession | null>(null);
@@ -97,18 +100,16 @@ export const Market: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
+    <div className="space-y-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
-            <BarChart2 className="w-6 h-6 text-orange-500" />
-            Market Board
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Browse listed equities, track live prices, and execute buy/sell orders.
-          </p>
-        </div>
+      <div>
+        <h1 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <BarChart2 className="w-6 h-6 text-orange-500" />
+          Market Board
+        </h1>
+        <p className="text-xs text-slate-400 font-medium">
+          Browse listed equities, track live prices, and execute buy/sell orders.
+        </p>
       </div>
 
       {/* Trade Feedback */}
@@ -116,8 +117,8 @@ export const Market: React.FC = () => {
         <div
           className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs ${
             tradeMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -133,7 +134,11 @@ export const Market: React.FC = () => {
           placeholder="Search by ticker symbol or company..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
+          className={`w-full rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs ${
+            isDark
+              ? 'bg-[#131B2E] text-white placeholder:text-slate-500 border border-white/5'
+              : 'bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80'
+          }`}
         />
       </div>
 
@@ -146,6 +151,8 @@ export const Market: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
               selectedSector === sector
                 ? 'bg-orange-500 text-white shadow-xs'
+                : isDark
+                ? 'bg-[#131B2E] text-slate-400 border border-white/5 hover:bg-[#1E293B]'
                 : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
             }`}
           >
@@ -157,7 +164,13 @@ export const Market: React.FC = () => {
       {/* Stock Cards Grid */}
       <div className="grid grid-cols-1 gap-3">
         {filteredStocks.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center text-slate-400 text-sm">
+          <div
+            className={`rounded-3xl p-12 text-center text-xs font-medium border ${
+              isDark
+                ? 'bg-[#131B2E] text-slate-400 border-white/5'
+                : 'bg-white text-slate-400 border-slate-200/80'
+            }`}
+          >
             No stocks found matching your filters.
           </div>
         ) : (
