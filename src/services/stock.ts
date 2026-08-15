@@ -111,10 +111,36 @@ export async function createStock(data: {
   if (isSupabaseConfigured) {
     try {
       const targetEventId = data.event_id === 'e1' ? (db.events[0]?.id || data.event_id) : data.event_id;
-      const { data: created, error } = await supabase
+      const { data: existing } = await supabase
         .from('stocks')
-        .upsert(
-          {
+        .select('*')
+        .eq('event_id', targetEventId)
+        .eq('symbol', stockSymbol)
+        .maybeSingle();
+
+      if (existing) {
+        const { data: updated } = await supabase
+          .from('stocks')
+          .update({
+            company_name: data.company_name.trim(),
+            sector: data.sector.trim(),
+            current_price: data.starting_price,
+            is_active: true,
+          })
+          .eq('id', existing.id)
+          .select()
+          .maybeSingle();
+
+        if (updated) {
+          const idx = db.stocks.findIndex((s) => s.symbol === stockSymbol);
+          if (idx >= 0) db.stocks[idx] = updated as Stock;
+          saveMockDB(db);
+          return { success: true, data: updated as Stock };
+        }
+      } else {
+        const { data: created } = await supabase
+          .from('stocks')
+          .insert({
             event_id: targetEventId,
             symbol: stockSymbol,
             company_name: data.company_name.trim(),
@@ -125,17 +151,16 @@ export async function createStock(data: {
             high_price: data.starting_price,
             low_price: data.starting_price,
             is_active: true,
-          },
-          { onConflict: 'event_id,symbol' }
-        )
-        .select()
-        .maybeSingle();
+          })
+          .select()
+          .maybeSingle();
 
-      if (!error && created) {
-        const idx = db.stocks.findIndex((s) => s.symbol === stockSymbol);
-        if (idx >= 0) db.stocks[idx] = created as Stock;
-        saveMockDB(db);
-        return { success: true, data: created as Stock };
+        if (created) {
+          const idx = db.stocks.findIndex((s) => s.symbol === stockSymbol);
+          if (idx >= 0) db.stocks[idx] = created as Stock;
+          saveMockDB(db);
+          return { success: true, data: created as Stock };
+        }
       }
     } catch (err: any) {
       console.warn('Supabase createStock warning (saved locally):', err);
