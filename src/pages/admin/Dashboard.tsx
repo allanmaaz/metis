@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Radio,
   ChevronRight,
+  ChevronLeft,
   Clock,
   Sparkles,
 } from 'lucide-react';
@@ -46,6 +47,9 @@ export const AdminDashboard: React.FC = () => {
   const [activeStockIndex, setActiveStockIndex] = useState(0);
   const [activePriceStock, setActivePriceStock] = useState<Stock | null>(null);
   const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
 
   const timer = useMarketTimer(session?.ends_at);
   const prefix = isAdminDomain ? '' : '/control';
@@ -76,6 +80,51 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Automatic slideshow timer (every 4 seconds)
+  useEffect(() => {
+    if (stocks.length <= 1 || isCarouselPaused || activePriceStock !== null) return;
+    const interval = setInterval(() => {
+      setActiveStockIndex((prev) => (prev + 1) % stocks.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [stocks.length, isCarouselPaused, activePriceStock]);
+
+  // Touch Swipe Gesture Handlers
+  const minSwipeDistance = 35;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+    setIsCarouselPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    setIsCarouselPaused(false);
+    if (touchStartX === null || touchEndX === null) return;
+    const distance = touchStartX - touchEndX;
+    if (distance > minSwipeDistance) {
+      // Swiped Left -> Next Stock
+      setActiveStockIndex((prev) => (prev + 1) % stocks.length);
+    } else if (distance < -minSwipeDistance) {
+      // Swiped Right -> Previous Stock
+      setActiveStockIndex((prev) => (prev - 1 + stocks.length) % stocks.length);
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
+  const handlePrevStock = () => {
+    setActiveStockIndex((prev) => (prev - 1 + stocks.length) % stocks.length);
+  };
+
+  const handleNextStock = () => {
+    setActiveStockIndex((prev) => (prev + 1) % stocks.length);
+  };
 
   // Universal Realtime Sync
   useRealtimeSubscription(
@@ -135,6 +184,11 @@ export const AdminDashboard: React.FC = () => {
     if (s.includes('HEALTH') || s.includes('MED')) return HeartPulse;
     return ShoppingBag;
   };
+
+  const pctChange = currentStock?.opening_price
+    ? ((currentStock.current_price - currentStock.opening_price) / currentStock.opening_price) * 100
+    : 0;
+  const isPositive = pctChange >= 0;
 
   return (
     <div className="space-y-5 max-w-md lg:max-w-none mx-auto pb-6">
@@ -381,26 +435,59 @@ export const AdminDashboard: React.FC = () => {
         <ChevronRight className="w-4 h-4 text-orange-500 shrink-0" />
       </Link>
 
-      {/* 5. Quick Stock Price Control Card with Carousel (Matching Mockup) */}
+      {/* 5. Quick Stock Price Control Card with Auto-Slide & Touch-Swipe */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-orange-500" />
             <h3 className="text-xs font-black tracking-wide uppercase text-slate-900">
               Quick Stock Price Control
             </h3>
+            {stocks.length > 1 && (
+              <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                {activeStockIndex + 1} / {stocks.length}
+              </span>
+            )}
           </div>
-          <Link
-            to={`${prefix}/stocks`}
-            className="text-xs font-bold text-orange-500 hover:text-orange-600"
-          >
-            Manage All Stocks ›
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {stocks.length > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handlePrevStock}
+                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                  title="Previous Stock"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handleNextStock}
+                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                  title="Next Stock"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+            <Link
+              to={`${prefix}/stocks`}
+              className="text-xs font-bold text-orange-500 hover:text-orange-600"
+            >
+              Manage All Stocks ›
+            </Link>
+          </div>
         </div>
 
-        {/* Stock Card with Sparkline & Action Chips */}
+        {/* Stock Card with Touch Gestures, Sparkline & Action Chips */}
         {currentStock && (
-          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+            className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 transition-all select-none relative group cursor-grab active:cursor-grabbing"
+          >
             {/* Top row: Sector, Symbol, Company, Price & % Change */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
@@ -424,8 +511,15 @@ export const AdminDashboard: React.FC = () => {
                 <div className="text-xl font-black text-slate-900 font-mono">
                   {formatCurrency(currentStock.current_price)}
                 </div>
-                <div className="flex items-center justify-end gap-1 text-[10px] font-bold font-mono text-emerald-600">
-                  <span>▲ +8.24%</span>
+                <div
+                  className={`flex items-center justify-end gap-1 text-[10px] font-bold font-mono ${
+                    isPositive ? 'text-emerald-600' : 'text-rose-600'
+                  }`}
+                >
+                  <span>
+                    {isPositive ? '▲ +' : '▼ '}
+                    {Math.abs(pctChange).toFixed(2)}%
+                  </span>
                 </div>
                 <div className="text-[9px] text-slate-400 font-mono">
                   Open: {formatCurrency(currentStock.opening_price)}
@@ -437,19 +531,35 @@ export const AdminDashboard: React.FC = () => {
             <div className="h-10 w-full overflow-hidden flex items-end">
               <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                  <linearGradient id={`grad_${currentStock.id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor={isPositive ? '#10B981' : '#F43F5E'}
+                      stopOpacity="0.25"
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={isPositive ? '#10B981' : '#F43F5E'}
+                      stopOpacity="0.0"
+                    />
                   </linearGradient>
                 </defs>
                 <path
-                  d="M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z"
-                  fill="url(#adminGrad)"
+                  d={
+                    isPositive
+                      ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z'
+                      : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25 L100,30 L0,30 Z'
+                  }
+                  fill={`url(#grad_${currentStock.id})`}
                 />
                 <path
-                  d="M0,25 Q15,20 30,22 T60,12 T85,14 T100,5"
+                  d={
+                    isPositive
+                      ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5'
+                      : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25'
+                  }
                   fill="none"
-                  stroke="#10B981"
+                  stroke={isPositive ? '#10B981' : '#F43F5E'}
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
@@ -460,34 +570,49 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100 flex-wrap">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
-                  onClick={() => handleQuickPercentChange(currentStock, -10)}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickPercentChange(currentStock, -10);
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
                 >
                   -10%
                 </button>
                 <button
-                  onClick={() => handleQuickPercentChange(currentStock, -5)}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickPercentChange(currentStock, -5);
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
                 >
                   -5%
                 </button>
                 <button
-                  onClick={() => handleQuickPercentChange(currentStock, 5)}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickPercentChange(currentStock, 5);
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
                 >
                   +5%
                 </button>
                 <button
-                  onClick={() => handleQuickPercentChange(currentStock, 10)}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickPercentChange(currentStock, 10);
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
                 >
                   +10%
                 </button>
               </div>
 
               <button
-                onClick={() => setActivePriceStock(currentStock)}
-                className="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePriceStock(currentStock);
+                }}
+                className="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
               >
                 Custom Price
               </button>
@@ -503,7 +628,7 @@ export const AdminDashboard: React.FC = () => {
                 key={s.id}
                 onClick={() => setActiveStockIndex(idx)}
                 aria-label={`Show ${s.symbol}`}
-                className={`transition-all duration-200 ${
+                className={`transition-all duration-300 cursor-pointer ${
                   activeStockIndex === idx
                     ? 'w-6 h-1.5 rounded-full bg-orange-500'
                     : 'w-2 h-1.5 rounded-full bg-slate-200 hover:bg-slate-300'
