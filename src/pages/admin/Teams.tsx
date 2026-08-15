@@ -197,23 +197,35 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Users2 className="w-7 h-7 text-orange-500 shrink-0" />
-            <span>Team & Participant Management</span>
-          </h1>
+      {/* Header Banner */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
+            <Users2 className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight">
+                Team & Participant Management
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase font-mono bg-orange-50 text-orange-600 border border-orange-200">
+                {teams.length} {teams.length === 1 ? 'Team' : 'Teams'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              Register competing teams, generate access PIN passes, and monitor virtual capital balances.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
           {teams.length > 0 && (
             <button
               onClick={() => {
                 setSelectedCredentialsTeam(null);
                 setIsCredentialsModalOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 text-xs sm:text-sm font-extrabold transition-all shadow-xs cursor-pointer"
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 text-xs sm:text-sm font-extrabold transition-all shadow-xs cursor-pointer"
               title="Export or print all team credentials and graphic passes"
             >
               <Printer className="w-4 h-4" />
@@ -223,7 +235,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs sm:text-sm transition-all shadow-sm shadow-orange-500/20 cursor-pointer"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs sm:text-sm transition-all shadow-md shadow-orange-500/25 cursor-pointer whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span>Register New Team</span>
