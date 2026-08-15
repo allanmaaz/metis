@@ -50,8 +50,8 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-3 gap-2">
           <div
-            className={`p-2.5 rounded-2xl border text-center ${
-              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/70'
+            className={`p-2.5 rounded-2xl border text-center transition-colors ${
+              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/80'
             }`}
           >
             <span className="text-[9px] uppercase font-bold text-slate-400 block">Total Orders</span>
@@ -61,8 +61,8 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
           </div>
 
           <div
-            className={`p-2.5 rounded-2xl border text-center ${
-              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/70'
+            className={`p-2.5 rounded-2xl border text-center transition-colors ${
+              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/80'
             }`}
           >
             <span className="text-[9px] uppercase font-bold text-slate-400 block">Buy Orders</span>
@@ -72,8 +72,8 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
           </div>
 
           <div
-            className={`p-2.5 rounded-2xl border text-center ${
-              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/70'
+            className={`p-2.5 rounded-2xl border text-center transition-colors ${
+              isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/80'
             }`}
           >
             <span className="text-[9px] uppercase font-bold text-slate-400 block">Sell Orders</span>
@@ -115,7 +115,9 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
                 <div
                   key={trade.id}
                   className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-colors ${
-                    isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/70'
+                    isDark
+                      ? 'bg-[#1E293B] border-white/5 text-white'
+                      : 'bg-slate-50 border-slate-200/80 text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -130,7 +132,11 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
                     </span>
 
                     <div className="min-w-0">
-                      <div className="font-black text-sm text-slate-900 dark:text-white truncate">
+                      <div
+                        className={`font-black text-sm truncate ${
+                          isDark ? 'text-white' : 'text-slate-900'
+                        }`}
+                      >
                         {trade.stock?.symbol || 'STOCK'}
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
@@ -151,10 +157,18 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
                   </div>
 
                   <div className="text-right shrink-0 font-mono">
-                    <div className="font-bold text-slate-900 dark:text-white">
+                    <div
+                      className={`font-bold ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}
+                    >
                       {trade.quantity.toLocaleString('en-IN')} @ {formatCurrency(trade.price)}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-medium">
+                    <div
+                      className={`text-[11px] font-medium ${
+                        isDark ? 'text-slate-300' : 'text-slate-600'
+                      }`}
+                    >
                       {formatCurrency(trade.total_value)}
                     </div>
                   </div>
@@ -167,7 +181,11 @@ export const TradeHistoryModal: React.FC<TradeHistoryModalProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-colors"
+          className={`w-full py-2.5 rounded-2xl font-extrabold text-xs transition-colors ${
+            isDark
+              ? 'bg-white/5 hover:bg-white/10 text-slate-200 border border-white/5'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
+          }`}
         >
           Close History
         </button>

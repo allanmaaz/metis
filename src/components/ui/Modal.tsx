@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTheme } from '../../context/ThemeContext';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -19,6 +20,14 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'md',
 }) => {
+  let isDark = false;
+  try {
+    const { theme } = useTheme();
+    isDark = theme === 'dark';
+  } catch {
+    isDark = false;
+  }
+
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -58,12 +67,20 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className={`relative w-full ${maxWidthStyles[maxWidth]} glass-modal rounded-3xl p-6 sm:p-7 overflow-hidden z-10`}
+            className={`relative w-full ${maxWidthStyles[maxWidth]} rounded-3xl p-6 sm:p-7 overflow-hidden z-10 shadow-2xl transition-colors duration-200 ${
+              isDark
+                ? 'bg-[#131B2E] border border-white/10 text-white shadow-black/80'
+                : 'bg-white border border-slate-200/90 text-slate-900 shadow-slate-900/20'
+            }`}
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-700/80 transition-colors"
+              className={`absolute top-5 right-5 p-2 rounded-full transition-colors ${
+                isDark
+                  ? 'text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700'
+                  : 'text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200'
+              }`}
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -71,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
 
             {/* Header */}
             <div className="mb-5 pr-8">
-              <h3 className="text-xl font-bold font-display text-white tracking-tight">
+              <h3 className={`text-xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {title}
               </h3>
               {subtitle && (
@@ -82,10 +99,12 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="text-slate-200">{children}</div>
+            <div className={isDark ? 'text-slate-200' : 'text-slate-700'}>{children}</div>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
 };
+
+export default Modal;
