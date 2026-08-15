@@ -216,16 +216,16 @@ export const AdminTeams: React.FC = () => {
 
       {/* Teams Table Card */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[240px]">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3.5 px-6 whitespace-nowrap min-w-[150px]">Team Name</th>
-                <th className="py-3.5 px-6 whitespace-nowrap min-w-[220px]">Access Credentials</th>
-                <th className="py-3.5 px-6 whitespace-nowrap min-w-[160px]">Registered Members</th>
-                <th className="py-3.5 px-6 text-right whitespace-nowrap min-w-[150px]">Available Cash</th>
-                <th className="py-3.5 px-6 text-center whitespace-nowrap min-w-[120px]">Status</th>
-                <th className="py-3.5 px-6 text-center whitespace-nowrap min-w-[160px]">Actions</th>
+                <th className="py-3.5 px-6 whitespace-nowrap">Team Name</th>
+                <th className="py-3.5 px-6 whitespace-nowrap">Access Credentials</th>
+                <th className="py-3.5 px-6 whitespace-nowrap text-center">Registered Members</th>
+                <th className="py-3.5 px-6 text-right whitespace-nowrap">Available Cash</th>
+                <th className="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                <th className="py-3.5 px-6 text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -409,49 +409,67 @@ export const AdminTeams: React.FC = () => {
 
                             {/* Dropdown Menu */}
                             {activeMenuTeamId === team.id && (
-                              <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl py-1 z-30 space-y-0.5 text-left">
-                                <button
-                                  onClick={() => handleRegenerateCode(team.id)}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-                                  <span>Regenerate Code</span>
-                                </button>
-                                <button
-                                  onClick={() => handleRegeneratePin(team.id)}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-                                  <span>Regenerate PIN</span>
-                                </button>
-                                <button
-                                  onClick={() => handleToggleStatus(team)}
-                                  className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
-                                    isEliminated
-                                      ? 'text-emerald-600 hover:bg-emerald-50'
-                                      : 'text-rose-600 hover:bg-rose-50'
-                                  }`}
-                                >
-                                  {isEliminated ? (
-                                    <>
-                                      <UserCheck className="w-3.5 h-3.5" />
-                                      <span>Restore Team</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UserX className="w-3.5 h-3.5" />
-                                      <span>Eliminate Team</span>
-                                    </>
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTeam(team)}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Delete Team</span>
-                                </button>
-                              </div>
+                              <>
+                                <div
+                                  className="fixed inset-0 z-30"
+                                  onClick={() => setActiveMenuTeamId(null)}
+                                />
+                                <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                                  <button
+                                    onClick={() => {
+                                      handleRegenerateCode(team.id);
+                                      setActiveMenuTeamId(null);
+                                    }}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                    <span>Regenerate Code</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleRegeneratePin(team.id);
+                                      setActiveMenuTeamId(null);
+                                    }}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                    <span>Regenerate PIN</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleToggleStatus(team);
+                                      setActiveMenuTeamId(null);
+                                    }}
+                                    className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
+                                      isEliminated
+                                        ? 'text-emerald-600 hover:bg-emerald-50'
+                                        : 'text-rose-600 hover:bg-rose-50'
+                                    }`}
+                                  >
+                                    {isEliminated ? (
+                                      <>
+                                        <UserCheck className="w-3.5 h-3.5" />
+                                        <span>Restore Team</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserX className="w-3.5 h-3.5" />
+                                        <span>Eliminate Team</span>
+                                      </>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteTeam(team);
+                                      setActiveMenuTeamId(null);
+                                    }}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete Team</span>
+                                  </button>
+                                </div>
+                              </>
                             )}
                           </div>
                         </div>
