@@ -124,9 +124,6 @@ export const Leaderboard: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        Cash: {formatWealth(entry.cash_balance)}
-                      </span>
                     </div>
                   </div>
 
