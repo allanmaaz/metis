@@ -32,14 +32,6 @@ export const Landing: React.FC = () => {
       {/* Top Bar */}
       <header className="flex items-center justify-between w-full">
         <MetisLogo size="md" />
-        <div className="flex items-center gap-2">
-          <Badge variant="orange" size="sm">
-            COLLEGE ARENA
-          </Badge>
-          <span className="text-xs text-slate-400 font-mono hidden sm:inline">
-            v1.0
-          </span>
-        </div>
       </header>
 
       {/* Hero Section */}
