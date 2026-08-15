@@ -39,83 +39,76 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between px-4 py-12 max-w-md mx-auto bg-[#070B12]">
+    <div className="min-h-screen flex flex-col justify-between px-4 py-8 max-w-lg mx-auto">
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <Link to="/" className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors">
+        <Link
+          to="/"
+          className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" /> Back to Arena
         </Link>
-        <span className="text-xs font-mono font-bold tracking-widest text-orange-400 uppercase">
-          CONTROL ACCESS
-        </span>
-      </div>
-
-      {/* Top Logo */}
-      <div className="text-center space-y-2 mt-4">
-        <MetisLogo size="lg" className="justify-center" />
-        <span className="text-xs font-mono font-bold tracking-widest text-orange-400 uppercase">
-          CONTROL CENTER ACCESS
-        </span>
+        <MetisLogo size="sm" />
       </div>
 
       {/* Login Card */}
-      <GlassCard variant="orange-glow" className="p-6 sm:p-8 space-y-6 my-auto">
-        <div className="space-y-1 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center mx-auto mb-3 border border-orange-500/30">
-            <Shield className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-extrabold font-display text-white tracking-tight">
-            Organizer Sign In
-          </h2>
-          <p className="text-xs text-slate-400">
-            Enter administrative credentials to manage events, market states, and prices.
-          </p>
-        </div>
-
-        <form onSubmit={handleSignIn} className="space-y-4">
-          <Input
-            label="Admin Email"
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError(null);
-            }}
-            placeholder="admin@metis.internal"
-            leftIcon={<Mail className="w-4 h-4" />}
-            autoFocus
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError(null);
-            }}
-            placeholder="••••••••"
-            leftIcon={<Lock className="w-4 h-4" />}
-          />
-
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs text-center">
-              {error}
+      <main className="my-auto py-8">
+        <GlassCard variant="orange-glow" className="p-6 sm:p-8 space-y-6">
+          <div className="space-y-1 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center mx-auto mb-3 border border-orange-500/30">
+              <Shield className="w-6 h-6" />
             </div>
-          )}
+            <h2 className="text-2xl font-extrabold font-display text-white tracking-tight">
+              Organizer Sign In
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300">
+              Enter administrative credentials to manage market states, stocks, and team portfolios.
+            </p>
+          </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            isLoading={isLoading}
-            className="w-full"
-            rightIcon={<ArrowRight className="w-5 h-5" />}
-          >
-            Access Control Center
-          </Button>
-        </form>
-      </GlassCard>
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <Input
+              label="Admin Email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
+              leftIcon={<Mail className="w-4 h-4" />}
+              autoFocus
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
+
+            {error && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs text-center font-medium">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              isLoading={isLoading}
+              className="w-full"
+              rightIcon={<ArrowRight className="w-5 h-5" />}
+            >
+              Access Control Center
+            </Button>
+          </form>
+        </GlassCard>
+      </main>
     </div>
   );
 };
