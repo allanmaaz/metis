@@ -6,6 +6,54 @@ import { getMockDB, saveMockDB } from './mockData';
 const PARTICIPANT_STORAGE_KEY = 'metis_participant_session_v1';
 const ADMIN_STORAGE_KEY = 'metis_admin_session_v1';
 
+export async function getTeamMembersByCode(
+  teamCode: string
+): Promise<{ team: Team | null; members: TeamMember[] }> {
+  const cleanCode = teamCode.trim().toUpperCase();
+  if (!cleanCode) return { team: null, members: [] };
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data: teamData } = await supabase
+        .from('teams')
+        .select('*')
+        .ilike('team_code', cleanCode)
+        .maybeSingle();
+
+      if (teamData) {
+        const team = teamData as Team;
+        const { data: members } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('team_id', team.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true });
+
+        return { team, members: (members as TeamMember[]) || [] };
+      }
+    } catch (err) {
+      console.error('Error fetching team members by code from Supabase:', err);
+    }
+  }
+
+  // Fallback to local DB
+  const db = getMockDB();
+  const team = db.teams.find(
+    (t) =>
+      t.team_code.toUpperCase() === cleanCode ||
+      t.name.toUpperCase() === cleanCode ||
+      cleanCode.includes(t.team_code.toUpperCase()) ||
+      t.team_code.toUpperCase().includes(cleanCode)
+  ) || null;
+
+  if (team) {
+    const members = db.teamMembers.filter((m) => m.team_id === team.id && m.is_active);
+    return { team, members };
+  }
+
+  return { team: null, members: [] };
+}
+
 export async function verifyParticipant(
   teamCode: string,
   rawName: string,

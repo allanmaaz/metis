@@ -4,9 +4,10 @@ import { MetisLogo } from '../../components/ui/MetisLogo';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { verifyParticipant } from '../../services/auth';
+import { verifyParticipant, getTeamMembersByCode } from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
-import { ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
+import { Team, TeamMember } from '../../types';
+import { ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Lock, ChevronDown, UserCheck, Users } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const Verify: React.FC = () => {
@@ -23,11 +24,53 @@ export const Verify: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [verifiedData, setVerifiedData] = useState<any>(null);
 
+  const [teamInfo, setTeamInfo] = useState<Team | null>(null);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [isCustomName, setIsCustomName] = useState(false);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+
   useEffect(() => {
     if (codeParam) {
       setTeamCode(codeParam.toUpperCase());
     }
   }, [codeParam]);
+
+  // Dynamically load registered team members whenever teamCode changes
+  useEffect(() => {
+    let isMounted = true;
+    const loadMembers = async () => {
+      const clean = teamCode.trim().toUpperCase();
+      if (!clean) {
+        setMembers([]);
+        setTeamInfo(null);
+        return;
+      }
+
+      setIsLoadingMembers(true);
+      try {
+        const res = await getTeamMembersByCode(clean);
+        if (isMounted) {
+          setTeamInfo(res.team);
+          setMembers(res.members);
+          if (res.members && res.members.length > 0) {
+            // Auto-select the first member by default
+            setName((prev) => (prev && res.members.some((m) => m.full_name === prev) ? prev : res.members[0].full_name));
+            setIsCustomName(false);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading team members:', err);
+      } finally {
+        if (isMounted) setIsLoadingMembers(false);
+      }
+    };
+
+    const debounce = setTimeout(loadMembers, 200);
+    return () => {
+      isMounted = false;
+      clearTimeout(debounce);
+    };
+  }, [teamCode]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +79,7 @@ export const Verify: React.FC = () => {
       return;
     }
     if (!name.trim()) {
-      setError('Please enter your registered full name.');
+      setError('Please select or enter your registered full name.');
       return;
     }
     if (!pin.trim()) {
@@ -118,7 +161,15 @@ export const Verify: React.FC = () => {
                   Team Member Verification
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-300">
-                  Confirm your identity on the official roster for code <span className="font-mono text-orange-400 font-bold">{teamCode || '---'}</span>.
+                  {teamInfo ? (
+                    <>
+                      Confirm your identity for <span className="font-bold text-white">{teamInfo.name}</span> (<span className="font-mono text-orange-400 font-bold">{teamCode}</span>).
+                    </>
+                  ) : (
+                    <>
+                      Confirm your identity on the official roster for code <span className="font-mono text-orange-400 font-bold">{teamCode || '---'}</span>.
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -132,17 +183,86 @@ export const Verify: React.FC = () => {
                   className="font-mono font-bold text-center uppercase"
                 />
 
-                {/* Member Name */}
-                <Input
-                  label="Your Registered Full Name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setError(null);
-                  }}
-                  autoFocus
-                />
+                {/* Member Name: Dropdown Selector OR Manual Text */}
+                {members.length > 0 && !isCustomName ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between px-0.5">
+                      <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-orange-400" />
+                        <span>Select Your Name</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomName(true);
+                          setName('');
+                        }}
+                        className="text-[11px] text-orange-400 hover:text-orange-300 font-semibold cursor-pointer"
+                      >
+                        + Type manually
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <select
+                        value={name}
+                        onChange={(e) => {
+                          if (e.target.value === '__CUSTOM__') {
+                            setIsCustomName(true);
+                            setName('');
+                          } else {
+                            setName(e.target.value);
+                            setError(null);
+                          }
+                        }}
+                        className="w-full px-4 py-3 rounded-2xl bg-slate-900/90 border border-white/15 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+                      >
+                        {members.map((m) => (
+                          <option key={m.id} value={m.full_name} className="bg-slate-900 text-white py-2">
+                            👤 {m.full_name} {m.is_trader ? '(Primary Trader)' : ''}
+                          </option>
+                        ))}
+                        <option value="__CUSTOM__" className="bg-slate-900 text-orange-400">
+                          ✍️ Other / Enter a different name...
+                        </option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {members.length > 0 && (
+                      <div className="flex items-center justify-between px-0.5">
+                        <label className="text-xs font-bold text-slate-300">
+                          Your Full Name
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomName(false);
+                            setName(members[0]?.full_name || '');
+                          }}
+                          className="text-[11px] text-orange-400 hover:text-orange-300 font-semibold cursor-pointer"
+                        >
+                          ← Select from team roster ({members.length})
+                        </button>
+                      </div>
+                    )}
+                    <Input
+                      label={members.length === 0 ? 'Your Registered Full Name' : undefined}
+                      type="text"
+                      placeholder="e.g. Farhan Khan"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        setError(null);
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                )}
 
                 {/* Team PIN */}
                 <Input
