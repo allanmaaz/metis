@@ -97,30 +97,18 @@ export const ParticipantHeader: React.FC = () => {
             </span>
           </Link>
 
-          {/* Right: Theme Toggle & Notification Bell */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleTheme}
-              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
-              className={`p-1.5 rounded-xl transition-colors ${
-                isDark ? 'text-amber-400 hover:bg-white/5' : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            <Link
-              to="/news"
-              className={`relative p-1.5 rounded-xl transition-colors ${
-                isDark ? 'text-slate-300 hover:text-orange-400' : 'text-slate-700 hover:text-orange-500'
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
-                12
-              </span>
-            </Link>
-          </div>
+          {/* Right: Notification Bell */}
+          <Link
+            to="/news"
+            className={`relative p-1.5 rounded-xl transition-colors ${
+              isDark ? 'text-slate-300 hover:text-orange-400' : 'text-slate-700 hover:text-orange-500'
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
+              12
+            </span>
+          </Link>
         </div>
       </header>
 
