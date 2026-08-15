@@ -200,40 +200,30 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Users2 className="w-7 h-7 text-orange-500" />
-            Team & Participant Management
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Users2 className="w-7 h-7 text-orange-500 shrink-0" />
+            <span>Team & Participant Management</span>
           </h1>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           {teams.length > 0 && (
-            <>
-              <button
-                onClick={() => {
-                  setSelectedCredentialsTeam(null);
-                  setIsCredentialsModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 text-xs font-extrabold transition-all shadow-xs cursor-pointer"
-                title="Export or print all team credentials and graphic passes"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Export Passes (PDF)</span>
-              </button>
-
-              <button
-                onClick={handleClearAllTeams}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold transition-all shadow-xs cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Clear All</span>
-              </button>
-            </>
+            <button
+              onClick={() => {
+                setSelectedCredentialsTeam(null);
+                setIsCredentialsModalOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 text-xs sm:text-sm font-extrabold transition-all shadow-xs cursor-pointer"
+              title="Export or print all team credentials and graphic passes"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Export Passes (PDF)</span>
+            </button>
           )}
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20 cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs sm:text-sm transition-all shadow-sm shadow-orange-500/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Register New Team</span>
