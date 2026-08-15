@@ -37,11 +37,54 @@ export async function getTeams(eventId: string): Promise<Team[]> {
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const filteredRemote = (data as Team[]).filter(
           (t) => !deletedSet.has(t.id) && !deletedSet.has(t.team_code)
         );
-        return filteredRemote;
+
+        // Auto-sync: push any locally created team that is missing on remote Supabase
+        const remoteCodes = new Set(filteredRemote.map((r) => r.team_code));
+        localTeams.forEach(async (lt) => {
+          if (!remoteCodes.has(lt.team_code)) {
+            try {
+              const { data: createdTeam } = await supabase
+                .from('teams')
+                .insert({
+                  event_id: eventId,
+                  name: lt.name,
+                  team_code: lt.team_code,
+                  pin_hash: lt.pin_hash,
+                  cash_balance: lt.cash_balance,
+                  starting_wealth: lt.starting_wealth,
+                  status: lt.status,
+                })
+                .select()
+                .single();
+
+              if (createdTeam) {
+                const mRows = db.teamMembers
+                  .filter((m) => m.team_id === lt.id)
+                  .map((m) => ({
+                    team_id: createdTeam.id,
+                    full_name: m.full_name,
+                    normalized_name: m.normalized_name,
+                    is_active: true,
+                    is_trader: true,
+                  }));
+                if (mRows.length > 0) {
+                  await supabase.from('team_members').insert(mRows);
+                }
+                broadcastRealtimeEvent('TEAM_UPDATED', { teamId: createdTeam.id });
+              }
+            } catch (syncErr) {
+              // Ignore sync errors gracefully
+            }
+          }
+        });
+
+        if (filteredRemote.length > 0) {
+          return filteredRemote;
+        }
       }
     } catch (err) {
       console.error('Error fetching teams:', err);
