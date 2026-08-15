@@ -22,31 +22,41 @@ const broadcastChannel =
     ? new BroadcastChannel('metis_universal_realtime_bus')
     : null;
 
-// Global Supabase Realtime Broadcast Channel for millisecond cross-device WebSocket sync
-const supabaseBroadcastChannel = isSupabaseConfigured
-  ? supabase.channel('metis_global_realtime_broadcast', {
-      config: {
-        broadcast: { ack: false, self: false },
-      },
-    })
-  : null;
+// Global Supabase Realtime Channel for millisecond cross-device WebSocket sync & Postgres CDC
+let globalSupabaseChannel: any = null;
 
-if (supabaseBroadcastChannel) {
-  supabaseBroadcastChannel
-    .on('broadcast', { event: '*' }, (payload: any) => {
-      if (payload?.payload && typeof window !== 'undefined') {
-        const msg = payload.payload as RealtimeMessage;
-        window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: msg }));
-        if (msg.type) {
-          window.dispatchEvent(new CustomEvent(`metis_${msg.type.toLowerCase()}`, { detail: msg.payload }));
+if (isSupabaseConfigured) {
+  try {
+    globalSupabaseChannel = supabase
+      .channel('metis_global_realtime_bus', {
+        config: {
+          broadcast: { ack: false, self: false },
+        },
+      })
+      .on('broadcast', { event: '*' }, (payload: any) => {
+        if (payload?.payload && typeof window !== 'undefined') {
+          const msg = payload.payload as RealtimeMessage;
+          window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: msg }));
+          if (msg.type) {
+            window.dispatchEvent(new CustomEvent(`metis_${msg.type.toLowerCase()}`, { detail: msg.payload }));
+          }
         }
-      }
-    })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('⚡ Connected to Metis Ultra-Low-Latency Realtime WebSocket Bus');
-      }
-    });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload: any) => {
+        if (typeof window !== 'undefined') {
+          const changeType = payload?.table === 'stocks' ? 'STOCK_PRICE_UPDATED' : 'LEADERBOARD_UPDATED';
+          window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: { type: changeType, payload } }));
+          window.dispatchEvent(new CustomEvent(`metis_${changeType.toLowerCase()}`, { detail: payload }));
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('⚡ Connected to Metis Ultra-Low-Latency Realtime WebSocket Bus');
+        }
+      });
+  } catch (err) {
+    console.warn('Supabase global channel init warning:', err);
+  }
 }
 
 if (broadcastChannel && typeof window !== 'undefined') {
@@ -84,9 +94,9 @@ export function broadcastRealtimeEvent(type: RealtimeEventType, payload?: any): 
   }
 
   // 3. Supabase WebSocket Broadcast (< 50ms across all internet devices)
-  if (isSupabaseConfigured && supabaseBroadcastChannel) {
+  if (isSupabaseConfigured && globalSupabaseChannel) {
     try {
-      supabaseBroadcastChannel.send({
+      globalSupabaseChannel.send({
         type: 'broadcast',
         event: type,
         payload: message,
@@ -103,10 +113,9 @@ export function broadcastRealtimeEvent(type: RealtimeEventType, payload?: any): 
 export function useRealtimeSubscription(
   eventTypes: RealtimeEventType | RealtimeEventType[],
   callback: () => void,
-  pollingIntervalMs: number = 400
+  pollingIntervalMs: number = 500
 ) {
   const types = Array.isArray(eventTypes) ? eventTypes : [eventTypes];
-
   const memoizedCallback = useCallback(callback, [callback]);
 
   useEffect(() => {
@@ -138,35 +147,7 @@ export function useRealtimeSubscription(
       broadcastChannel?.addEventListener('message', handleBroadcastMessage);
     }
 
-    // 4. Supabase Postgres & Broadcast WebSockets Subscription (< 50ms)
-    let postgresChannel: any = null;
-    let localBroadcastListener: any = null;
-
-    if (isSupabaseConfigured) {
-      try {
-        // Postgres CDC changes
-        postgresChannel = supabase
-          .channel('metis_postgres_realtime')
-          .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-            memoizedCallback();
-          })
-          .subscribe();
-
-        // Broadcast WebSockets listener
-        if (supabaseBroadcastChannel) {
-          localBroadcastListener = (payload: any) => {
-            if (payload?.event && types.includes(payload.event as RealtimeEventType)) {
-              memoizedCallback();
-            }
-          };
-          supabaseBroadcastChannel.on('broadcast', { event: '*' }, localBroadcastListener);
-        }
-      } catch (err) {
-        console.warn('Supabase realtime subscription failed, falling back to bus:', err);
-      }
-    }
-
-    // 5. High-frequency fallback polling (300-400ms)
+    // 4. Fallback Polling
     const interval = setInterval(() => {
       memoizedCallback();
     }, pollingIntervalMs);
@@ -176,9 +157,6 @@ export function useRealtimeSubscription(
         window.removeEventListener('metis_realtime_event', handleCustomEvent);
         window.removeEventListener('storage', handleStorageEvent);
         broadcastChannel?.removeEventListener('message', handleBroadcastMessage);
-      }
-      if (postgresChannel) {
-        supabase.removeChannel(postgresChannel);
       }
       clearInterval(interval);
     };

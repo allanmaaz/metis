@@ -1,5 +1,5 @@
 import { getMockDB, saveMockDB } from './mockData';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 import { Stock } from '../types';
 
@@ -93,14 +93,26 @@ export async function updateStockPriceInstant(
     stock,
   });
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(stockId)) {
     try {
-      await supabase.rpc('update_stock_price', {
+      const { error: rpcErr } = await supabase.rpc('update_stock_price', {
         p_stock_id: stockId,
         p_new_price: newPrice,
         p_reason: reason,
         p_admin_id: adminId || null,
       });
+
+      if (rpcErr) {
+        await supabase
+          .from('stocks')
+          .update({
+            current_price: newPrice,
+            high_price: stock.high_price,
+            low_price: stock.low_price,
+            updated_at: stock.updated_at,
+          })
+          .eq('id', stockId);
+      }
     } catch (err) {
       console.warn('Supabase instant update warning:', err);
     }
