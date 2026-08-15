@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Stock, StockPriceHistory } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
+import { publishNews } from './news';
 
 export async function getStocks(eventId?: string): Promise<Stock[]> {
   const db = getMockDB();
@@ -107,6 +108,14 @@ export async function createStock(data: {
     price: newStock.current_price,
     sector: newStock.sector,
   });
+
+  // Automatically broadcast breaking IPO wire to News feed
+  publishNews({
+    event_id: data.event_id,
+    headline: `🚀 NEW LISTING: ${newStock.company_name} (${newStock.symbol}) Debuts at ₹${newStock.starting_price.toLocaleString('en-IN')}`,
+    body: `${newStock.company_name} (${newStock.symbol}) has officially commenced live trading in the ${newStock.sector} sector. Buy and sell orders are now active across the exchange floor.`,
+    sector: newStock.sector,
+  }).catch(() => {});
 
   if (isSupabaseConfigured) {
     try {

@@ -102,44 +102,65 @@ export const News: React.FC = () => {
             No breaking market news published yet. Check back soon!
           </div>
         ) : (
-          filteredNews.map((item) => (
-            <div
-              key={item.id}
-              className={`p-5 rounded-3xl border space-y-2 transition-shadow ${
-                isDark
-                  ? 'bg-[#131B2E] border-white/5 shadow-md'
-                  : 'bg-white border-slate-200/80 shadow-xs'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 font-mono">
-                  ● BREAKING
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  {formatClockTime(item.published_at)}
-                </span>
-              </div>
+          filteredNews.map((item, idx) => {
+            const isListing = item.headline.includes('NEW LISTING') || item.headline.includes('🚀');
+            const isSurge = item.headline.includes('SURGE') || item.headline.includes('📈') || item.headline.includes('Rallies');
+            const isDrop = item.headline.includes('PLUNGE') || item.headline.includes('📉') || item.headline.includes('Drops');
+            const isFirst = idx === 0;
 
-              <h3 className={`font-extrabold text-sm leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {item.headline}
-              </h3>
+            let badgeClass = 'bg-orange-500/15 text-orange-400 border-orange-500/30';
+            let badgeText = '⚡ BREAKING WIRE';
 
-              <p className="text-xs text-slate-400 leading-relaxed">
-                {item.body}
-              </p>
+            if (isListing) {
+              badgeClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+              badgeText = '🚀 NEW LISTING';
+            } else if (isSurge) {
+              badgeClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+              badgeText = '📈 SURGE ALERT';
+            } else if (isDrop) {
+              badgeClass = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+              badgeText = '📉 MARKET DROP';
+            }
 
-              {item.sector && (
-                <div
-                  className={`pt-2 border-t flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase font-mono ${
-                    isDark ? 'border-white/5' : 'border-slate-100'
-                  }`}
-                >
-                  <span>Sector: {item.sector}</span>
-                  <span className="text-slate-500">METIS Dispatch</span>
+            return (
+              <div
+                key={item.id}
+                className={`p-5 rounded-3xl border space-y-2.5 transition-all relative overflow-hidden ${
+                  isDark
+                    ? 'bg-[#131B2E] border-white/5 hover:border-white/10 shadow-md'
+                    : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full border font-mono flex items-center gap-1 ${badgeClass}`}>
+                    {badgeText}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {formatClockTime(item.published_at)}
+                  </span>
                 </div>
-              )}
-            </div>
-          ))
+
+                <h3 className={`font-extrabold text-sm sm:text-base leading-snug tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {item.headline}
+                </h3>
+
+                <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {item.body}
+                </p>
+
+                {item.sector && (
+                  <div
+                    className={`pt-2.5 border-t flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase font-mono ${
+                      isDark ? 'border-white/5' : 'border-slate-100'
+                    }`}
+                  >
+                    <span>Sector: {item.sector}</span>
+                    <span className="text-[9px] text-slate-500">METIS DISPATCH</span>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

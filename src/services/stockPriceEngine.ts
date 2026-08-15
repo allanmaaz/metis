@@ -2,6 +2,7 @@ import { getMockDB, saveMockDB } from './mockData';
 import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 import { Stock } from '../types';
+import { publishNews } from './news';
 
 export interface ActiveGlide {
   stockId: string;
@@ -92,6 +93,25 @@ export async function updateStockPriceInstant(
     reason,
     stock,
   });
+
+  // Automatically broadcast Breaking Wire on price hikes or drops
+  if (Math.abs(pctChange) >= 2 || (reason && !reason.includes('micro-noise'))) {
+    const isSurge = pctChange > 0;
+    const sign = isSurge ? '+' : '';
+    const headline = isSurge
+      ? `📈 SURGE ALERT: ${stock.symbol} Rallies ${sign}${pctChange.toFixed(1)}% to ₹${newPrice.toLocaleString('en-IN')}`
+      : `📉 PLUNGE ALERT: ${stock.symbol} Drops ${pctChange.toFixed(1)}% to ₹${newPrice.toLocaleString('en-IN')}`;
+
+    const body = `${stock.company_name} (${stock.symbol}) moved from ₹${oldPrice.toLocaleString('en-IN')} to ₹${newPrice.toLocaleString('en-IN')} (${sign}${pctChange.toFixed(1)}%). ${reason ? `Market Driver: ${reason}` : (isSurge ? 'Heavy buying demand observed.' : 'Intense market selloff recorded.')}`;
+
+    publishNews({
+      event_id: stock.event_id,
+      headline,
+      body,
+      sector: stock.sector,
+      admin_id: adminId,
+    }).catch(() => {});
+  }
 
   if (isSupabaseConfigured && isValidUuid(stockId)) {
     try {
