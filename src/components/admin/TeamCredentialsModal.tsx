@@ -108,80 +108,113 @@ Generated on ${new Date().toLocaleString()}`;
         if (isSingle) {
           // Large, full-page executive pass design for single team print
           return `
-          <div class="executive-pass">
-            <div class="pass-header-strip">
-              <div class="brand-left">
-                <span class="metis-logo">🏛️ METIS 2026</span>
-                <span class="sub-logo">MOCK STOCK TRADING ARENA</span>
+          <div class="page-container">
+            <!-- MAIN OFFICIAL PASS -->
+            <div class="executive-pass">
+              <div class="pass-header-strip">
+                <div class="brand-left">
+                  <span class="metis-logo">🏛️ METIS 2026</span>
+                  <span class="sub-logo">SIMULATED STOCK TRADING ARENA · ROUND 2</span>
+                </div>
+                <div class="badge-right">
+                  <span class="official-tag">OFFICIAL ACCESS PASS</span>
+                  <span class="serial-tag">AUTH #${team.team_code}</span>
+                </div>
               </div>
-              <div class="badge-right">
-                <span class="official-tag">OFFICIAL ACCESS PASS</span>
-                <span class="serial-tag">AUTH #${team.team_code}</span>
+
+              <div class="pass-content">
+                <div class="team-spotlight">
+                  <div class="team-avatar-lg">${team.name.charAt(0)}</div>
+                  <div class="team-info-lg">
+                    <div class="status-pill">OFFICIAL COMPETITOR · VERIFIED</div>
+                    <h1 class="team-title-lg">${team.name}</h1>
+                    <p class="members-lg"><strong>Team Members:</strong> ${memberNames}</p>
+                  </div>
+                </div>
+
+                <div class="key-credentials-box">
+                  <div class="cred-cell primary">
+                    <span class="cell-label">OFFICIAL TEAM ACCESS CODE</span>
+                    <div class="cell-value-code">${team.team_code}</div>
+                    <span class="cell-sub">Enter on the participant portal to unlock trading terminal</span>
+                  </div>
+                  <div class="cred-cell secondary">
+                    <span class="cell-label">CONFIDENTIAL SECURITY PIN</span>
+                    <div class="cell-value-pin">${pin}</div>
+                    <span class="cell-sub">4-Digit authorized trading authentication PIN</span>
+                  </div>
+                </div>
+
+                <div class="trading-parameters-grid">
+                  <div class="param-card">
+                    <span class="param-label">STARTING CAPITAL</span>
+                    <span class="param-value">${formatWealth(team.cash_balance)}</span>
+                  </div>
+                  <div class="param-card">
+                    <span class="param-label">TRADING PORTAL</span>
+                    <span class="param-value link">metis-bvx.pages.dev</span>
+                  </div>
+                  <div class="param-card">
+                    <span class="param-label">ARENA VENUE</span>
+                    <span class="param-value">Main Trading Floor</span>
+                  </div>
+                </div>
+
+                <div class="login-guide-card">
+                  <h3>🚀 Step-by-Step Login Instructions:</h3>
+                  <ol>
+                    <li>Connect to the event network and visit <strong>${portalUrl}</strong> on any browser.</li>
+                    <li>Select your team or input your Team Access Code: <strong>${team.team_code}</strong>.</li>
+                    <li>Choose your name from the roster and enter your Security PIN: <strong>${pin}</strong>.</li>
+                    <li>When the market opens, execute live buys & sells to maximize portfolio wealth!</li>
+                  </ol>
+                </div>
+
+                <div class="pass-seal-row">
+                  <div class="rules-note">
+                    <strong>⚠️ Confidentiality Notice:</strong> This pass contains authorized access credentials. All trades executed under this team ID are final and binding on the competition leaderboard.
+                  </div>
+                  <div class="signature-box">
+                    <div class="sig-line"></div>
+                    <span>Authorized Event Official</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pass-footer-strip">
+                <span>METIS Market Engine v3.0 · Ultra-Low-Latency Realtime Trading Simulation</span>
+                <span>Pass Issued: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </div>
             </div>
 
-            <div class="pass-content">
-              <div class="team-spotlight">
-                <div class="team-avatar-lg">${team.name.charAt(0)}</div>
-                <div class="team-info-lg">
-                  <div class="status-pill">ROUND 2 COMPETITOR · VERIFIED</div>
-                  <h1 class="team-title-lg">${team.name}</h1>
-                  <p class="members-lg"><strong>Team Members:</strong> ${memberNames}</p>
-                </div>
-              </div>
-
-              <div class="key-credentials-box">
-                <div class="cred-cell primary">
-                  <span class="cell-label">OFFICIAL TEAM ACCESS CODE</span>
-                  <div class="cell-value-code">${team.team_code}</div>
-                  <span class="cell-sub">Enter this code on the participant login screen</span>
-                </div>
-                <div class="cred-cell secondary">
-                  <span class="cell-label">CONFIDENTIAL SECURITY PIN</span>
-                  <div class="cell-value-pin">${pin}</div>
-                  <span class="cell-sub">4-Digit authorized trading authentication</span>
-                </div>
-              </div>
-
-              <div class="trading-parameters-grid">
-                <div class="param-card">
-                  <span class="param-label">ALLOCATED STARTING CAPITAL</span>
-                  <span class="param-value">${formatWealth(team.cash_balance)}</span>
-                </div>
-                <div class="param-card">
-                  <span class="param-label">PARTICIPANT TRADING PORTAL</span>
-                  <span class="param-value link">${portalUrl}</span>
-                </div>
-                <div class="param-card">
-                  <span class="param-label">COMPETITION VENUE</span>
-                  <span class="param-value">Main Trading Floor</span>
-                </div>
-              </div>
-
-              <div class="login-guide-card">
-                <h3>🚀 Step-by-Step Login Instructions:</h3>
-                <ol>
-                  <li>Connect to the event network and visit <strong>${portalUrl}</strong> on your device.</li>
-                  <li>Select <strong>"Team Login"</strong> and input your Team Code: <strong>${team.team_code}</strong>.</li>
-                  <li>Provide your 4-digit Security PIN: <strong>${pin}</strong> to unlock your terminal.</li>
-                  <li>When the market opens, execute live buys & sells to maximize portfolio valuation.</li>
-                </ol>
-              </div>
-
-              <div class="pass-seal-row">
-                <div class="rules-note">
-                  <strong>⚠️ Security Notice:</strong> This pass is strictly non-transferable. All trades executed under this team ID are final and binding on the competition leaderboard.
-                </div>
-                <div class="signature-box">
-                  <div class="sig-line"></div>
-                  <span>Authorized Metis Official Seal</span>
-                </div>
-              </div>
+            <!-- CUT LINE -->
+            <div class="cut-divider">
+              <span class="cut-label">✂️ &nbsp; TEAR-OFF PARTICIPANT QUICK REFERENCE SLIP &nbsp; ✂️</span>
             </div>
 
-            <div class="pass-footer-strip">
-              <span>METIS Simulated Market Engine v3.0 · Built for Ultra-Low-Latency Realtime Trading</span>
-              <span>Generated on ${new Date().toLocaleString()}</span>
+            <!-- SECONDARY TEAR-OFF SLIP -->
+            <div class="slip-card">
+              <div class="slip-header">
+                <div>
+                  <span class="slip-title">🏛️ METIS 2026 · TEAM TRADING SLIP</span>
+                  <span class="slip-sub">${team.name} · Roster: ${memberNames}</span>
+                </div>
+                <div class="slip-portal">Portal: <strong>${portalUrl.replace('https://', '')}</strong></div>
+              </div>
+              <div class="slip-body">
+                <div class="slip-box highlight">
+                  <span class="slip-lbl">TEAM CODE</span>
+                  <span class="slip-val">${team.team_code}</span>
+                </div>
+                <div class="slip-box">
+                  <span class="slip-lbl">SECURITY PIN</span>
+                  <span class="slip-val">${pin}</span>
+                </div>
+                <div class="slip-box">
+                  <span class="slip-lbl">ALLOCATED CAPITAL</span>
+                  <span class="slip-val">${formatWealth(team.cash_balance)}</span>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -254,41 +287,46 @@ Generated on ${new Date().toLocaleString()}`;
             }
 
             /* Single Team Executive Pass */
-            .executive-pass {
+            .page-container {
               width: 100%;
-              min-height: 270mm;
-              border: 3px solid #0f172a;
-              border-radius: 24px;
+              max-width: 190mm;
+              margin: 0 auto;
               display: flex;
               flex-direction: column;
-              justify-content: space-between;
+              gap: 12px;
+            }
+
+            .executive-pass {
+              width: 100%;
+              border: 2px solid #0f172a;
+              border-radius: 18px;
               overflow: hidden;
               background: #ffffff;
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
             }
 
             .pass-header-strip {
               background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
               color: #ffffff;
-              padding: 20px 28px;
+              padding: 14px 22px;
               display: flex;
               align-items: center;
               justify-content: space-between;
-              border-bottom: 4px solid #f97316;
+              border-bottom: 3px solid #f97316;
             }
             .metis-logo {
-              font-size: 24px;
+              font-size: 20px;
               font-weight: 900;
               letter-spacing: -0.5px;
               display: block;
             }
             .sub-logo {
-              font-size: 11px;
+              font-size: 10px;
               font-weight: 700;
               color: #fdba74;
-              letter-spacing: 1.5px;
+              letter-spacing: 1px;
               text-transform: uppercase;
-              margin-top: 2px;
+              margin-top: 1px;
               display: block;
             }
             .badge-right {
@@ -298,82 +336,82 @@ Generated on ${new Date().toLocaleString()}`;
               display: inline-block;
               background: #f97316;
               color: #ffffff;
-              font-size: 11px;
+              font-size: 10px;
               font-weight: 800;
-              padding: 4px 12px;
-              border-radius: 8px;
+              padding: 3px 10px;
+              border-radius: 6px;
               letter-spacing: 0.5px;
             }
             .serial-tag {
               display: block;
               font-family: 'JetBrains Mono', monospace;
-              font-size: 11px;
+              font-size: 10px;
               color: #94a3b8;
               font-weight: 700;
-              margin-top: 4px;
+              margin-top: 2px;
             }
 
             .pass-content {
-              padding: 28px 32px;
-              flex: 1;
+              padding: 18px 22px;
               display: flex;
               flex-direction: column;
-              gap: 20px;
+              gap: 14px;
             }
 
             .team-spotlight {
               display: flex;
               align-items: center;
-              gap: 20px;
-              padding-bottom: 20px;
-              border-bottom: 2px solid #f1f5f9;
+              gap: 14px;
+              padding-bottom: 12px;
+              border-bottom: 1.5px solid #f1f5f9;
             }
             .team-avatar-lg {
-              width: 72px;
-              height: 72px;
-              border-radius: 20px;
+              width: 52px;
+              height: 52px;
+              border-radius: 14px;
               background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
               color: #ffffff;
-              font-size: 36px;
+              font-size: 26px;
               font-weight: 900;
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+              box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
             }
             .status-pill {
               display: inline-block;
               font-family: 'JetBrains Mono', monospace;
-              font-size: 10px;
+              font-size: 9px;
               font-weight: 800;
               color: #059669;
               background: #ecfdf5;
               border: 1px solid #a7f3d0;
-              padding: 2px 10px;
-              border-radius: 6px;
-              margin-bottom: 6px;
+              padding: 1px 8px;
+              border-radius: 5px;
+              margin-bottom: 4px;
             }
             .team-title-lg {
-              font-size: 30px;
+              font-size: 24px;
               font-weight: 900;
               color: #0f172a;
               letter-spacing: -0.5px;
+              line-height: 1.1;
             }
             .members-lg {
-              font-size: 13px;
+              font-size: 12px;
               color: #475569;
-              margin-top: 4px;
+              margin-top: 2px;
             }
 
             .key-credentials-box {
               display: grid;
               grid-template-columns: 1.3fr 0.9fr;
-              gap: 16px;
+              gap: 12px;
             }
             .cred-cell {
-              border-radius: 18px;
-              padding: 16px 20px;
-              border: 2px solid #e2e8f0;
+              border-radius: 14px;
+              padding: 12px 16px;
+              border: 1.5px solid #e2e8f0;
             }
             .cred-cell.primary {
               background: #fff7ed;
@@ -385,110 +423,111 @@ Generated on ${new Date().toLocaleString()}`;
             }
             .cell-label {
               font-family: 'JetBrains Mono', monospace;
-              font-size: 10px;
+              font-size: 9px;
               font-weight: 800;
               letter-spacing: 0.5px;
               display: block;
-              margin-bottom: 6px;
+              margin-bottom: 4px;
             }
             .cred-cell.primary .cell-label { color: #c2410c; }
             .cred-cell.secondary .cell-label { color: #475569; }
             .cell-value-code {
               font-family: 'JetBrains Mono', monospace;
-              font-size: 32px;
+              font-size: 24px;
               font-weight: 900;
               color: #ea580c;
-              letter-spacing: 2px;
+              letter-spacing: 1.5px;
             }
             .cell-value-pin {
               font-family: 'JetBrains Mono', monospace;
-              font-size: 32px;
+              font-size: 24px;
               font-weight: 900;
               color: #0f172a;
-              letter-spacing: 4px;
+              letter-spacing: 3px;
             }
             .cell-sub {
-              font-size: 11px;
+              font-size: 10px;
               color: #64748b;
-              margin-top: 4px;
+              margin-top: 2px;
               display: block;
             }
 
             .trading-parameters-grid {
               display: grid;
               grid-template-columns: repeat(3, 1fr);
-              gap: 12px;
+              gap: 10px;
             }
             .param-card {
               background: #f8fafc;
               border: 1px solid #e2e8f0;
-              border-radius: 14px;
-              padding: 12px 16px;
+              border-radius: 12px;
+              padding: 10px 14px;
             }
             .param-label {
-              font-size: 9px;
+              font-size: 8.5px;
               font-weight: 800;
               color: #64748b;
               letter-spacing: 0.5px;
               display: block;
-              margin-bottom: 4px;
+              margin-bottom: 2px;
             }
             .param-value {
               font-family: 'JetBrains Mono', monospace;
-              font-size: 14px;
+              font-size: 13px;
               font-weight: 800;
               color: #0f172a;
+              white-space: nowrap;
             }
             .param-value.link {
               color: #2563eb;
-              font-size: 12px;
+              font-size: 11.5px;
             }
 
             .login-guide-card {
               background: #f0fdf4;
               border: 1.5px solid #86efac;
-              border-radius: 16px;
-              padding: 16px 20px;
+              border-radius: 12px;
+              padding: 12px 16px;
             }
             .login-guide-card h3 {
-              font-size: 13px;
+              font-size: 12px;
               font-weight: 800;
               color: #15803d;
-              margin-bottom: 8px;
+              margin-bottom: 6px;
             }
             .login-guide-card ol {
-              padding-left: 20px;
-              font-size: 12px;
+              padding-left: 18px;
+              font-size: 11px;
               color: #166534;
-              line-height: 1.6;
+              line-height: 1.5;
             }
 
             .pass-seal-row {
               display: flex;
               align-items: flex-end;
               justify-content: space-between;
-              gap: 20px;
-              padding-top: 12px;
-              border-top: 1.5px dashed #cbd5e1;
+              gap: 16px;
+              padding-top: 8px;
+              border-top: 1px dashed #cbd5e1;
             }
             .rules-note {
-              font-size: 11px;
+              font-size: 10px;
               color: #64748b;
               max-width: 65%;
-              line-height: 1.4;
+              line-height: 1.35;
             }
             .signature-box {
               text-align: center;
-              min-width: 170px;
+              min-width: 150px;
             }
             .sig-line {
               width: 100%;
-              border-bottom: 2px solid #94a3b8;
-              margin-bottom: 6px;
-              height: 30px;
+              border-bottom: 1.5px solid #94a3b8;
+              margin-bottom: 4px;
+              height: 20px;
             }
             .signature-box span {
-              font-size: 10px;
+              font-size: 9px;
               font-weight: 700;
               color: #64748b;
               text-transform: uppercase;
@@ -497,15 +536,104 @@ Generated on ${new Date().toLocaleString()}`;
 
             .pass-footer-strip {
               background: #f8fafc;
-              border-top: 2px solid #e2e8f0;
-              padding: 12px 28px;
+              border-top: 1.5px solid #e2e8f0;
+              padding: 8px 22px;
               display: flex;
               align-items: center;
               justify-content: space-between;
-              font-size: 10px;
+              font-size: 9.5px;
               color: #94a3b8;
               font-weight: 600;
             }
+
+            /* Tear-off divider */
+            .cut-divider {
+              text-align: center;
+              position: relative;
+              margin: 6px 0;
+            }
+            .cut-divider::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              right: 0;
+              top: 50%;
+              border-top: 1.5px dashed #94a3b8;
+              z-index: 1;
+            }
+            .cut-label {
+              position: relative;
+              z-index: 2;
+              background: #ffffff;
+              padding: 0 14px;
+              font-size: 9px;
+              font-weight: 800;
+              color: #64748b;
+              font-family: 'JetBrains Mono', monospace;
+              letter-spacing: 1px;
+            }
+
+            /* Secondary Tear-Off Slip */
+            .slip-card {
+              border: 1.5px dashed #94a3b8;
+              border-radius: 14px;
+              padding: 12px 18px;
+              background: #f8fafc;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+            .slip-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .slip-title {
+              font-size: 12px;
+              font-weight: 900;
+              color: #0f172a;
+              display: block;
+            }
+            .slip-sub {
+              font-size: 10px;
+              color: #64748b;
+              font-weight: 600;
+            }
+            .slip-portal {
+              font-size: 10px;
+              font-family: 'JetBrains Mono', monospace;
+              color: #2563eb;
+            }
+            .slip-body {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 10px;
+            }
+            .slip-box {
+              background: #ffffff;
+              border: 1px solid #cbd5e1;
+              border-radius: 10px;
+              padding: 8px 12px;
+            }
+            .slip-box.highlight {
+              border-color: #f97316;
+              background: #fff7ed;
+            }
+            .slip-lbl {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 8px;
+              font-weight: 800;
+              color: #64748b;
+              display: block;
+            }
+            .slip-box.highlight .slip-lbl { color: #c2410c; }
+            .slip-val {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 15px;
+              font-weight: 900;
+              color: #0f172a;
+            }
+            .slip-box.highlight .slip-val { color: #ea580c; }
 
             /* Multi-pass Grid Layout */
             .multi-grid {
