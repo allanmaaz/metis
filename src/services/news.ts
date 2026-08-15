@@ -3,9 +3,28 @@ import { NewsItem } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
+function getDeletedNewsIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem('metis_deleted_news_ids_v1');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+
+function saveDeletedNewsId(idOrHeadline: string) {
+  try {
+    const set = getDeletedNewsIds();
+    set.add(idOrHeadline);
+    localStorage.setItem('metis_deleted_news_ids_v1', JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
   const db = getMockDB();
-  const localPublished = db.news.filter((n) => n.is_published);
+  const deletedSet = getDeletedNewsIds();
+  const localPublished = db.news.filter(
+    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
+  );
 
   if (isSupabaseConfigured && eventId && isValidUuid(eventId)) {
     try {
@@ -17,7 +36,10 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
         .order('published_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        return data as NewsItem[];
+        const filteredRemote = (data as NewsItem[]).filter(
+          (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
+        );
+        return filteredRemote;
       }
     } catch (err) {
       // Fallback to local database
@@ -98,10 +120,17 @@ export async function publishNews(data: {
 }
 
 export async function deleteNews(newsId: string): Promise<{ success: boolean; error?: string }> {
-  // 1. Remove from local DB
+  // 1. Mark in permanent blacklist cache
+  saveDeletedNewsId(newsId);
+
+  // 2. Remove from local DB
   const db = getMockDB();
   const targetNews = db.news.find((n) => n.id === newsId);
   const targetHeadline = targetNews?.headline;
+  if (targetHeadline) {
+    saveDeletedNewsId(targetHeadline);
+  }
+
   db.news = db.news.filter((n) => n.id !== newsId);
   db.auditLogs.unshift({
     id: `al_${Date.now()}`,
@@ -119,7 +148,7 @@ export async function deleteNews(newsId: string): Promise<{ success: boolean; er
   });
   saveMockDB(db);
 
-  // 2. Remove from Supabase
+  // 3. Remove from Supabase if configured
   if (isSupabaseConfigured) {
     try {
       if (isValidUuid(newsId)) {

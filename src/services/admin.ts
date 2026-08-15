@@ -4,9 +4,30 @@ import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
+function getDeletedTeamIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem('metis_deleted_team_ids_v1');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+
+function saveDeletedTeamId(idOrCode: string) {
+  try {
+    const set = getDeletedTeamIds();
+    set.add(idOrCode);
+    localStorage.setItem('metis_deleted_team_ids_v1', JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
 export async function getTeams(eventId: string): Promise<Team[]> {
   const db = getMockDB();
-  const localTeams = db.teams.filter((t) => t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1');
+  const deletedSet = getDeletedTeamIds();
+  const localTeams = db.teams.filter(
+    (t) => (t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1') &&
+      !deletedSet.has(t.id) &&
+      !deletedSet.has(t.team_code)
+  );
 
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
@@ -17,7 +38,10 @@ export async function getTeams(eventId: string): Promise<Team[]> {
         .order('created_at', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        return data as Team[];
+        const filteredRemote = (data as Team[]).filter(
+          (t) => !deletedSet.has(t.id) && !deletedSet.has(t.team_code)
+        );
+        return filteredRemote;
       }
     } catch (err) {
       console.error('Error fetching teams:', err);
@@ -318,11 +342,17 @@ export async function setTeamStatus(
 }
 
 export async function deleteTeam(teamId: string): Promise<{ success: boolean; error?: string }> {
+  // 1. Mark in permanent blacklist cache
+  saveDeletedTeamId(teamId);
+
   const db = getMockDB();
   const targetTeam = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
   const teamCode = targetTeam?.team_code;
+  if (teamCode) {
+    saveDeletedTeamId(teamCode);
+  }
 
-  // 1. Remove from local DB
+  // 2. Remove from local DB
   db.teams = db.teams.filter((t) => t.id !== teamId && t.team_code !== teamCode);
   db.teamMembers = db.teamMembers.filter((m) => m.team_id !== teamId);
   db.holdings = db.holdings.filter((h) => h.team_id !== teamId);
