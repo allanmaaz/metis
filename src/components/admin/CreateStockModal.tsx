@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import {
   REAL_WORLD_STOCKS,
   REAL_WORLD_CATEGORIES,
-  RealWorldStock,
 } from '../../data/realWorldStocks';
 import { formatCurrency } from '../../lib/formatting';
-import { Sparkles, Building2, Search, ArrowRight } from 'lucide-react';
+import { Sparkles, Building2 } from 'lucide-react';
 
 interface CreateStockModalProps {
   isOpen: boolean;
@@ -109,32 +107,32 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
     }
   };
 
-  const selectedStockData = REAL_WORLD_STOCKS.find((s) => s.symbol === symbol);
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Stock to Market"
-      subtitle="Choose a real-world company or create a custom asset, then set your custom starting price."
+      title={
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-orange-500" />
+          <span className="text-white font-black">Add Stock to Market</span>
+        </div>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* 1. Real-World Stock Quick Selector Dropdown */}
         <div className="space-y-1.5">
-          <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between font-mono">
-            <span className="flex items-center gap-1.5 text-orange-500">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold uppercase tracking-wider text-orange-400 font-mono flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Real-World Company Preset</span>
-            </span>
-            <span className="text-[10px] text-slate-500 font-normal">
-              50+ Marquee Stocks
-            </span>
-          </label>
+            </label>
+            <span className="text-[10px] text-slate-400 font-mono">50+ Marquee Stocks</span>
+          </div>
 
           <select
             value={selectedStockSymbol}
             onChange={handleDropdownSelect}
-            className="w-full rounded-2xl px-4 py-3 text-sm font-bold bg-slate-800/80 dark:bg-[#1E293B] text-white border border-slate-700 dark:border-white/10 focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
+            className="w-full rounded-2xl px-4 py-3 text-sm font-bold bg-slate-900 text-white border border-slate-700/80 focus:outline-none focus:border-orange-500 transition-colors shadow-xs cursor-pointer"
           >
             <option value="CUSTOM">✨ + Create Custom Stock...</option>
             {REAL_WORLD_CATEGORIES.filter((c) => c !== 'All Sectors').map((cat) => {
@@ -154,14 +152,14 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
         </div>
 
         {/* 2. Stock Configuration Fields (Clean 2x2 Grid) */}
-        <div className="p-4 rounded-2xl bg-slate-900/60 dark:bg-[#182235] border border-slate-800 dark:border-white/5 space-y-3.5">
-          <div className="flex items-center justify-between border-b border-slate-800 dark:border-white/5 pb-2">
-            <span className="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5 font-mono">
+        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3.5">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <span className="text-[11px] font-extrabold uppercase text-slate-300 tracking-wider flex items-center gap-1.5 font-mono">
               <Building2 className="w-3.5 h-3.5 text-orange-500" />
-              <span>Stock Details & Custom Price</span>
+              <span>Stock Details</span>
             </span>
-            <span className="text-[10px] text-emerald-400 font-mono font-bold">
-              ✓ Fully Editable
+            <span className="text-[10px] text-emerald-400 font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+              ● Fully Editable
             </span>
           </div>
 
@@ -219,7 +217,7 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
                     key={preset}
                     type="button"
                     onClick={() => handleSetPricePreset(preset)}
-                    className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-slate-800 hover:bg-orange-500 hover:text-white text-slate-300 border border-slate-700 transition-colors"
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-slate-800 hover:bg-orange-500 hover:text-white text-slate-300 border border-slate-700 transition-colors cursor-pointer"
                   >
                     ₹{preset}
                   </button>
@@ -237,12 +235,20 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
 
         {/* Footer Actions */}
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-extrabold text-xs transition-colors cursor-pointer"
+          >
             Cancel
-          </Button>
-          <Button type="submit" variant="primary" isLoading={isCreating}>
-            Add {symbol || 'Stock'} ({formatCurrency(parseFloat(priceStr) || 0)})
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={isCreating}
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs transition-all shadow-md shadow-orange-500/20 active:scale-98 cursor-pointer disabled:opacity-50"
+          >
+            {isCreating ? 'Adding...' : `Add ${symbol || 'Stock'} (${formatCurrency(parseFloat(priceStr) || 0)})`}
+          </button>
         </div>
       </form>
     </Modal>

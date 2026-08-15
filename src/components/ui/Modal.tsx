@@ -10,6 +10,7 @@ export interface ModalProps {
   subtitle?: React.ReactNode;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+  forceLight?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -19,14 +20,9 @@ export const Modal: React.FC<ModalProps> = ({
   subtitle,
   children,
   maxWidth = 'md',
+  forceLight = false,
 }) => {
-  let isDark = false;
-  try {
-    const { theme } = useTheme();
-    isDark = theme === 'dark';
-  } catch {
-    isDark = false;
-  }
+  const isDark = !forceLight;
 
   // Lock body scroll when open
   useEffect(() => {
@@ -57,7 +53,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 bg-black/75 backdrop-blur-md"
             onClick={onClose}
           />
 
@@ -87,12 +83,12 @@ export const Modal: React.FC<ModalProps> = ({
             </button>
 
             {/* Header */}
-            <div className="mb-5 pr-8">
+            <div className="mb-4 pr-8">
               <h3 className={`text-xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   {subtitle}
                 </p>
               )}
