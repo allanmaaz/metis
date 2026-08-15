@@ -11,6 +11,7 @@ import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
 import { Search, BarChart2, ShieldCheck } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
+import { useMarketPulse } from '../../hooks/useMarketPulse';
 
 export const Market: React.FC = () => {
   const { participant } = useAuth();
@@ -21,6 +22,9 @@ export const Market: React.FC = () => {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [session, setSession] = useState<MarketSession | null>(null);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
+
+  // Live 4-second market pulse micro-fluctuation hook (0.01% - 0.02% around base price when open)
+  const { pulsedStocks, isMarketOpen } = useMarketPulse(stocks, session);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState<string>('ALL');
@@ -62,6 +66,30 @@ export const Market: React.FC = () => {
     1500
   );
 
+  // Instant 0ms reactive listener for live price glides & micro-ticks
+  useEffect(() => {
+    const handlePriceUpdate = (e: any) => {
+      const payload = e.detail;
+      if (payload && (payload.stockId || payload.symbol) && payload.newPrice !== undefined) {
+        setStocks((prev) =>
+          prev.map((s) =>
+            s.id === payload.stockId || s.symbol === payload.symbol
+              ? {
+                  ...s,
+                  current_price: payload.newPrice,
+                  high_price: Math.max(s.high_price, payload.newPrice),
+                  low_price: Math.min(s.low_price, payload.newPrice),
+                }
+              : s
+          )
+        );
+      }
+    };
+
+    window.addEventListener('metis_stock_price_updated', handlePriceUpdate);
+    return () => window.removeEventListener('metis_stock_price_updated', handlePriceUpdate);
+  }, []);
+
   // Instant 0ms reactive listener for market session changes
   useEffect(() => {
     const handleMarketChange = (e: any) => {
@@ -91,7 +119,7 @@ export const Market: React.FC = () => {
 
   const sectors = ['ALL', ...Array.from(new Set(stocks.map((s) => s.sector)))];
 
-  const filteredStocks = stocks.filter((stock) => {
+  const filteredStocks = pulsedStocks.filter((stock) => {
     const matchesSearch =
       stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
       stock.company_name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -99,7 +127,6 @@ export const Market: React.FC = () => {
     return matchesSearch && matchesSector;
   });
 
-  const isMarketOpen = session?.status === 'OPEN';
   const cashBalance = participant?.team.cash_balance || 42000000;
 
   const handleBuy = (stock: Stock) => {

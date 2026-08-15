@@ -28,6 +28,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useMarketPulse } from '../../hooks/useMarketPulse';
 
 export const Dashboard: React.FC = () => {
   const { participant } = useAuth();
@@ -39,6 +40,9 @@ export const Dashboard: React.FC = () => {
   const [session, setSession] = useState<MarketSession | null>(null);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [latestNews, setLatestNews] = useState<NewsItem | null>(null);
+
+  // Live 4-second market pulse micro-fluctuation hook (0.01% - 0.02% around base price when open)
+  const { pulsedStocks, flashStates, isMarketOpen } = useMarketPulse(stocks, session);
 
   const [activeBuyStock, setActiveBuyStock] = useState<Stock | null>(null);
   const [activeSellStock, setActiveSellStock] = useState<Stock | null>(null);
@@ -88,6 +92,30 @@ export const Dashboard: React.FC = () => {
     loadDashboardData,
     1500
   );
+
+  // Instant 0ms reactive listener for live price glides & micro-ticks
+  useEffect(() => {
+    const handlePriceUpdate = (e: any) => {
+      const payload = e.detail;
+      if (payload && (payload.stockId || payload.symbol) && payload.newPrice !== undefined) {
+        setStocks((prev) =>
+          prev.map((s) =>
+            s.id === payload.stockId || s.symbol === payload.symbol
+              ? {
+                  ...s,
+                  current_price: payload.newPrice,
+                  high_price: Math.max(s.high_price, payload.newPrice),
+                  low_price: Math.min(s.low_price, payload.newPrice),
+                }
+              : s
+          )
+        );
+      }
+    };
+
+    window.addEventListener('metis_stock_price_updated', handlePriceUpdate);
+    return () => window.removeEventListener('metis_stock_price_updated', handlePriceUpdate);
+  }, []);
 
   // Instant 0ms reactive listener for market session changes
   useEffect(() => {
@@ -146,7 +174,6 @@ export const Dashboard: React.FC = () => {
     return res;
   };
 
-  const isMarketOpen = session?.status === 'OPEN';
   const teamDisplayName = participant?.team?.name
     ? participant.team.name.startsWith('Team')
       ? participant.team.name
@@ -417,7 +444,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Stock Cards List */}
         <div className="space-y-3">
-          {stocks.slice(0, 5).map((stock) => {
+          {pulsedStocks.slice(0, 5).map((stock) => {
             const holding = holdings.find((h) => h.stock_id === stock.id);
             const ownedQty = holding?.quantity ?? 0;
             const priceDiff = stock.current_price - stock.opening_price;
@@ -427,10 +454,16 @@ export const Dashboard: React.FC = () => {
               100
             ).toFixed(1);
 
+            const flash = flashStates[stock.id];
+            const formattedPrice =
+              stock.current_price % 1 !== 0
+                ? `₹${stock.current_price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : `₹${stock.current_price.toLocaleString('en-IN')}`;
+
             return (
               <div
                 key={stock.id}
-                className={`p-4 rounded-3xl border transition-colors space-y-3 ${
+                className={`p-4 rounded-3xl border transition-all space-y-3 ${
                   isDark
                     ? 'bg-[#131B2E] border-white/5 shadow-md'
                     : 'bg-white border-slate-200/80 shadow-xs'
@@ -469,13 +502,26 @@ export const Dashboard: React.FC = () => {
                 {/* Price + High/Low/Owned + Jagged Mini Sparkline */}
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <div className={`text-xl font-black font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      ₹{Math.round(stock.current_price)}
+                    <div
+                      className={`text-xl font-black font-mono transition-all duration-300 flex items-center gap-1.5 ${
+                        flash === 'up'
+                          ? 'text-emerald-400 scale-[1.03]'
+                          : flash === 'down'
+                          ? 'text-rose-400 scale-[0.97]'
+                          : isDark
+                          ? 'text-white'
+                          : 'text-slate-900'
+                      }`}
+                    >
+                      <span>{formattedPrice}</span>
+                      {isMarketOpen && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" title="Live Market Active" />
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
-                      <span>H: ₹{Math.round(stock.high_price)}</span>
+                      <span>H: ₹{Math.round(stock.high_price).toLocaleString('en-IN')}</span>
                       <span>·</span>
-                      <span>L: ₹{Math.round(stock.low_price)}</span>
+                      <span>L: ₹{Math.round(stock.low_price).toLocaleString('en-IN')}</span>
                       {ownedQty > 0 && (
                         <>
                           <span>·</span>

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Stock } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { formatCurrency, formatPercent } from '../../lib/formatting';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 
 interface StockCardProps {
   stock: Stock;
@@ -22,11 +22,33 @@ export const StockCard: React.FC<StockCardProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  const [tickFlash, setTickFlash] = useState<'up' | 'down' | null>(null);
+  const prevPriceRef = useRef(stock.current_price);
+
+  useEffect(() => {
+    if (stock.current_price !== prevPriceRef.current) {
+      if (stock.current_price > prevPriceRef.current) {
+        setTickFlash('up');
+      } else if (stock.current_price < prevPriceRef.current) {
+        setTickFlash('down');
+      }
+      prevPriceRef.current = stock.current_price;
+
+      const timer = setTimeout(() => setTickFlash(null), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [stock.current_price]);
+
   const priceDiff = stock.current_price - stock.opening_price;
   const pctChange =
     stock.opening_price > 0 ? (priceDiff / stock.opening_price) * 100 : 0;
   const isUp = priceDiff >= 0;
   const pct = Math.abs(pctChange).toFixed(1);
+
+  const formattedPrice =
+    stock.current_price % 1 !== 0
+      ? `₹${stock.current_price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : formatCurrency(stock.current_price);
 
   return (
     <div
@@ -84,11 +106,20 @@ export const StockCard: React.FC<StockCardProps> = ({
         <div className="flex items-center justify-between gap-3 pt-1">
           <div>
             <div
-              className={`text-2xl font-black font-mono tracking-tight ${
-                isDark ? 'text-white' : 'text-slate-900'
+              className={`text-2xl font-black font-mono tracking-tight transition-all duration-300 flex items-center gap-2 ${
+                tickFlash === 'up'
+                  ? 'text-emerald-400 scale-[1.03]'
+                  : tickFlash === 'down'
+                  ? 'text-rose-400 scale-[0.97]'
+                  : isDark
+                  ? 'text-white'
+                  : 'text-slate-900'
               }`}
             >
-              {formatCurrency(stock.current_price)}
+              <span>{formattedPrice}</span>
+              {marketOpen && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" title="Live Market Active" />
+              )}
             </div>
             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5 flex-wrap">
               <span>H: {formatCurrency(stock.high_price)}</span>
