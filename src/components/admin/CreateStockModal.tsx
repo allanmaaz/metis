@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import {
   REAL_WORLD_STOCKS,
   REAL_WORLD_CATEGORIES,
+  RealWorldStock,
 } from '../../data/realWorldStocks';
 import { formatCurrency } from '../../lib/formatting';
-import { Sparkles, Building2 } from 'lucide-react';
+import { Sparkles, Building2, Search, ChevronDown, ChevronUp, Check, Plus } from 'lucide-react';
 
 interface CreateStockModalProps {
   isOpen: boolean;
@@ -35,30 +36,43 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
     REAL_WORLD_STOCKS[0].defaultPrice.toString()
   );
 
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState('');
+  const [selectedSectorFilter, setSelectedSectorFilter] = useState('All');
+
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleDropdownSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedStockSymbol(val);
+  const filteredPresetStocks = useMemo(() => {
+    return REAL_WORLD_STOCKS.filter((s) => {
+      const matchesSearch =
+        s.symbol.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+        s.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+        s.sector.toLowerCase().includes(pickerSearch.toLowerCase());
 
-    if (val === 'CUSTOM') {
+      const matchesSector =
+        selectedSectorFilter === 'All' || s.sector === selectedSectorFilter;
+
+      return matchesSearch && matchesSector;
+    });
+  }, [pickerSearch, selectedSectorFilter]);
+
+  const handleSelectPreset = (preset: RealWorldStock | 'CUSTOM') => {
+    if (preset === 'CUSTOM') {
+      setSelectedStockSymbol('CUSTOM');
       setSymbol('');
       setCompanyName('');
       setSector('General Market');
       setPriceStr('100');
-      setError(null);
-      return;
+    } else {
+      setSelectedStockSymbol(preset.symbol);
+      setSymbol(preset.symbol);
+      setCompanyName(preset.name);
+      setSector(preset.sector);
+      setPriceStr(preset.defaultPrice.toString());
     }
-
-    const matched = REAL_WORLD_STOCKS.find((s) => s.symbol === val);
-    if (matched) {
-      setSymbol(matched.symbol);
-      setCompanyName(matched.name);
-      setSector(matched.sector);
-      setPriceStr(matched.defaultPrice.toString());
-      setError(null);
-    }
+    setIsPickerOpen(false);
+    setError(null);
   };
 
   const handleSetPricePreset = (presetPrice: number) => {
@@ -107,10 +121,15 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
     }
   };
 
+  const currentSelectedPreset = REAL_WORLD_STOCKS.find(
+    (s) => s.symbol === selectedStockSymbol
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      maxWidth="lg"
       title={
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-orange-500" />
@@ -119,8 +138,8 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* 1. Real-World Stock Quick Selector Dropdown */}
-        <div className="space-y-1.5">
+        {/* 1. Custom Embedded Searchable Preset Picker */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold uppercase tracking-wider text-orange-400 font-mono flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
@@ -129,26 +148,141 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
             <span className="text-[10px] text-slate-400 font-mono">50+ Marquee Stocks</span>
           </div>
 
-          <select
-            value={selectedStockSymbol}
-            onChange={handleDropdownSelect}
-            className="w-full rounded-2xl px-4 py-3 text-sm font-bold bg-slate-900 text-white border border-slate-700/80 focus:outline-none focus:border-orange-500 transition-colors shadow-xs cursor-pointer"
+          {/* Trigger Pill */}
+          <div
+            onClick={() => setIsPickerOpen(!isPickerOpen)}
+            className="w-full rounded-2xl p-3.5 bg-slate-900 border border-slate-700/80 hover:border-orange-500/60 transition-all cursor-pointer flex items-center justify-between gap-3 shadow-xs"
           >
-            <option value="CUSTOM">✨ + Create Custom Stock...</option>
-            {REAL_WORLD_CATEGORIES.filter((c) => c !== 'All Sectors').map((cat) => {
-              const stocksInCat = REAL_WORLD_STOCKS.filter((s) => s.sector === cat);
-              if (stocksInCat.length === 0) return null;
-              return (
-                <optgroup key={cat} label={`── ${cat} ──`}>
-                  {stocksInCat.map((stock) => (
-                    <option key={stock.symbol} value={stock.symbol}>
-                      {stock.symbol} — {stock.name} (Default: ₹{stock.defaultPrice.toLocaleString('en-IN')})
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </select>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-400 font-mono font-black text-xs flex items-center justify-center border border-orange-500/20 shrink-0">
+                {selectedStockSymbol === 'CUSTOM' ? '+' : (symbol.slice(0, 3) || 'STK')}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-black text-white font-mono truncate">
+                    {selectedStockSymbol === 'CUSTOM'
+                      ? '✨ Custom Stock (Blank Form)'
+                      : `${symbol} — ${companyName}`}
+                  </span>
+                  {currentSelectedPreset && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300 shrink-0">
+                      {currentSelectedPreset.sector}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-slate-400 font-mono block">
+                  {selectedStockSymbol === 'CUSTOM'
+                    ? 'Fill details manually below'
+                    : `Preset Starting: ${formatCurrency(parseFloat(priceStr) || 0)}`}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 text-slate-400 shrink-0">
+              <span className="text-[11px] font-bold hidden sm:inline">
+                {isPickerOpen ? 'Hide' : 'Browse'}
+              </span>
+              {isPickerOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {/* Embedded Dropdown Menu */}
+          {isPickerOpen && (
+            <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-700 shadow-xl space-y-2.5 animate-in fade-in duration-150">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  placeholder="Search 50+ companies (e.g. Reliance, HDFC, Tata, Zomato)..."
+                  value={pickerSearch}
+                  onChange={(e) => setPickerSearch(e.target.value)}
+                  className="w-full bg-slate-950 text-white placeholder:text-slate-500 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-orange-500"
+                  autoFocus
+                />
+              </div>
+
+              {/* Sector Filter Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-[10px] font-bold font-mono">
+                {['All', ...REAL_WORLD_CATEGORIES.filter((c) => c !== 'All Sectors')].map((sec) => (
+                  <button
+                    key={sec}
+                    type="button"
+                    onClick={() => setSelectedSectorFilter(sec)}
+                    className={`px-2.5 py-1 rounded-lg shrink-0 transition-colors cursor-pointer ${
+                      selectedSectorFilter === sec
+                        ? 'bg-orange-500 text-white shadow-xs'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                    }`}
+                  >
+                    {sec}
+                  </button>
+                ))}
+              </div>
+
+              {/* Scrollable Stocks List */}
+              <div className="max-h-48 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
+                {/* Custom Stock Option */}
+                <div
+                  onClick={() => handleSelectPreset('CUSTOM')}
+                  className={`p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedStockSymbol === 'CUSTOM'
+                      ? 'bg-orange-500/20 border border-orange-500/40 text-orange-300'
+                      : 'hover:bg-white/5 text-slate-300 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-orange-400" />
+                    <span className="font-bold">✨ + Create Custom Stock (Blank)</span>
+                  </div>
+                  {selectedStockSymbol === 'CUSTOM' && <Check className="w-4 h-4 text-orange-400" />}
+                </div>
+
+                {filteredPresetStocks.length === 0 ? (
+                  <div className="p-4 text-center text-slate-500 text-xs">
+                    No companies match your search.
+                  </div>
+                ) : (
+                  filteredPresetStocks.map((preset) => {
+                    const isSelected = selectedStockSymbol === preset.symbol;
+                    return (
+                      <div
+                        key={preset.symbol}
+                        onClick={() => handleSelectPreset(preset)}
+                        className={`p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-orange-500/20 border border-orange-500/40 text-white'
+                            : 'hover:bg-white/5 text-slate-300 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-white/5 text-slate-200 text-[10px] font-black flex items-center justify-center shrink-0">
+                            {preset.symbol.slice(0, 3)}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-white">{preset.symbol}</span>
+                              <span className="text-[9px] text-slate-400 font-sans truncate">
+                                {preset.name}
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-slate-500">{preset.sector}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0 flex items-center gap-2">
+                          <span className="font-black text-amber-400">
+                            ₹{preset.defaultPrice.toLocaleString('en-IN')}
+                          </span>
+                          {isSelected && <Check className="w-4 h-4 text-orange-400 shrink-0" />}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 2. Stock Configuration Fields (Clean 2x2 Grid) */}
