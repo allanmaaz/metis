@@ -13,7 +13,7 @@ import { formatCurrency } from '../../lib/formatting';
 
 export interface MarketNotification {
   id: string;
-  type: 'NEWS' | 'STOCK_CREATED' | 'PRICE_HIKE' | 'PRICE_CRASH';
+  type: 'NEWS' | 'STOCK_CREATED' | 'PRICE_HIKE' | 'PRICE_CRASH' | 'MARKET_STATUS';
   badge: string;
   title: string;
   subtitle: string;
@@ -105,7 +105,46 @@ export const LiveNotificationBanner: React.FC = () => {
       const detail = e.detail;
       if (!detail) return;
 
-      // 1. Breaking News Flash
+      // 1. Market Status Changes (Open / Freeze / Pause / Close)
+      if (detail.type === 'MARKET_SESSION_CHANGED') {
+        const payload = detail.payload;
+        const status = payload?.status || payload || 'OPEN';
+        
+        let title = '🟢 Market is now OPEN!';
+        let subtitle = 'Trading floor has commenced. Place your buy/sell orders now.';
+        let badge = 'MARKET OPEN';
+        let targetPath = '/market';
+        let actionText = 'Trade Now';
+
+        if (status === 'FROZEN') {
+          title = '❄️ Circuit Breaker Activated!';
+          subtitle = 'Market is temporarily FROZEN by Admin. Order placements on hold.';
+          badge = 'MARKET FROZEN';
+          actionText = 'View Market';
+        } else if (status === 'PAUSED') {
+          title = '⏸️ Trading Session Paused';
+          subtitle = 'Market clock has been paused by Event Admin.';
+          badge = 'MARKET PAUSED';
+          actionText = 'View Status';
+        } else if (status === 'CLOSED') {
+          title = '🔴 Trading Floor is CLOSED';
+          subtitle = 'Market session has ended. Final P&L settlement in progress.';
+          badge = 'MARKET CLOSED';
+          targetPath = '/portfolio';
+          actionText = 'View Portfolio';
+        }
+
+        handlePushNotification({
+          type: 'MARKET_STATUS',
+          badge,
+          title,
+          subtitle,
+          targetPath,
+          actionText,
+        });
+      }
+
+      // 2. Breaking News Flash
       if (detail.type === 'NEWS_UPDATED') {
         const payload = detail.payload;
         if (payload && payload.headline && !payload.deletedId) {
@@ -120,7 +159,7 @@ export const LiveNotificationBanner: React.FC = () => {
         }
       }
 
-      // 2. Stock Creation or Price Changes
+      // 3. Stock Creation or Price Changes
       if (detail.type === 'STOCK_PRICE_UPDATED') {
         const payload = detail.payload;
         if (!payload) return;
@@ -189,6 +228,14 @@ export const LiveNotificationBanner: React.FC = () => {
 
   const getThemeConfig = () => {
     switch (currentNotification.type) {
+      case 'MARKET_STATUS':
+        return {
+          icon: <Zap className="w-5 h-5 text-orange-400 shrink-0 animate-pulse" />,
+          bg: 'bg-gradient-to-r from-orange-950/95 via-slate-900/95 to-amber-950/90',
+          border: 'border-orange-500/50 shadow-[0_0_25px_rgba(249,115,22,0.3)]',
+          badgeBg: 'bg-orange-500/20 text-orange-400 border border-orange-500/40',
+          btnBg: 'bg-orange-500 hover:bg-orange-400 text-white font-black',
+        };
       case 'NEWS':
         return {
           icon: <Newspaper className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />,

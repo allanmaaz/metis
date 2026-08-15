@@ -32,9 +32,30 @@ const supabaseBroadcastChannel = isSupabaseConfigured
   : null;
 
 if (supabaseBroadcastChannel) {
-  supabaseBroadcastChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') {
-      console.log('⚡ Connected to Metis Ultra-Low-Latency Realtime WebSocket Bus');
+  supabaseBroadcastChannel
+    .on('broadcast', { event: '*' }, (payload: any) => {
+      if (payload?.payload && typeof window !== 'undefined') {
+        const msg = payload.payload as RealtimeMessage;
+        window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: msg }));
+        if (msg.type) {
+          window.dispatchEvent(new CustomEvent(`metis_${msg.type.toLowerCase()}`, { detail: msg.payload }));
+        }
+      }
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('⚡ Connected to Metis Ultra-Low-Latency Realtime WebSocket Bus');
+      }
+    });
+}
+
+if (broadcastChannel && typeof window !== 'undefined') {
+  broadcastChannel.addEventListener('message', (event: MessageEvent<RealtimeMessage>) => {
+    if (event.data) {
+      window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: event.data }));
+      if (event.data.type) {
+        window.dispatchEvent(new CustomEvent(`metis_${event.data.type.toLowerCase()}`, { detail: event.data.payload }));
+      }
     }
   });
 }
