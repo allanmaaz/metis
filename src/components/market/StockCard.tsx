@@ -106,19 +106,19 @@ export const StockCard: React.FC<StockCardProps> = ({
         <div className="flex items-center justify-between gap-3 pt-1">
           <div>
             <div
-              className={`text-2xl font-black font-mono tracking-tight transition-all duration-300 flex items-center gap-2 ${
+              className={`text-2xl font-black font-mono tracking-tight transition-colors duration-500 flex items-center gap-2 ${
                 tickFlash === 'up'
-                  ? 'text-emerald-400 scale-[1.03]'
+                  ? 'text-emerald-400'
                   : tickFlash === 'down'
-                  ? 'text-rose-400 scale-[0.97]'
+                  ? 'text-rose-400'
                   : isDark
                   ? 'text-white'
                   : 'text-slate-900'
               }`}
             >
-              <span>{formattedPrice}</span>
+              <span>{formatCurrency(Math.round(stock.current_price))}</span>
               {marketOpen && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" title="Live Market Active" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50 inline-block shrink-0" title="Live Market Active" />
               )}
             </div>
             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5 flex-wrap">
