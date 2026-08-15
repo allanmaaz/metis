@@ -22,6 +22,9 @@ function saveDeletedNewsId(idOrHeadline: string) {
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
   const db = getMockDB();
   const deletedSet = getDeletedNewsIds();
+  const localPublished = db.news.filter(
+    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
+  );
 
   if (isSupabaseConfigured) {
     try {
@@ -37,8 +40,40 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
 
       const { data, error } = await query;
 
-      if (!error && data && data.length > 0) {
-        const filteredRemote = (data as NewsItem[]).filter(
+      if (!error && data) {
+        const remoteNews = data as NewsItem[];
+        const remoteHeadlines = new Set(remoteNews.map((n) => n.headline));
+
+        // Auto-sync: if this browser has any news created locally (e.g. "heeeeeeeeeee") missing on Supabase, upload it!
+        const missingLocal = localPublished.filter((ln) => !remoteHeadlines.has(ln.headline));
+        if (missingLocal.length > 0) {
+          const targetEventId = isValidUuid(eventId)
+            ? eventId
+            : (db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111');
+
+          missingLocal.forEach(async (item) => {
+            try {
+              await supabase.from('news').insert({
+                event_id: targetEventId,
+                headline: item.headline,
+                body: item.body,
+                sector: item.sector,
+                published_by: null,
+                is_published: true,
+                published_at: item.published_at,
+              });
+            } catch {}
+          });
+
+          const merged = [...missingLocal, ...remoteNews].filter(
+            (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
+          );
+          db.news = merged;
+          saveMockDB(db);
+          return merged;
+        }
+
+        const filteredRemote = remoteNews.filter(
           (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
         );
         db.news = filteredRemote;
@@ -49,10 +84,6 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
       // Fallback to local database
     }
   }
-
-  const localPublished = db.news.filter(
-    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
-  );
 
   return localPublished.sort(
     (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
