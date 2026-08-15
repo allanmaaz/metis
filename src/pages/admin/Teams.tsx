@@ -30,10 +30,6 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Zap,
-  Flame,
-  Award,
   CircleDot,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
@@ -149,45 +145,6 @@ export const AdminTeams: React.FC = () => {
     currentPage * pageSize
   );
 
-  // Team Logo / Icon Helper
-  const getTeamBadge = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('alpha')) {
-      return {
-        bg: 'bg-orange-50 text-orange-500 border-orange-200/80',
-        icon: <Flame className="w-5 h-5 fill-orange-500" />,
-      };
-    }
-    if (n.includes('bull')) {
-      return {
-        bg: 'bg-red-50 text-red-500 border-red-200/80',
-        icon: <Shield className="w-5 h-5 fill-red-500" />,
-      };
-    }
-    if (n.includes('titan')) {
-      return {
-        bg: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
-        icon: <Award className="w-5 h-5 fill-indigo-500" />,
-      };
-    }
-    if (n.includes('nova')) {
-      return {
-        bg: 'bg-amber-50 text-amber-500 border-amber-200/80',
-        icon: <Zap className="w-5 h-5 fill-amber-500" />,
-      };
-    }
-    if (n.includes('phoenix')) {
-      return {
-        bg: 'bg-rose-50 text-rose-500 border-rose-200/80',
-        icon: <Flame className="w-5 h-5 fill-rose-500" />,
-      };
-    }
-    return {
-      bg: 'bg-slate-100 text-slate-700 border-slate-200',
-      icon: <span className="font-extrabold text-sm">{name.charAt(0)}</span>,
-    };
-  };
-
   // Avatar photos fallback generator
   const getMemberAvatars = (members: TeamMember[], teamName: string) => {
     if (members.length === 0) return null;
@@ -290,7 +247,6 @@ export const AdminTeams: React.FC = () => {
                   const isEliminated = team.status === 'ELIMINATED';
                   const isDisabled = team.status === 'DISABLED';
                   const isPinVisible = visiblePins[team.id];
-                  const { bg: badgeBg, icon: badgeIcon } = getTeamBadge(team.name);
 
                   return (
                     <tr
@@ -301,16 +257,9 @@ export const AdminTeams: React.FC = () => {
                     >
                       {/* 1. Team Name */}
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-3.5">
-                          <div
-                            className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${badgeBg}`}
-                          >
-                            {badgeIcon}
-                          </div>
-                          <span className="font-extrabold text-base text-slate-900 tracking-tight">
-                            {team.name}
-                          </span>
-                        </div>
+                        <span className="font-extrabold text-base text-slate-900 tracking-tight">
+                          {team.name}
+                        </span>
                       </td>
 
                       {/* 2. Access Credentials */}
