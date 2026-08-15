@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Stock } from '../../types';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { formatCurrency, formatPercent } from '../../lib/formatting';
 import {
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Zap,
   Waves,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 
 interface PriceChangeModalProps {
@@ -109,10 +105,10 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
       subtitle={`${stock.company_name} · ${stock.sector}`}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Current vs New Price Comparison */}
+        {/* Current vs Target Price Comparison */}
         <div className="grid grid-cols-2 gap-2.5 p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block font-mono">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block font-mono">
               Current Price
             </span>
             <div className="text-xl font-black font-mono text-slate-300 mt-0.5">
@@ -120,7 +116,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
             </div>
           </div>
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block font-mono">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block font-mono">
               Target Price
             </span>
             <div className="text-xl font-black font-mono text-white mt-0.5 flex items-center gap-1.5">
@@ -151,7 +147,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
                 key={pct}
                 type="button"
                 onClick={() => applyDeltaPercent(pct)}
-                className={`text-xs py-1.5 rounded-xl border font-mono font-black transition-all active:scale-95 ${
+                className={`text-xs py-1.5 rounded-xl border font-mono font-black transition-all active:scale-95 cursor-pointer ${
                   pct < 0
                     ? 'border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
                     : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
@@ -180,35 +176,33 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
         </div>
 
         {/* Dynamic Transition Duration Control */}
-        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+        <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-mono">
-              <Activity className="w-3.5 h-3.5 text-orange-500" />
-              <span>Transition Speed & Duration</span>
+            <label className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5 font-mono">
+              <Activity className="w-3.5 h-3.5 text-orange-400" />
+              <span>Transition Speed</span>
             </label>
-            <span className="text-[10px] text-orange-400 font-mono font-bold">
-              {durationSec === 0 ? 'Instant (0s)' : `${durationSec}s Glide (~${estimatedTicks} ticks)`}
+            <span className="text-xs text-orange-400 font-mono font-bold">
+              {durationSec === 0 ? '⚡ 0s Instant' : `🌊 ${durationSec}s Glide (~${estimatedTicks} ticks)`}
             </span>
           </div>
 
-          {/* Quick Duration Preset Pills */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+          {/* Clean 4-Preset Grid */}
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { label: '⚡ 0s (Instant)', sec: 0 },
-              { label: '5s (Fast)', sec: 5 },
-              { label: '10s', sec: 10 },
-              { label: '15s (Default)', sec: 15 },
-              { label: '30s (Smooth)', sec: 30 },
-              { label: '60s (Slow)', sec: 60 },
+              { label: '⚡ Instant', sec: 0 },
+              { label: '5s Fast', sec: 5 },
+              { label: '15s Default', sec: 15 },
+              { label: '30s Smooth', sec: 30 },
             ].map((p) => (
               <button
                 key={p.sec}
                 type="button"
                 onClick={() => setDurationSec(p.sec)}
-                className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all text-center ${
+                className={`py-2 px-1 rounded-xl text-xs font-bold font-mono transition-all text-center cursor-pointer ${
                   durationSec === p.sec
-                    ? 'bg-orange-500 text-white shadow-xs'
-                    : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm font-black'
+                    : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/10'
                 }`}
               >
                 {p.label}
@@ -216,8 +210,9 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
             ))}
           </div>
 
-          {/* Custom Duration Input Slider/Number */}
-          <div className="flex items-center gap-3 pt-1">
+          {/* Custom Duration Slider + Input */}
+          <div className="flex items-center gap-2.5 pt-0.5">
+            <Clock className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="range"
               min="0"
@@ -225,7 +220,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
               step="1"
               value={durationSec}
               onChange={(e) => setDurationSec(Number(e.target.value))}
-              className="flex-1 accent-orange-500 cursor-pointer"
+              className="flex-1 accent-orange-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
             />
             <div className="flex items-center gap-1 shrink-0">
               <input
@@ -234,26 +229,26 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
                 max="300"
                 value={durationSec}
                 onChange={(e) => setDurationSec(Math.max(0, Number(e.target.value)))}
-                className="w-16 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono font-bold text-xs text-center focus:outline-none focus:border-orange-500"
+                className="w-14 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono font-bold text-xs text-center focus:outline-none focus:border-orange-500"
               />
-              <span className="text-xs text-slate-400 font-mono">sec</span>
+              <span className="text-[11px] text-slate-400 font-mono">sec</span>
             </div>
           </div>
 
           {/* Explanation Banner */}
-          <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/40 text-[11px] text-slate-300 font-medium">
+          <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
             {durationSec === 0 ? (
-              <span className="flex items-center gap-1.5 text-amber-300 font-bold">
-                <Zap className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 text-amber-300 font-semibold">
+                <Zap className="w-3.5 h-3.5 shrink-0 text-amber-400" />
                 <span>Price will update immediately on all screens with zero delay.</span>
-              </span>
+              </div>
             ) : (
-              <span className="flex items-start gap-1.5 text-slate-300">
+              <div className="flex items-start gap-2 text-slate-300">
                 <Waves className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
                 <span>
                   Price will gradually glide from <b>{formatCurrency(currentPrice)}</b> to <b>{formatCurrency(numPrice)}</b> with realistic micro-fluctuations over <b>{durationSec} seconds</b> (~{estimatedTicks} live ticks).
                 </span>
-              </span>
+              </div>
             )}
           </div>
         </div>
@@ -290,12 +285,20 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
 
         {/* Modal Buttons */}
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-extrabold text-xs transition-colors cursor-pointer"
+          >
             Cancel
-          </Button>
-          <Button type="submit" variant="primary" isLoading={isLoading}>
-            {durationSec === 0 ? 'Apply Instant Price' : `Start ${durationSec}s Glide`}
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs transition-all shadow-md shadow-orange-500/20 active:scale-98 cursor-pointer disabled:opacity-50"
+          >
+            {isLoading ? 'Applying...' : durationSec === 0 ? 'Apply Instant Price' : `Start ${durationSec}s Glide`}
+          </button>
         </div>
       </form>
     </Modal>
