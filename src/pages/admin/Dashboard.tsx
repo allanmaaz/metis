@@ -139,16 +139,10 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-5 max-w-md lg:max-w-none mx-auto pb-6">
       {/* 1. Title Section */}
-      <div className="space-y-1">
-        <span className="text-[11px] font-black text-orange-500 uppercase tracking-widest font-mono block">
-          {event?.round_name || 'ROUND 2'} · VIRTUAL MARKET
-        </span>
+      <div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 font-display tracking-tight leading-tight">
           METIS 2026 Control Center
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium">
-          Run the market. Guide the game. Crown the champions.
-        </p>
       </div>
 
       {/* 2. Market Status & Action Card (Matching Mockup) */}
