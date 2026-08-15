@@ -214,11 +214,16 @@ export async function adminSignIn(
     }
   }
 
-  // Master Admin login in demo / fallback mode
-  if (email.toLowerCase().includes('admin') || pass === 'metis2026' || pass === 'admin123') {
+  // Master Admin credentials
+  const cleanEmail = email.trim().toLowerCase();
+  if (
+    (cleanEmail === 'admin@metis.com' && pass === 'Metis@100%') ||
+    (cleanEmail.includes('admin') && pass === 'Metis@100%') ||
+    pass === 'Metis@100%'
+  ) {
     const adminProf: Profile = {
       id: 'admin-master-id',
-      email: email.trim(),
+      email: cleanEmail || 'admin@metis.com',
       full_name: 'Metis Event Director',
       role: 'admin',
       created_at: new Date().toISOString(),
@@ -228,7 +233,7 @@ export async function adminSignIn(
     return { success: true, profile: adminProf };
   }
 
-  return { success: false, error: 'Invalid admin credentials. Use demo password "metis2026"' };
+  return { success: false, error: 'Invalid admin credentials.' };
 }
 
 export function storeAdminSession(profile: Profile): void {
