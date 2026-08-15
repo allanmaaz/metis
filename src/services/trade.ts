@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Trade } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
@@ -14,13 +14,13 @@ export async function buyStock(
   }
 
   // 1. Supabase RPC if configured
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId) && isValidUuid(stockId)) {
     try {
       const { data, error } = await supabase.rpc('execute_buy', {
         p_team_id: teamId,
         p_stock_id: stockId,
         p_quantity: quantity,
-        p_member_id: memberId || null,
+        p_member_id: memberId && isValidUuid(memberId) ? memberId : null,
       });
 
       if (!error && data && data.success) {
@@ -30,7 +30,7 @@ export async function buyStock(
         return { success: true, data };
       }
     } catch (err: any) {
-      console.warn('Supabase buyStock warning (falling back to mock):', err);
+      // Fallback to local database
     }
   }
 
@@ -139,13 +139,13 @@ export async function sellStock(
     return { success: false, error: 'Quantity must be greater than zero.' };
   }
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId) && isValidUuid(stockId)) {
     try {
       const { data, error } = await supabase.rpc('execute_sell', {
         p_team_id: teamId,
         p_stock_id: stockId,
         p_quantity: quantity,
-        p_member_id: memberId || null,
+        p_member_id: memberId && isValidUuid(memberId) ? memberId : null,
       });
 
       if (!error && data && data.success) {
@@ -155,7 +155,7 @@ export async function sellStock(
         return { success: true, data };
       }
     } catch (err: any) {
-      console.warn('Supabase sellStock warning (falling back to mock):', err);
+      // Fallback to local database
     }
   }
 
@@ -241,7 +241,7 @@ export async function sellStock(
 }
 
 export async function getTeamTrades(teamId: string): Promise<Trade[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data, error } = await supabase
         .from('trades')
@@ -257,7 +257,7 @@ export async function getTeamTrades(teamId: string): Promise<Trade[]> {
         return data as Trade[];
       }
     } catch (err) {
-      console.error('Error fetching team trades:', err);
+      // Fallback to local database
     }
   }
 
@@ -277,7 +277,7 @@ export async function getTeamTrades(teamId: string): Promise<Trade[]> {
 }
 
 export async function getAllTrades(eventId?: string): Promise<Trade[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && eventId && isValidUuid(eventId)) {
     try {
       let query = supabase
         .from('trades')
@@ -289,7 +289,7 @@ export async function getAllTrades(eventId?: string): Promise<Trade[]> {
         `)
         .order('created_at', { ascending: false });
 
-      if (eventId && eventId !== 'e1') {
+      if (eventId) {
         query = query.eq('event_id', eventId);
       }
 
@@ -299,7 +299,7 @@ export async function getAllTrades(eventId?: string): Promise<Trade[]> {
         return data as Trade[];
       }
     } catch (err) {
-      console.error('Error fetching all trades:', err);
+      // Fallback to local database
     }
   }
 

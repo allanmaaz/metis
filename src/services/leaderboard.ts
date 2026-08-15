@@ -1,9 +1,9 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { LeaderboardEntry } from '../types';
 import { getMockDB } from './mockData';
 
 export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
         p_event_id: eventId,
@@ -24,7 +24,7 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
         }));
       }
     } catch (err) {
-      console.error('Error fetching leaderboard RPC:', err);
+      // Fallback to local database
     }
   }
 

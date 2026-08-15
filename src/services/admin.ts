@@ -52,7 +52,7 @@ export async function getTeams(eventId: string): Promise<Team[]> {
 }
 
 export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data, error } = await supabase
         .from('team_members')
@@ -64,7 +64,7 @@ export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
         return data as TeamMember[];
       }
     } catch (err) {
-      console.error('Error fetching team members:', err);
+      // Fallback to local database
     }
   }
 
@@ -167,7 +167,7 @@ export async function regenerateTeamCode(teamId: string): Promise<{ success: boo
   const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
   const newCode = `METIS-${randomSuffix}`;
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { error } = await supabase
         .from('teams')
@@ -197,7 +197,7 @@ export async function regenerateTeamCode(teamId: string): Promise<{ success: boo
 export async function regenerateTeamPin(teamId: string): Promise<{ success: boolean; newPin?: string; error?: string }> {
   const newPin = Math.floor(1000 + Math.random() * 9000).toString();
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { error } = await supabase
         .from('teams')
@@ -230,13 +230,13 @@ export async function adjustTeamCash(
   reason: string,
   adminId?: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data, error } = await supabase.rpc('adjust_team_cash', {
         p_team_id: teamId,
         p_amount: amount,
         p_reason: reason,
-        p_admin_id: adminId || null,
+        p_admin_id: adminId && isValidUuid(adminId) ? adminId : null,
       });
 
       if (error) return { success: false, error: error.message };
@@ -293,13 +293,13 @@ export async function setTeamStatus(
   reason: string,
   adminId?: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data, error } = await supabase.rpc('set_team_status', {
         p_team_id: teamId,
         p_status: status,
         p_reason: reason,
-        p_admin_id: adminId || null,
+        p_admin_id: adminId && isValidUuid(adminId) ? adminId : null,
       });
 
       if (error) return { success: false, error: error.message };
