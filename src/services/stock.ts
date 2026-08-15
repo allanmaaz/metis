@@ -183,3 +183,20 @@ export async function getStockPriceHistory(stockId: string): Promise<StockPriceH
 
   return [];
 }
+
+export async function deleteStock(stockId: string): Promise<{ success: boolean; error?: string }> {
+  const db = getMockDB();
+  db.stocks = db.stocks.filter((s) => s.id !== stockId);
+  saveMockDB(db);
+
+  if (isSupabaseConfigured) {
+    try {
+      await supabase.from('stocks').delete().eq('id', stockId);
+    } catch (err) {
+      console.warn('Supabase deleteStock warning:', err);
+    }
+  }
+
+  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {});
+  return { success: true };
+}
