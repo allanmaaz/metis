@@ -145,31 +145,7 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
-      {/* 1. Team Profile Pill Card */}
-      <div
-        className={`p-3 rounded-2xl flex items-center justify-between transition-colors ${
-          isDark
-            ? 'bg-[#131B2E] border border-white/5 shadow-xs'
-            : 'bg-white border border-slate-200/80 shadow-xs'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-            {participant?.team.name.charAt(0) || 'A'}
-          </div>
-          <div>
-            <span className={`font-extrabold text-xs block leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Team {participant?.team.name || 'Alpha'}
-            </span>
-            <span className="text-[10px] text-slate-400 font-medium">
-              {participant?.member.full_name || 'Mohammed Maaz'}
-            </span>
-          </div>
-        </div>
-        <ChevronDown className="w-4 h-4 text-slate-400" />
-      </div>
-
-      {/* 2. Market Status & Session Countdown Card (2-Column Pill) */}
+      {/* 1. Market Status & Session Countdown Card (2-Column Pill) */}
       <div
         className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-colors ${
           isDark
