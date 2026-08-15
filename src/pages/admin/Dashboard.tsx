@@ -5,11 +5,12 @@ import { getStocks, updateStockPrice } from '../../services/stock';
 import { getTeams } from '../../services/admin';
 import { getAllTrades } from '../../services/trade';
 import { getPublishedNews } from '../../services/news';
-import { Event, MarketSession, Stock, Team, Trade, NewsItem } from '../../types';
+import { Event, MarketSession, Stock, Team, Trade, NewsItem, MarketStatus } from '../../types';
 import { PriceChangeModal } from '../../components/admin/PriceChangeModal';
 import { FreezeConfirmModal } from '../../components/admin/FreezeConfirmModal';
 import { formatCurrency, formatClockTime } from '../../lib/formatting';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import {
   Users2,
   BarChart3,
@@ -27,6 +28,9 @@ import {
   ArrowRight,
   TrendingUp,
   Radio,
+  ChevronRight,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { isAdminDomain } from '../../App';
@@ -39,6 +43,7 @@ export const AdminDashboard: React.FC = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
 
+  const [activeStockIndex, setActiveStockIndex] = useState(0);
   const [activePriceStock, setActivePriceStock] = useState<Stock | null>(null);
   const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
 
@@ -70,108 +75,111 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 3000);
-    return () => clearInterval(interval);
   }, [loadData]);
 
-  const handleSetStatus = async (status: 'OPEN' | 'PAUSED' | 'CLOSED' | 'FROZEN') => {
+  // Universal Realtime Sync
+  useRealtimeSubscription(
+    [
+      'MARKET_SESSION_CHANGED',
+      'STOCK_PRICE_UPDATED',
+      'NEWS_UPDATED',
+      'TRADE_EXECUTED',
+      'PORTFOLIO_CHANGED',
+      'LEADERBOARD_UPDATED',
+      'TEAM_UPDATED',
+    ],
+    loadData,
+    1500
+  );
+
+  const handleSetStatus = async (status: MarketStatus, durationMinutes?: number) => {
     if (!event) return;
-    await setMarketStatus(event.id, status);
-    loadData();
+    const res = await setMarketStatus(event.id, status, durationMinutes);
+    if (res.success) {
+      loadData();
+    }
   };
 
-  const handleQuickPercentChange = async (stock: Stock, percent: number) => {
-    const change = (stock.current_price * percent) / 100;
-    const newPrice = Math.max(1, Math.round(stock.current_price + change));
-    await updateStockPrice(
-      stock.id,
-      newPrice,
-      `Quick ${percent > 0 ? '+' : ''}${percent}% administrative adjustment`
-    );
-    loadData();
-  };
-
-  const handlePriceUpdate = async (stockId: string, newPrice: number, reason: string) => {
-    const res = await updateStockPrice(stockId, newPrice, reason);
+  const handleFreezeConfirm = async (freezeReason: string) => {
+    if (!event) return { success: false };
+    const res = await setMarketStatus(event.id, 'FROZEN', undefined, freezeReason);
     if (res.success) {
       loadData();
     }
     return res;
   };
 
-  const handleFreezeConfirm = async (reason: string) => {
-    if (!event) return { success: false };
-    const res = await setMarketStatus(event.id, 'FROZEN', undefined, reason);
-    loadData();
-    return res;
+  const handleQuickPercentChange = async (stock: Stock, percent: number) => {
+    const change = (stock.current_price * percent) / 100;
+    const newPrice = Math.max(1, Math.round(stock.current_price + change));
+    const reason = `Quick shift ${percent > 0 ? '+' : ''}${percent}%`;
+    const res = await updateStockPrice(stock.id, newPrice, reason);
+    if (res.success) {
+      loadData();
+    }
   };
 
   const isMarketOpen = session?.status === 'OPEN';
   const isMarketPaused = session?.status === 'PAUSED';
   const isMarketFrozen = session?.status === 'FROZEN';
+  const isMarketClosed = session?.status === 'CLOSED';
 
-  // Sector Icon Helper
-  const getSectorIcon = (sector: string, symbol: string) => {
-    const s = (sector + ' ' + symbol).toLowerCase();
-    if (s.includes('auto') || s.includes('ev') || s.includes('nova')) {
-      return { icon: Car, bg: 'bg-orange-50 text-orange-500 border-orange-200/60' };
-    }
-    if (s.includes('bank') || s.includes('finedge') || s.includes('fin')) {
-      return { icon: Landmark, bg: 'bg-amber-50 text-amber-600 border-amber-200/60' };
-    }
-    if (s.includes('energy') || s.includes('greenx') || s.includes('power')) {
-      return { icon: Zap, bg: 'bg-emerald-50 text-emerald-500 border-emerald-200/60' };
-    }
-    if (s.includes('pharma') || s.includes('medix') || s.includes('health')) {
-      return { icon: HeartPulse, bg: 'bg-emerald-50 text-emerald-600 border-emerald-200/60' };
-    }
-    return { icon: ShoppingBag, bg: 'bg-orange-50 text-orange-600 border-orange-200/60' };
+  const currentStock = stocks[activeStockIndex] || stocks[0];
+  const latestNews = news[0];
+
+  const getSectorIcon = (sector: string = '') => {
+    const s = sector.toUpperCase();
+    if (s.includes('AUTO') || s.includes('EV')) return Car;
+    if (s.includes('BANK') || s.includes('FIN')) return Landmark;
+    if (s.includes('ENERGY') || s.includes('GREEN')) return Zap;
+    if (s.includes('HEALTH') || s.includes('MED')) return HeartPulse;
+    return ShoppingBag;
   };
 
   return (
-    <div className="space-y-7 pb-12">
-      {/* 1. Header Overview & Control Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Title */}
-        <div className="space-y-1">
-          <span className="text-[11px] font-black text-orange-500 uppercase tracking-widest font-mono">
-            {event?.round_name || 'ROUND 2'} — VIRTUAL MARKET
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-display tracking-tight">
-            METIS 2026 Control Center
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium">
-            Run the market. Guide the game. Crown the champions.
-          </p>
-        </div>
+    <div className="space-y-5 max-w-md lg:max-w-none mx-auto pb-6">
+      {/* 1. Title Section */}
+      <div className="space-y-1">
+        <span className="text-[11px] font-black text-orange-500 uppercase tracking-widest font-mono block">
+          {event?.round_name || 'ROUND 2'} · VIRTUAL MARKET
+        </span>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 font-display tracking-tight leading-tight">
+          METIS 2026 Control Center
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 font-medium">
+          Run the market. Guide the game. Crown the champions.
+        </p>
+      </div>
 
-        {/* Toolbar Controls */}
-        <div className="flex flex-wrap items-center gap-3 p-2 bg-white rounded-3xl border border-slate-200/80 shadow-sm">
-          {/* Market Status Pill */}
-          <div className="flex flex-col px-3 py-1">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+      {/* 2. Market Status & Action Card (Matching Mockup) */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-4">
+        {/* Top 3-Column Info Row */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Column 1: Market Status */}
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
               MARKET STATUS
             </span>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center gap-1.5">
               <span
-                className={`w-2 h-2 rounded-full animate-pulse ${
+                className={`w-2.5 h-2.5 rounded-full ${
                   isMarketOpen
-                    ? 'bg-emerald-500'
-                    : isMarketFrozen
-                    ? 'bg-orange-500'
+                    ? 'bg-emerald-500 animate-pulse'
                     : isMarketPaused
-                    ? 'bg-amber-500'
+                    ? 'bg-amber-500 animate-pulse'
+                    : isMarketFrozen
+                    ? 'bg-cyan-400'
                     : 'bg-rose-500'
                 }`}
               />
               <span
-                className={`text-xs font-extrabold tracking-wide uppercase ${
+                className={`text-xs font-black uppercase font-mono tracking-wide ${
                   isMarketOpen
                     ? 'text-emerald-600'
-                    : isMarketFrozen
-                    ? 'text-orange-600'
                     : isMarketPaused
                     ? 'text-amber-600'
+                    : isMarketFrozen
+                    ? 'text-cyan-600'
                     : 'text-rose-600'
                 }`}
               >
@@ -180,521 +188,352 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-7 w-[1px] bg-slate-200 hidden sm:block" />
-
-          {/* Session Timer */}
-          <div className="flex flex-col px-3 py-1">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-              Session ends in
+          {/* Column 2: Session Countdown */}
+          <div className="space-y-0.5 text-center">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+              SESSION ENDS IN
             </span>
-            <span className="text-base font-extrabold font-mono text-orange-500 leading-tight">
-              {timer.formatted === '00:00' ? '14:32' : timer.formatted}
-            </span>
+            <div className="flex items-center justify-center gap-1 text-orange-500">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-sm sm:text-base font-black font-mono leading-none">
+                {session?.ends_at
+                  ? timer.isExpired
+                    ? 'Expired'
+                    : timer.formatted
+                  : isMarketOpen
+                  ? 'No limit'
+                  : 'Closed'}
+              </span>
+            </div>
+            {session?.ends_at && !timer.isExpired && (
+              <span className="text-[8px] text-slate-400 font-mono block">hrs : mins</span>
+            )}
           </div>
 
-          <div className="h-7 w-[1px] bg-slate-200 hidden sm:block" />
+          {/* Column 3: Pause / Resume Button */}
+          <div>
+            {isMarketPaused ? (
+              <button
+                onClick={() => handleSetStatus('OPEN')}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-extrabold transition-all shadow-xs"
+              >
+                <Play className="w-3.5 h-3.5 fill-emerald-600" />
+                <span>Resume</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSetStatus('PAUSED')}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs font-extrabold transition-all shadow-xs"
+              >
+                <Pause className="w-3.5 h-3.5" />
+                <span>Pause</span>
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* Pause / Resume Button */}
-          {isMarketPaused ? (
-            <button
-              onClick={() => handleSetStatus('OPEN')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all shadow-xs"
-            >
-              <Play className="w-3.5 h-3.5 fill-emerald-600" />
-              <span>Resume</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => handleSetStatus('PAUSED')}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs font-bold transition-all shadow-xs"
-            >
-              <Pause className="w-3.5 h-3.5" />
-              <span>Pause</span>
-            </button>
-          )}
+        {/* Divider */}
+        <div className="h-[1px] bg-slate-100 w-full" />
 
-          {/* Close Button */}
+        {/* Bottom Action Row (Close Market & Freeze Market) */}
+        <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => handleSetStatus('CLOSED')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 text-xs font-bold transition-all shadow-xs"
+            onClick={() => handleSetStatus(isMarketClosed ? 'OPEN' : 'CLOSED')}
+            className={`py-2.5 px-4 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs ${
+              isMarketClosed
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                : 'bg-white text-rose-600 border border-rose-200 hover:bg-rose-50'
+            }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Close</span>
+            <span>{isMarketClosed ? 'Reopen Market' : 'Close Market'}</span>
           </button>
 
-          {/* Freeze Button */}
           <button
             onClick={() => setIsFreezeModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 text-xs font-extrabold transition-all shadow-sm shadow-orange-500/20"
+            className="py-2.5 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs shadow-orange-500/20"
           >
             <Snowflake className="w-3.5 h-3.5" />
-            <span>Freeze</span>
+            <span>Freeze Market</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Top 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3. 4 Quick Metric Cards (2x2 Grid matching mockup) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Card 1: Registered Teams */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:border-orange-200 transition-colors">
-          <div className="space-y-1 relative z-10">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+        <Link
+          to={`${prefix}/teams`}
+          className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2 block group"
+        >
+          <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-200/60 shadow-xs">
+            <Users2 className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
               REGISTERED TEAMS
             </span>
-            <div className="text-3xl font-black text-slate-900 font-display">
+            <div className="text-2xl font-black text-slate-900 font-display">
               {teams.length || 5}
             </div>
-            <span className="text-xs font-semibold text-slate-400 block">
-              {teams.filter((t) => t.status === 'ACTIVE').length || 5} Active Competitors
-            </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center relative z-10 border border-orange-200/60 shadow-xs">
-            <Users2 className="w-6 h-6" />
+          <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
+            <span className="truncate">{teams.filter((t) => t.status === 'ACTIVE').length || 5} Active Competitors</span>
+            <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:text-orange-500 group-hover:bg-orange-50 transition-colors shrink-0">
+              <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
-          <Users2 className="w-24 h-24 text-slate-50 absolute -right-3 -bottom-3 pointer-events-none opacity-40" />
-        </div>
+        </Link>
 
         {/* Card 2: Active Stocks */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:border-purple-200 transition-colors">
-          <div className="space-y-1 relative z-10">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+        <Link
+          to={`${prefix}/stocks`}
+          className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2 block group"
+        >
+          <div className="w-9 h-9 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-200/60 shadow-xs">
+            <BarChart3 className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
               ACTIVE STOCKS
             </span>
-            <div className="text-3xl font-black text-slate-900 font-display">
+            <div className="text-2xl font-black text-slate-900 font-display">
               {stocks.length || 5}
             </div>
-            <span className="text-xs font-semibold text-slate-400 block">
-              Controllable Assets
-            </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center relative z-10 border border-purple-200/60 shadow-xs">
-            <BarChart3 className="w-6 h-6" />
+          <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
+            <span className="truncate">Controllable Assets</span>
+            <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:text-purple-600 group-hover:bg-purple-50 transition-colors shrink-0">
+              <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
-          <BarChart3 className="w-24 h-24 text-slate-50 absolute -right-3 -bottom-3 pointer-events-none opacity-40" />
-        </div>
+        </Link>
 
         {/* Card 3: Executed Trades */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:border-emerald-200 transition-colors">
-          <div className="space-y-1 relative z-10">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+        <Link
+          to={`${prefix}/trades`}
+          className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2 block group"
+        >
+          <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-200/60 shadow-xs">
+            <Receipt className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
               EXECUTED TRADES
             </span>
-            <div className="text-3xl font-black text-slate-900 font-display">
-              {trades.length || 1}
+            <div className="text-2xl font-black text-slate-900 font-display">
+              {trades.length || 2}
             </div>
-            <span className="text-xs font-semibold text-slate-400 block">
-              Total Volume Traded
-            </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center relative z-10 border border-emerald-200/60 shadow-xs">
-            <Receipt className="w-6 h-6" />
+          <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
+            <span className="truncate">Total Volume Traded</span>
+            <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors shrink-0">
+              <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
-          <Receipt className="w-24 h-24 text-slate-50 absolute -right-3 -bottom-3 pointer-events-none opacity-40" />
-        </div>
+        </Link>
 
         {/* Card 4: News Broadcasts */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:border-blue-200 transition-colors">
-          <div className="space-y-1 relative z-10">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+        <Link
+          to={`${prefix}/news`}
+          className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2 block group"
+        >
+          <div className="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center border border-blue-200/60 shadow-xs">
+            <Newspaper className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
               NEWS BROADCASTS
             </span>
-            <div className="text-3xl font-black text-slate-900 font-display">
+            <div className="text-2xl font-black text-slate-900 font-display">
               {news.length || 3}
             </div>
-            <span className="text-xs font-semibold text-slate-400 block">
-              Market Wires Sent
-            </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center relative z-10 border border-blue-200/60 shadow-xs">
-            <Newspaper className="w-6 h-6" />
+          <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
+            <span className="truncate">Market Wires Sent</span>
+            <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors shrink-0">
+              <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
-          <Radio className="w-24 h-24 text-slate-50 absolute -right-3 -bottom-3 pointer-events-none opacity-40" />
-        </div>
+        </Link>
       </div>
 
-      {/* 3. Quick Stock Price Control Grid */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-orange-500" />
-            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
+      {/* 4. Latest News Wire Banner (Matching Mockup) */}
+      <Link
+        to={`${prefix}/news`}
+        className="bg-orange-50/70 border border-orange-200/80 p-3.5 rounded-3xl flex items-center justify-between gap-3 shadow-xs hover:bg-orange-50 transition-all block"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-2xl bg-orange-500/15 text-orange-500 flex items-center justify-center shrink-0">
+            <Radio className="w-4 h-4" />
+          </div>
+          <div className="min-w-0 space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono">
+                LATEST WIRE
+              </span>
+              <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-orange-200/60 text-orange-800 font-mono">
+                {latestNews?.sector || 'EV & Auto'}
+              </span>
+            </div>
+            <p className="text-xs font-extrabold text-slate-900 truncate">
+              {latestNews?.headline || 'Government Announces ₹25,000 Cr Incentive...'}
+            </p>
+            <span className="text-[9.5px] text-slate-400 font-mono block">
+              {latestNews?.published_at ? formatClockTime(latestNews.published_at) : '2m ago'}
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-orange-500 shrink-0" />
+      </Link>
+
+      {/* 5. Quick Stock Price Control Card with Carousel (Matching Mockup) */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5">
+            <BarChart3 className="w-4 h-4 text-orange-500" />
+            <h3 className="text-xs font-black tracking-wide uppercase text-slate-900">
               Quick Stock Price Control
-            </h2>
+            </h3>
           </div>
           <Link
             to={`${prefix}/stocks`}
-            className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors"
+            className="text-xs font-bold text-orange-500 hover:text-orange-600"
           >
-            Manage All Stocks <ArrowRight className="w-3.5 h-3.5" />
+            Manage All Stocks ›
           </Link>
         </div>
 
-        {/* Stock Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {stocks.slice(0, 6).map((stock) => {
-            const { icon: SectorIcon, bg: sectorBg } = getSectorIcon(
-              stock.sector,
-              stock.symbol
-            );
-            const isUp = stock.current_price >= stock.opening_price;
-
-            return (
-              <div
-                key={stock.id}
-                className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 hover:shadow-md transition-all group"
-              >
-                {/* Top Info */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${sectorBg}`}
-                    >
-                      <SectorIcon className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                        {stock.sector || 'EQUITY'}
-                      </span>
-                      <span className="text-base font-black text-slate-900 tracking-tight">
-                        {stock.symbol}
-                      </span>
-                      <span className="text-[11px] text-slate-400 truncate max-w-[130px]">
-                        {stock.company_name}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-xl font-black text-slate-900 font-mono">
-                      {formatCurrency(stock.current_price)}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono font-medium">
-                      Open: {formatCurrency(stock.opening_price)}
-                    </div>
-                  </div>
+        {/* Stock Card with Sparkline & Action Chips */}
+        {currentStock && (
+          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+            {/* Top row: Sector, Symbol, Company, Price & % Change */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-200/60 shrink-0">
+                  {React.createElement(getSectorIcon(currentStock.sector), { className: 'w-4 h-4' })}
                 </div>
-
-                {/* Mini SVG Sparkline */}
-                <div className="h-10 w-full overflow-hidden flex items-end">
-                  <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id={`grad-${stock.id}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="0%"
-                          stopColor={isUp ? '#10B981' : '#F43F5E'}
-                          stopOpacity="0.25"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={isUp ? '#10B981' : '#F43F5E'}
-                          stopOpacity="0.0"
-                        />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d={
-                        isUp
-                          ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z'
-                          : 'M0,5 Q20,12 40,10 T70,22 T90,18 T100,26 L100,30 L0,30 Z'
-                      }
-                      fill={`url(#grad-${stock.id})`}
-                    />
-                    <path
-                      d={
-                        isUp
-                          ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5'
-                          : 'M0,5 Q20,12 40,10 T70,22 T90,18 T100,26'
-                      }
-                      fill="none"
-                      stroke={isUp ? '#10B981' : '#F43F5E'}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-
-                {/* Quick Action Percentage Buttons */}
-                <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-100">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleQuickPercentChange(stock, -10)}
-                      className="px-2 py-1 rounded-xl text-[11px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
-                      title="Decrease by 10%"
-                    >
-                      -10%
-                    </button>
-                    <button
-                      onClick={() => handleQuickPercentChange(stock, -5)}
-                      className="px-2 py-1 rounded-xl text-[11px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
-                      title="Decrease by 5%"
-                    >
-                      -5%
-                    </button>
-                    <button
-                      onClick={() => handleQuickPercentChange(stock, 5)}
-                      className="px-2 py-1 rounded-xl text-[11px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
-                      title="Increase by 5%"
-                    >
-                      +5%
-                    </button>
-                    <button
-                      onClick={() => handleQuickPercentChange(stock, 10)}
-                      className="px-2 py-1 rounded-xl text-[11px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
-                      title="Increase by 10%"
-                    >
-                      +10%
-                    </button>
+                <div>
+                  <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
+                    {currentStock.sector || 'EV & AUTO'}
+                  </span>
+                  <div className="text-base font-black text-slate-900 tracking-tight">
+                    {currentStock.symbol}
                   </div>
-
-                  <button
-                    onClick={() => setActivePriceStock(stock)}
-                    className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80 transition-colors shadow-xs"
-                  >
-                    Custom Price
-                  </button>
+                  <span className="text-[10px] text-slate-400 truncate block max-w-[140px]">
+                    {currentStock.company_name}
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* 4. Bottom 3-Column Grid: Market Overview, Recent Trades, Latest News */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Column 1: Market Overview */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-orange-500" />
-              <h3 className="text-sm font-extrabold text-slate-900">
-                Market Overview
-              </h3>
+              <div className="text-right">
+                <div className="text-xl font-black text-slate-900 font-mono">
+                  {formatCurrency(currentStock.current_price)}
+                </div>
+                <div className="flex items-center justify-end gap-1 text-[10px] font-bold font-mono text-emerald-600">
+                  <span>▲ +8.24%</span>
+                </div>
+                <div className="text-[9px] text-slate-400 font-mono">
+                  Open: {formatCurrency(currentStock.opening_price)}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">
-                Market Trend (All Stocks)
-              </span>
-              <span className="text-xs font-black text-emerald-600 font-mono flex items-center gap-0.5">
-                +6.25% <TrendingUp className="w-3 h-3" />
-              </span>
-            </div>
-            {/* Smooth full sparkline */}
-            <div className="h-28 w-full pt-2">
-              <svg className="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
+            {/* Sparkline */}
+            <div className="h-10 w-full overflow-hidden flex items-end">
+              <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="marketTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F97316" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#F97316" stopOpacity="0.0" />
+                  <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
                 <path
-                  d="M0,45 Q30,35 60,50 T120,25 T160,30 T200,10 L200,60 L0,60 Z"
-                  fill="url(#marketTrendGrad)"
+                  d="M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z"
+                  fill="url(#adminGrad)"
                 />
                 <path
-                  d="M0,45 Q30,35 60,50 T120,25 T160,30 T200,10"
+                  d="M0,25 Q15,20 30,22 T60,12 T85,14 T100,5"
                   fill="none"
-                  stroke="#F97316"
-                  strokeWidth="2.5"
+                  stroke="#10B981"
+                  strokeWidth="2"
                   strokeLinecap="round"
                 />
               </svg>
             </div>
-          </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-            <span>Total Listed Capitalization</span>
-            <span className="font-bold text-slate-800 font-mono">
-              ₹54.20 Cr
-            </span>
-          </div>
-        </div>
-
-        {/* Column 2: Recent Trades */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-orange-500" />
-              <h3 className="text-sm font-extrabold text-slate-900">
-                Recent Trades
-              </h3>
-            </div>
-            <Link
-              to={`${prefix}/trades`}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1"
-            >
-              View All <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-2.5">
-            {trades.length === 0 ? (
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                <span className="text-[10px] font-mono text-slate-400 block">
-                  10:04:21 AM
-                </span>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 font-mono">
-                      BUY
-                    </span>
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-900 block">
-                        NOVA
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        Team Alpha • Maaz
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-bold text-slate-900 font-mono block">
-                      5,000 Qty
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      ₹100 Price
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              trades.slice(0, 2).map((trade) => (
-                <div
-                  key={trade.id}
-                  className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2"
+            {/* Action Chips: -10%, -5%, +5%, +10%, Custom Price */}
+            <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => handleQuickPercentChange(currentStock, -10)}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
                 >
-                  <span className="text-[10px] font-mono text-slate-400 block">
-                    {formatClockTime(trade.created_at)}
-                  </span>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md font-mono ${
-                          trade.side === 'BUY'
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-600 border border-rose-200'
-                        }`}
-                      >
-                        {trade.side}
-                      </span>
-                      <div>
-                        <span className="text-xs font-extrabold text-slate-900 block">
-                          {trade.stock?.symbol || 'STOCK'}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          {trade.team?.name || 'Team'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-slate-900 font-mono block">
-                        {trade.quantity.toLocaleString()} Qty
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {formatCurrency(trade.price)} Price
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Column 3: Latest News */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Newspaper className="w-4 h-4 text-orange-500" />
-              <h3 className="text-sm font-extrabold text-slate-900">
-                Latest News
-              </h3>
-            </div>
-            <Link
-              to={`${prefix}/news`}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1"
-            >
-              View All <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {news.length === 0 ? (
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400">
-                      10:22 AM
-                    </span>
-                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 border border-rose-200 font-mono">
-                      ● BREAKING
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-2">
-                    EV Sector Sees Major Growth
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2">
-                    Government announces new incentives for battery component manufacturing.
-                  </p>
-                </div>
-                <div className="w-16 h-16 rounded-xl bg-slate-200 overflow-hidden shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=150&auto=format&fit=crop&q=80"
-                    alt="EV Car"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            ) : (
-              news.slice(0, 2).map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3"
+                  -10%
+                </button>
+                <button
+                  onClick={() => handleQuickPercentChange(currentStock, -5)}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors"
                 >
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {formatClockTime(item.published_at)}
-                      </span>
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 border border-rose-200 font-mono">
-                        ● BREAKING
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900 line-clamp-2">
-                      {item.headline}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 line-clamp-2">
-                      {item.body}
-                    </p>
-                  </div>
-                  <div className="w-16 h-16 rounded-xl bg-slate-200 overflow-hidden shrink-0">
-                    <img
-                      src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=150&auto=format&fit=crop&q=80"
-                      alt="News"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              ))
-            )}
+                  -5%
+                </button>
+                <button
+                  onClick={() => handleQuickPercentChange(currentStock, 5)}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
+                >
+                  +5%
+                </button>
+                <button
+                  onClick={() => handleQuickPercentChange(currentStock, 10)}
+                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors"
+                >
+                  +10%
+                </button>
+              </div>
+
+              <button
+                onClick={() => setActivePriceStock(currentStock)}
+                className="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
+              >
+                Custom Price
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Carousel Slide Indicators */}
+        {stocks.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 py-1">
+            {stocks.map((s, idx) => (
+              <button
+                key={s.id}
+                onClick={() => setActiveStockIndex(idx)}
+                aria-label={`Show ${s.symbol}`}
+                className={`transition-all duration-200 ${
+                  activeStockIndex === idx
+                    ? 'w-6 h-1.5 rounded-full bg-orange-500'
+                    : 'w-2 h-1.5 rounded-full bg-slate-200 hover:bg-slate-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Price Change Modal */}
+      {/* Modals */}
       {activePriceStock && (
         <PriceChangeModal
           stock={activePriceStock}
           isOpen={!!activePriceStock}
           onClose={() => setActivePriceStock(null)}
-          onConfirmChange={handlePriceUpdate}
+          onConfirmChange={async (stockId, newPrice, reason) => {
+            const res = await updateStockPrice(stockId, newPrice, reason);
+            if (res.success) loadData();
+            return res;
+          }}
         />
       )}
 
-      {/* Emergency Freeze Modal */}
       <FreezeConfirmModal
         isOpen={isFreezeModalOpen}
         onClose={() => setIsFreezeModalOpen(false)}
