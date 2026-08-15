@@ -12,7 +12,7 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v6';
+const STORAGE_KEY = 'metis_mock_database_v7';
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -120,28 +120,7 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       created_at: new Date().toISOString(),
     }
   ],
-  news: [
-    {
-      id: 'n1111111-1111-1111-1111-111111111111',
-      event_id: 'e1111111-1111-1111-1111-111111111111',
-      headline: 'Nova BioTech Receives Regulatory Fast-Track Approval',
-      body: 'Phase 3 oncology trials show unprecedented efficacy milestones in key international markets.',
-      sector: 'Pharmaceuticals',
-      published_by: null,
-      published_at: new Date(Date.now() - 5 * 60000).toISOString(),
-      is_published: true,
-    },
-    {
-      id: 'n2222222-2222-2222-2222-222222222222',
-      event_id: 'e1111111-1111-1111-1111-111111111111',
-      headline: 'Central Bank Hints at Possible Rate Adjustments',
-      body: 'Surging quarterly inflation data signals liquidity adjustments across leading lenders.',
-      sector: 'Banking & Finance',
-      published_by: null,
-      published_at: new Date(Date.now() - 15 * 60000).toISOString(),
-      is_published: true,
-    }
-  ],
+  news: [],
   holdings: [],
   trades: [],
   auditLogs: [
@@ -168,6 +147,9 @@ export function getMockDB(): MockDatabase {
     localStorage.removeItem('metis_mock_database_v1');
     localStorage.removeItem('metis_mock_database_v2');
     localStorage.removeItem('metis_mock_database_v3');
+    localStorage.removeItem('metis_mock_database_v4');
+    localStorage.removeItem('metis_mock_database_v5');
+    localStorage.removeItem('metis_mock_database_v6');
   } catch {}
 
   const saved = localStorage.getItem(STORAGE_KEY);
