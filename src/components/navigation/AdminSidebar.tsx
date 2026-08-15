@@ -115,12 +115,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
       {/* Bottom Section: Profile Card + Sign Out */}
       <div className="space-y-3 pt-3 border-t border-slate-100 mt-auto">
         {/* Profile Card */}
-        <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/70 hover:bg-slate-100/70 transition-colors cursor-pointer">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-orange-500/20">
+        <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/70 hover:bg-slate-100/70 transition-colors">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-orange-500/20 shrink-0">
               {admin?.full_name?.charAt(0) || 'M'}
             </div>
-            <div className="flex flex-col text-left overflow-hidden">
+            <div className="flex flex-col text-left overflow-hidden min-w-0">
               <span className="text-xs font-bold text-slate-900 truncate">
                 {admin?.full_name || 'Metis Event Director'}
               </span>
@@ -129,7 +129,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
               </span>
             </div>
           </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
         </div>
 
         {/* Sign Out Button */}
