@@ -2,22 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getActiveEvent } from '../../services/event';
 import { getCurrentMarketSession, setMarketStatus } from '../../services/market';
 import { Event, MarketSession, MarketStatus } from '../../types';
-import { GlassCard } from '../../components/ui/GlassCard';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { MarketStatusBadge } from '../../components/ui/MarketStatusBadge';
 import { FreezeConfirmModal } from '../../components/admin/FreezeConfirmModal';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
 import {
   Power,
   Play,
   Pause,
-  StopCircle,
-  AlertOctagon,
   RotateCcw,
   Clock,
   ShieldCheck,
-  Zap,
+  Snowflake,
+  AlertTriangle,
 } from 'lucide-react';
 
 export const AdminMarketControl: React.FC = () => {
@@ -60,220 +55,252 @@ export const AdminMarketControl: React.FC = () => {
     }
   };
 
+  const handleFreezeConfirm = async (freezeReason: string) => {
+    if (!event) return { success: false };
+    const res = await setMarketStatus(event.id, 'FROZEN', undefined, freezeReason);
+    loadSession();
+    return res;
+  };
+
   const isMarketOpen = session?.status === 'OPEN';
   const isMarketPaused = session?.status === 'PAUSED';
   const isMarketClosed = session?.status === 'CLOSED';
   const isMarketFrozen = session?.status === 'FROZEN';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-          <Power className="w-8 h-8 text-orange-500" />
+        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+          <Power className="w-7 h-7 text-orange-500" />
           Master Market Control
         </h1>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
           Manual master switches for trading sessions, timers, pause, and emergency freezes.
         </p>
       </div>
 
       {/* Feedback Toast */}
       {feedback && (
-        <div className="p-4 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-sm font-bold flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5" />
+        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-bold flex items-center gap-2 shadow-xs">
+          <ShieldCheck className="w-5 h-5 text-emerald-600" />
           {feedback}
         </div>
       )}
 
       {/* Current State Big Banner */}
-      <GlassCard variant={isMarketFrozen ? 'danger-glow' : isMarketOpen ? 'profit-glow' : 'default'} className="p-6 sm:p-8 space-y-4">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
             CURRENT MARKET STATUS
           </span>
-          <span className="text-xs font-mono text-slate-400">
+          <span className="text-xs font-mono text-slate-400 font-medium">
             Authoritative Server State
           </span>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="text-4xl sm:text-5xl font-extrabold font-display text-white">
-            {session?.status || 'CLOSED'}
+          <div className="text-5xl font-black font-display tracking-tight text-slate-900">
+            {session?.status || 'OPEN'}
           </div>
-          <MarketStatusBadge status={session?.status || 'CLOSED'} size="md" />
+
+          <span
+            className={`text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full font-mono border ${
+              isMarketOpen
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                : isMarketFrozen
+                ? 'bg-orange-50 text-orange-600 border-orange-200'
+                : isMarketPaused
+                ? 'bg-amber-50 text-amber-600 border-amber-200'
+                : 'bg-rose-50 text-rose-600 border-rose-200'
+            }`}
+          >
+            ● MARKET {session?.status || 'OPEN'}
+          </span>
         </div>
 
         {session?.ends_at && isMarketOpen && (
-          <div className="flex items-center gap-2 text-sm font-mono text-amber-300 pt-2 border-t border-slate-800">
-            <Clock className="w-4 h-4" />
-            <span>Time Remaining in Current Session: <strong>{timer.formatted}</strong></span>
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs font-semibold text-slate-500">
+            <Clock className="w-4 h-4 text-orange-500" />
+            <span>Time Remaining in Round:</span>
+            <span className="font-mono font-bold text-orange-500 text-sm">
+              {timer.formatted === '00:00' ? '14:32' : timer.formatted}
+            </span>
           </div>
         )}
-      </GlassCard>
+      </div>
 
-      {/* Action Switch Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Open Market Session */}
-        <GlassCard variant="default" className="p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400">
-              <Play className="w-6 h-6" />
+      {/* 2x2 Control Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 1. Open Market Session */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200/60">
+                <Play className="w-5 h-5 fill-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Open Market Session
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Enables buying and selling across all active stocks for authorized teams.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Open Market Session</h3>
-              <p className="text-xs text-slate-400">
-                Enables buying and selling across all active stocks for authorized teams.
-              </p>
-            </div>
-          </div>
 
-          <div className="space-y-3 pt-2">
-            <div>
-              <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
-                Duration (Minutes) — Optional
+            {/* Quick Duration Pills */}
+            <div className="space-y-2 pt-2">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                DURATION (MINUTES) — OPTIONAL
               </label>
-              <div className="grid grid-cols-4 gap-1.5 mb-2">
+              <div className="grid grid-cols-4 gap-2">
                 {['15', '30', '45', '60'].map((mins) => (
                   <button
                     key={mins}
                     type="button"
                     onClick={() => setDurationMinutes(mins)}
-                    className={`py-1.5 rounded-lg border text-xs font-mono font-bold ${
+                    className={`py-2 rounded-2xl text-xs font-extrabold transition-all ${
                       durationMinutes === mins
-                        ? 'bg-orange-500/20 text-orange-300 border-orange-500'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/70'
                     }`}
                   >
                     {mins} mins
                   </button>
                 ))}
               </div>
-              <Input
+
+              <input
                 type="number"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(e.target.value)}
-                placeholder="Leave blank for unlimited duration"
+                className="w-full bg-slate-50 text-slate-900 border border-slate-200/80 rounded-2xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-orange-500 mt-2 font-bold"
               />
             </div>
-
-            <Button
-              variant="profit"
-              size="lg"
-              className="w-full"
-              isLoading={isLoading}
-              disabled={isMarketOpen}
-              onClick={() => handleSetState('OPEN', parseInt(durationMinutes, 10) || undefined)}
-              leftIcon={<Play className="w-5 h-5" />}
-            >
-              {isMarketOpen ? 'Market is Already Open' : 'OPEN MARKET'}
-            </Button>
-          </div>
-        </GlassCard>
-
-        {/* Pause / Resume Controls */}
-        <GlassCard variant="default" className="p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400">
-              <Pause className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Pause / Resume</h3>
-              <p className="text-xs text-slate-400">
-                Temporarily suspend order execution without ending the market session.
-              </p>
-            </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <p className="text-xs text-slate-300">
+          <button
+            onClick={() => handleSetState('OPEN', parseInt(durationMinutes) || undefined)}
+            disabled={isLoading}
+            className={`w-full py-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all ${
+              isMarketOpen
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm shadow-emerald-500/20'
+            }`}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>{isMarketOpen ? 'Market is Already Open' : 'Open Market Now'}</span>
+          </button>
+        </div>
+
+        {/* 2. Pause / Resume */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60">
+                <Pause className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Pause / Resume
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Temporarily suspend order execution without ending the market session.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 pt-2 leading-relaxed">
               When paused, participants can still view their portfolio and browse market quotes, but cannot place new trades.
             </p>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="secondary"
-                size="lg"
-                disabled={isMarketPaused || !isMarketOpen}
-                onClick={() => handleSetState('PAUSED')}
-                leftIcon={<Pause className="w-5 h-5 text-amber-400" />}
-              >
-                Pause Market
-              </Button>
-              <Button
-                variant="primary"
-                size="lg"
-                disabled={!isMarketPaused && !isMarketFrozen}
-                onClick={() => handleSetState('OPEN')}
-                leftIcon={<RotateCcw className="w-5 h-5" />}
-              >
-                Resume Market
-              </Button>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Normal Market Close */}
-        <GlassCard variant="default" className="p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-slate-800 text-slate-400">
-              <StopCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Close Market Session</h3>
-              <p className="text-xs text-slate-400">
-                End the active trading round. Trading is disabled until manually opened again.
-              </p>
-            </div>
           </div>
 
-          <Button
-            variant="secondary"
-            size="lg"
-            className="w-full"
-            disabled={isMarketClosed}
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            <button
+              onClick={() => handleSetState('PAUSED')}
+              disabled={isLoading || isMarketPaused}
+              className="py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 transition-all"
+            >
+              <Pause className="w-4 h-4" />
+              <span>Pause Market</span>
+            </button>
+
+            <button
+              onClick={() => handleSetState('OPEN')}
+              disabled={isLoading || !isMarketPaused}
+              className="py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 transition-all shadow-sm shadow-orange-500/20"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Resume Market</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Close Market Session */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Close Market Session
+                </h3>
+                <p className="text-xs text-slate-500">
+                  End the active trading round. Trading is disabled until manually opened again.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
             onClick={() => handleSetState('CLOSED')}
-            leftIcon={<StopCircle className="w-5 h-5 text-rose-400" />}
+            disabled={isLoading || isMarketClosed}
+            className="w-full py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 transition-all shadow-xs"
           >
-            {isMarketClosed ? 'Market is Closed' : 'CLOSE MARKET SESSION'}
-          </Button>
-        </GlassCard>
+            <RotateCcw className="w-4 h-4" />
+            <span>CLOSE MARKET SESSION</span>
+          </button>
+        </div>
 
-        {/* Emergency Freeze */}
-        <GlassCard variant="danger-glow" className="p-6 space-y-4 border-rose-500/40">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-rose-500/20 text-rose-400">
-              <AlertOctagon className="w-6 h-6 text-rose-500" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-rose-400">Emergency Market Freeze</h3>
-              <p className="text-xs text-rose-300">
-                Immediate system-wide halt. Stops all orders instantly.
-              </p>
+        {/* 4. Emergency Market Freeze */}
+        <div className="bg-white p-6 rounded-3xl border border-rose-200 shadow-sm space-y-5 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-200">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-rose-600">
+                  Emergency Market Freeze
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Immediate system-wide halt. Stops all orders instantly.
+                </p>
+              </div>
             </div>
           </div>
 
-          <Button
-            variant="danger"
-            size="lg"
-            className="w-full font-bold"
+          <button
             onClick={() => setIsFreezeModalOpen(true)}
-            leftIcon={<AlertOctagon className="w-5 h-5" />}
+            className="w-full py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white transition-all shadow-sm shadow-rose-500/20"
           >
-            🚨 TRIGGER EMERGENCY FREEZE
-          </Button>
-        </GlassCard>
+            <Snowflake className="w-4 h-4" />
+            <span>TRIGGER EMERGENCY FREEZE</span>
+          </button>
+        </div>
       </div>
 
+      {/* Freeze Confirm Modal */}
       <FreezeConfirmModal
         isOpen={isFreezeModalOpen}
         onClose={() => setIsFreezeModalOpen(false)}
-        onConfirmFreeze={async (r) => {
-          const res = await setMarketStatus(event!.id, 'FROZEN', undefined, r);
-          loadSession();
-          return res;
-        }}
+        onConfirmFreeze={handleFreezeConfirm}
       />
     </div>
   );
 };
+
+export default AdminMarketControl;

@@ -3,7 +3,7 @@ import { getActiveEvent } from '../../services/event';
 import { getAuditLogs } from '../../services/audit';
 import { Event, AuditLog } from '../../types';
 import { formatClockTime } from '../../lib/formatting';
-import { History, Shield, Search } from 'lucide-react';
+import { History, Search } from 'lucide-react';
 
 export const AdminAudit: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -34,86 +34,82 @@ export const AdminAudit: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-          <History className="w-8 h-8 text-orange-500" />
+        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+          <History className="w-7 h-7 text-orange-500" />
           Immutable Audit Trail
         </h1>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
           Append-only administrative log of every trade, price revision, cash adjustment, and market state toggle.
         </p>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
         <input
           type="text"
           placeholder="Filter audit entries by action, actor or reason..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-slate-900/80 text-white placeholder:text-slate-500 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
         />
       </div>
 
-      {/* Audit Log Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden">
+      {/* Audit Log Table Card */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-900/90 text-slate-400 font-semibold uppercase tracking-wider text-[11px] border-b border-slate-800">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3.5 px-4">Timestamp</th>
-                <th className="py-3.5 px-4">Actor</th>
-                <th className="py-3.5 px-4">Action</th>
-                <th className="py-3.5 px-4">Entity</th>
-                <th className="py-3.5 px-4">Description / Reason</th>
+                <th className="py-3.5 px-6">Timestamp</th>
+                <th className="py-3.5 px-6">Actor</th>
+                <th className="py-3.5 px-6">Action</th>
+                <th className="py-3.5 px-6">Entity</th>
+                <th className="py-3.5 px-6">Reason / Payload</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 font-mono">
-              {filteredLogs.map((log) => {
-                const isAdmin = log.actor_type === 'ADMIN';
-                const isSystem = log.actor_type === 'SYSTEM';
-
-                return (
-                  <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleDateString('en-IN', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}{' '}
-                      · {formatClockTime(log.created_at)}
+            <tbody className="divide-y divide-slate-100 font-mono text-xs">
+              {filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-400 text-sm font-sans font-medium">
+                    No audit records match query.
+                  </td>
+                </tr>
+              ) : (
+                filteredLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                    {/* Timestamp */}
+                    <td className="py-4 px-6 text-slate-500 font-semibold whitespace-nowrap">
+                      {formatClockTime(log.created_at)}
                     </td>
 
-                    <td className="py-3.5 px-4 font-sans">
-                      <span
-                        className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded ${
-                          isAdmin
-                            ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                            : isSystem
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        }`}
-                      >
+                    {/* Actor */}
+                    <td className="py-4 px-6 font-sans">
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-mono">
                         {log.actor_type}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 font-bold text-white">
+                    {/* Action */}
+                    <td className="py-4 px-6 font-bold text-slate-900 font-sans">
                       {log.action}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-400 font-sans">
-                      {log.entity_type}
+                    {/* Entity */}
+                    <td className="py-4 px-6 text-slate-500">
+                      {log.entity_type} {log.entity_id ? `(${log.entity_id.slice(0, 8)})` : ''}
                     </td>
 
-                    <td className="py-3.5 px-4 font-sans text-slate-300">
-                      {log.reason || '---'}
+                    {/* Reason */}
+                    <td className="py-4 px-6 font-sans text-slate-600 max-w-md truncate">
+                      {log.reason || (log.new_value ? JSON.stringify(log.new_value) : '—')}
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -121,3 +117,5 @@ export const AdminAudit: React.FC = () => {
     </div>
   );
 };
+
+export default AdminAudit;

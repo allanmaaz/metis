@@ -3,7 +3,7 @@ import { getActiveEvent } from '../../services/event';
 import { getAllTrades } from '../../services/trade';
 import { Event, Trade } from '../../types';
 import { formatCurrency, formatQuantity, formatClockTime } from '../../lib/formatting';
-import { Receipt, Search, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Receipt, Search, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export const AdminTrades: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -38,15 +38,15 @@ export const AdminTrades: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-            <Receipt className="w-8 h-8 text-orange-500" />
+          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Receipt className="w-7 h-7 text-orange-500" />
             Trade Flow Monitor
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
             Immutable log of all executed participant transactions with execution prices & timestamps.
           </p>
         </div>
@@ -55,25 +55,25 @@ export const AdminTrades: React.FC = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
           <input
             type="text"
             placeholder="Search by team name, member name, or stock symbol..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900/80 text-white placeholder:text-slate-500 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+            className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-slate-200/80 self-start sm:self-auto shadow-xs">
           {(['ALL', 'BUY', 'SELL'] as const).map((side) => (
             <button
               key={side}
               onClick={() => setSideFilter(side)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-colors ${
+              className={`text-xs px-4 py-2 rounded-xl font-extrabold transition-all ${
                 sideFilter === side
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               {side}
@@ -82,63 +82,87 @@ export const AdminTrades: React.FC = () => {
         </div>
       </div>
 
-      {/* Trades Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden">
+      {/* Trades Table Card */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-900/90 text-slate-400 font-semibold uppercase tracking-wider text-[11px] border-b border-slate-800">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3 px-4">Time</th>
-                <th className="py-3 px-4">Team</th>
-                <th className="py-3 px-4">Trader Member</th>
-                <th className="py-3 px-4">Action</th>
-                <th className="py-3 px-4">Stock</th>
-                <th className="py-3 px-4 text-right">Quantity</th>
-                <th className="py-3 px-4 text-right">Price</th>
-                <th className="py-3 px-4 text-right">Total Value</th>
+                <th className="py-3.5 px-6">Time</th>
+                <th className="py-3.5 px-6">Team</th>
+                <th className="py-3.5 px-6">Trader Member</th>
+                <th className="py-3.5 px-6 text-center">Action</th>
+                <th className="py-3.5 px-6">Stock</th>
+                <th className="py-3.5 px-6 text-right">Quantity</th>
+                <th className="py-3.5 px-6 text-right">Price</th>
+                <th className="py-3.5 px-6 text-right">Total Value</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 font-mono">
-              {filteredTrades.map((trade) => {
-                const isBuy = trade.side === 'BUY';
-                return (
-                  <tr key={trade.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 text-slate-400">
-                      {formatClockTime(trade.created_at)}
+            <tbody className="divide-y divide-slate-100">
+              {filteredTrades.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400 text-sm">
+                    No trades executed yet.
+                  </td>
+                </tr>
+              ) : (
+                filteredTrades.map((t) => (
+                  <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
+                    {/* Time */}
+                    <td className="py-4 px-6 font-mono text-xs font-semibold text-slate-500">
+                      {formatClockTime(t.created_at)}
                     </td>
-                    <td className="py-3.5 px-4 font-sans font-bold text-white">
-                      Team {trade.team?.name || '---'}
+
+                    {/* Team */}
+                    <td className="py-4 px-6 font-extrabold text-slate-900">
+                      {t.team?.name || 'Unknown Team'}
                     </td>
-                    <td className="py-3.5 px-4 font-sans text-slate-300">
-                      {trade.team_member?.full_name || 'Team Member'}
+
+                    {/* Trader Member */}
+                    <td className="py-4 px-6 text-slate-600 font-medium">
+                      {t.team_member?.full_name || 'Team Action'}
                     </td>
-                    <td className="py-3.5 px-4">
+
+                    {/* Action */}
+                    <td className="py-4 px-6 text-center">
                       <span
-                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                          isBuy
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                        className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full font-mono inline-flex items-center gap-0.5 border ${
+                          t.side === 'BUY'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : 'bg-rose-50 text-rose-600 border-rose-200'
                         }`}
                       >
-                        {isBuy ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {trade.side}
+                        {t.side === 'BUY' ? (
+                          <ArrowUpRight className="w-3 h-3" />
+                        ) : (
+                          <ArrowDownRight className="w-3 h-3" />
+                        )}
+                        {t.side}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-white">
-                      {trade.stock?.symbol || 'STOCK'}
+
+                    {/* Stock */}
+                    <td className="py-4 px-6 font-black font-mono text-slate-900">
+                      {t.stock?.symbol || 'STOCK'}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-slate-200">
-                      {formatQuantity(trade.quantity)}
+
+                    {/* Quantity */}
+                    <td className="py-4 px-6 text-right font-mono font-bold text-slate-900">
+                      {formatQuantity(t.quantity)}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">
-                      {formatCurrency(trade.price)}
+
+                    {/* Price */}
+                    <td className="py-4 px-6 text-right font-mono font-bold text-slate-900">
+                      {formatCurrency(t.price)}
                     </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-white">
-                      {formatCurrency(trade.total_value)}
+
+                    {/* Total Value */}
+                    <td className="py-4 px-6 text-right font-mono font-black text-slate-900">
+                      {formatCurrency(t.total_value)}
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -146,3 +170,5 @@ export const AdminTrades: React.FC = () => {
     </div>
   );
 };
+
+export default AdminTrades;
