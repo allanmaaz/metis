@@ -12,8 +12,8 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const { setAdminSession } = useAuth();
 
-  const [email, setEmail] = useState('admin@metis.internal');
-  const [password, setPassword] = useState('metis2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,10 +105,6 @@ export const AdminLogin: React.FC = () => {
             Access Control Center
           </Button>
         </form>
-
-        <div className="text-center pt-2 text-[11px] text-slate-400 border-t border-slate-800">
-          Demo Admin Credentials: <span className="font-mono text-orange-400 font-bold">metis2026</span>
-        </div>
       </GlassCard>
 
       {/* Footer */}

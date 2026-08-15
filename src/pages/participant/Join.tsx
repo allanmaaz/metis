@@ -4,7 +4,7 @@ import { MetisLogo } from '../../components/ui/MetisLogo';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowRight, KeyRound, Sparkles, Shield } from 'lucide-react';
+import { ArrowRight, KeyRound, Shield } from 'lucide-react';
 
 export const Join: React.FC = () => {
   const navigate = useNavigate();
@@ -23,11 +23,6 @@ export const Join: React.FC = () => {
       return;
     }
     navigate(`/verify?code=${encodeURIComponent(clean)}`);
-  };
-
-  const handleDemoFill = (code: string) => {
-    setTeamCode(code);
-    setError(null);
   };
 
   return (
@@ -53,7 +48,7 @@ export const Join: React.FC = () => {
               Join METIS Arena
             </h2>
             <p className="text-xs sm:text-sm text-slate-300">
-              Enter your team access code provided by the event organizers.
+              Enter your official team access code provided by the event organizers.
             </p>
           </div>
 
@@ -87,35 +82,6 @@ export const Join: React.FC = () => {
               Continue to Member Verification
             </Button>
           </form>
-
-          {/* Quick Demo Fill Buttons */}
-          <div className="pt-4 border-t border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="flex items-center gap-1 font-semibold">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Demo Teams:
-              </span>
-              <span className="text-[10px] text-slate-400">Click to fill</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              {[
-                { name: 'Alpha', code: 'ALPHA-7K29' },
-                { name: 'Bulls', code: 'BULLS-9X12' },
-                { name: 'Titans', code: 'TITAN-4M88' },
-                { name: 'Nova', code: 'NOVA-3B45' },
-                { name: 'Phoenix', code: 'PHX-8V71' },
-              ].map((t) => (
-                <button
-                  key={t.code}
-                  type="button"
-                  onClick={() => handleDemoFill(t.code)}
-                  className="text-left px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-[11px] font-mono text-slate-300 hover:text-orange-400 transition-colors"
-                >
-                  <span className="font-bold text-white block">{t.name}</span>
-                  <span className="text-[10px] text-slate-400">{t.code}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </GlassCard>
       </main>
 

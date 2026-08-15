@@ -2,7 +2,6 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, TrendingUp, Briefcase, Newspaper, Trophy } from 'lucide-react';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
-import { motion } from 'framer-motion';
 
 export const ScrollAwareBottomNav: React.FC = () => {
   const scrollDirection = useScrollDirection();
@@ -18,14 +17,12 @@ export const ScrollAwareBottomNav: React.FC = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none pb-safe px-4 mb-3 sm:mb-5"
+      className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none pb-safe px-3 mb-3 sm:mb-5 transition-all duration-300"
       aria-label="Participant Bottom Navigation"
     >
-      <motion.div
-        layout
-        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className={`pointer-events-auto flex items-center glass-nav rounded-full px-2 py-1.5 shadow-2xl border border-white/10 ${
-          isCompact ? 'gap-1 px-3 py-2' : 'gap-1 sm:gap-2'
+      <div
+        className={`pointer-events-auto flex items-center glass-nav rounded-2xl sm:rounded-full p-1.5 shadow-2xl border border-white/10 max-w-md w-full sm:w-auto justify-between sm:justify-center gap-1 transition-all duration-300 ${
+          isCompact ? 'py-2 px-3' : 'px-2 py-1.5'
         }`}
       >
         {navItems.map((item) => {
@@ -35,38 +32,27 @@ export const ScrollAwareBottomNav: React.FC = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `relative flex items-center justify-center rounded-full transition-all duration-200 ${
-                  isCompact ? 'p-2.5 sm:p-3' : 'px-3.5 py-2 sm:px-4 sm:py-2.5'
+                `flex items-center justify-center gap-1.5 rounded-xl sm:rounded-full font-medium transition-all duration-200 ${
+                  isCompact
+                    ? 'p-2.5'
+                    : 'flex-1 sm:flex-initial px-3 sm:px-4 py-2 text-xs sm:text-sm'
                 } ${
                   isActive
-                    ? 'text-white font-semibold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNavIndicator"
-                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                      className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full shadow-lg shadow-orange-500/30"
-                    />
-                  )}
-                  <div className="relative z-10 flex items-center gap-1.5">
-                    <Icon className="w-5 h-5" />
-                    {!isCompact && (
-                      <span className="text-xs sm:text-sm font-medium tracking-wide">
-                        {item.label}
-                      </span>
-                    )}
-                  </div>
-                </>
+              <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" />
+              {!isCompact && (
+                <span className="truncate tracking-wide text-xs">
+                  {item.label}
+                </span>
               )}
             </NavLink>
           );
         })}
-      </motion.div>
+      </div>
     </nav>
   );
 };

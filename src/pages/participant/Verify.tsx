@@ -17,7 +17,7 @@ export const Verify: React.FC = () => {
   const codeParam = searchParams.get('code') || '';
   const [teamCode, setTeamCode] = useState(codeParam);
   const [name, setName] = useState('');
-  const [pin, setPin] = useState('4821'); // Default demo PIN
+  const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -147,24 +147,19 @@ export const Verify: React.FC = () => {
                 />
 
                 {/* Team PIN */}
-                <div>
-                  <Input
-                    label="4-Digit Team PIN"
-                    type="password"
-                    maxLength={8}
-                    value={pin}
-                    onChange={(e) => {
-                      setPin(e.target.value);
-                      setError(null);
-                    }}
-                    placeholder="e.g. 4821"
-                    className="font-mono text-center tracking-widest text-lg"
-                    leftIcon={<Lock className="w-4 h-4" />}
-                  />
-                  <span className="text-[11px] text-slate-400 mt-1 block text-right">
-                    Default demo PIN: <span className="font-mono text-orange-400 font-bold">4821</span>
-                  </span>
-                </div>
+                <Input
+                  label="4-Digit Team PIN"
+                  type="password"
+                  maxLength={8}
+                  value={pin}
+                  onChange={(e) => {
+                    setPin(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="••••"
+                  className="font-mono text-center tracking-widest text-lg"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                />
 
                 {/* Error Alert */}
                 {error && (
