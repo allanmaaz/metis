@@ -12,7 +12,7 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v8';
+const STORAGE_KEY = 'metis_mock_database_v9';
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -68,11 +68,11 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       symbol: 'GREENX',
       company_name: 'GreenX Renewables Ltd',
       sector: 'Clean Energy',
-      starting_price: 165,
-      current_price: 172,
-      opening_price: 165,
-      high_price: 178,
-      low_price: 162,
+      starting_price: 210,
+      current_price: 228,
+      opening_price: 210,
+      high_price: 235,
+      low_price: 205,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -80,14 +80,14 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
     {
       id: 's4444444-4444-4444-4444-444444444444',
       event_id: 'e1111111-1111-1111-1111-111111111111',
-      symbol: 'FINEX',
-      company_name: 'FinEx Core Banking',
-      sector: 'Banking & Finance',
-      starting_price: 535,
-      current_price: 520,
-      opening_price: 535,
-      high_price: 540,
-      low_price: 512,
+      symbol: 'FINTECH',
+      company_name: 'Apex FinTech Global',
+      sector: 'Banking & Financials',
+      starting_price: 520,
+      current_price: 508,
+      opening_price: 520,
+      high_price: 535,
+      low_price: 495,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -95,14 +95,14 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
     {
       id: 's5555555-5555-5555-5555-555555555555',
       event_id: 'e1111111-1111-1111-1111-111111111111',
-      symbol: 'KINETIC',
-      company_name: 'Kinetic EV Mobility',
-      sector: 'Automotive & Tech',
-      starting_price: 275,
-      current_price: 280,
-      opening_price: 275,
-      high_price: 292,
-      low_price: 270,
+      symbol: 'CYBER',
+      company_name: 'CyberShield Systems',
+      sector: 'Cybersecurity & Tech',
+      starting_price: 410,
+      current_price: 435,
+      opening_price: 410,
+      high_price: 442,
+      low_price: 402,
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -113,7 +113,7 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       id: 'ms111111-1111-1111-1111-111111111111',
       event_id: 'e1111111-1111-1111-1111-111111111111',
       status: 'CLOSED',
-      started_at: null,
+      started_at: new Date().toISOString(),
       ends_at: null,
       started_by: null,
       ended_by: null,
@@ -151,6 +151,7 @@ export function getMockDB(): MockDatabase {
     localStorage.removeItem('metis_mock_database_v5');
     localStorage.removeItem('metis_mock_database_v6');
     localStorage.removeItem('metis_mock_database_v7');
+    localStorage.removeItem('metis_mock_database_v8');
   } catch {}
 
   const saved = localStorage.getItem(STORAGE_KEY);
