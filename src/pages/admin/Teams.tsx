@@ -163,43 +163,6 @@ export const AdminTeams: React.FC = () => {
     currentPage * pageSize
   );
 
-  // Avatar photos fallback generator
-  const getMemberAvatars = (members: TeamMember[], teamName: string) => {
-    if (members.length === 0) return null;
-    const avatars = [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=60&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=60&auto=format&fit=crop&q=80',
-    ];
-
-    const displayCount = Math.min(members.length, 4);
-    const extraCount = Math.max(0, members.length - 4);
-
-    return (
-      <div className="flex items-center -space-x-2">
-        {members.slice(0, displayCount).map((m, idx) => (
-          <div
-            key={m.id || idx}
-            title={m.full_name}
-            className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0"
-          >
-            <img
-              src={avatars[idx % avatars.length]}
-              alt={m.full_name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
-        {extraCount > 0 && (
-          <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 text-slate-700 text-[10px] font-black flex items-center justify-center shadow-xs shrink-0">
-            +{extraCount}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -364,22 +327,10 @@ export const AdminTeams: React.FC = () => {
 
                       {/* 3. Registered Members */}
                       <td className="py-4 px-6">
-                        {members.length > 0 ? (
-                          <div className="space-y-1.5">
-                            {getMemberAvatars(members, team.name)}
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
-                              <span>
-                                {members.length} Members • {members.length} Verified
-                              </span>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-slate-400 text-xs italic">
-                            <Users2 className="w-4 h-4 text-slate-300" />
-                            <span>No members added yet</span>
-                          </div>
-                        )}
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 text-slate-800 font-extrabold text-xs font-mono border border-slate-200/80">
+                          <Users2 className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
+                        </div>
                       </td>
 
                       {/* 4. Available Cash */}
