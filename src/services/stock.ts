@@ -167,3 +167,106 @@ export async function deleteStock(stockId: string): Promise<{ success: boolean; 
   broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {});
   return { success: true };
 }
+
+export interface StockHoldingTeam {
+  team_id: string;
+  team_name: string;
+  team_code?: string;
+  quantity: number;
+  average_cost: number;
+  current_price: number;
+  current_value: number;
+  total_invested: number;
+  unrealized_pnl: number;
+  unrealized_pnl_pct: number;
+  holding_pct: number;
+}
+
+export interface StockHoldingDistribution {
+  stock_id: string;
+  symbol: string;
+  company_name: string;
+  current_price: number;
+  total_quantity: number;
+  total_value: number;
+  teams_count: number;
+  teams: StockHoldingTeam[];
+}
+
+export async function getStockHoldingDistribution(stockId: string): Promise<StockHoldingDistribution> {
+  const stock = await getStock(stockId);
+  const currentPrice = stock?.current_price || 0;
+  const symbol = stock?.symbol || 'STOCK';
+  const companyName = stock?.company_name || 'Asset';
+
+  let rawHoldings: any[] = [];
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('holdings')
+        .select(`
+          *,
+          team:teams(id, name, team_code)
+        `)
+        .eq('stock_id', stockId)
+        .gt('quantity', 0);
+
+      if (!error && data && data.length > 0) {
+        rawHoldings = data;
+      }
+    } catch (err) {
+      console.warn('Supabase getStockHoldingDistribution error:', err);
+    }
+  }
+
+  if (rawHoldings.length === 0) {
+    const db = getMockDB();
+    rawHoldings = db.holdings
+      .filter((h) => h.stock_id === stockId && h.quantity > 0)
+      .map((h) => ({
+        ...h,
+        team: db.teams.find((t) => t.id === h.team_id) || { id: h.team_id, name: 'Team', team_code: 'T' },
+      }));
+  }
+
+  const totalQuantity = rawHoldings.reduce((sum, h) => sum + Number(h.quantity || 0), 0);
+  const totalValue = totalQuantity * currentPrice;
+
+  const teams: StockHoldingTeam[] = rawHoldings
+    .map((h) => {
+      const qty = Number(h.quantity || 0);
+      const avgCost = Number(h.average_cost || 0);
+      const val = qty * currentPrice;
+      const invested = qty * avgCost;
+      const pnl = val - invested;
+      const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+      const holdingPct = totalQuantity > 0 ? (qty / totalQuantity) * 100 : 0;
+
+      return {
+        team_id: h.team?.id || h.team_id,
+        team_name: h.team?.name || 'Unknown Team',
+        team_code: h.team?.team_code,
+        quantity: qty,
+        average_cost: avgCost,
+        current_price: currentPrice,
+        current_value: val,
+        total_invested: invested,
+        unrealized_pnl: pnl,
+        unrealized_pnl_pct: pnlPct,
+        holding_pct: holdingPct,
+      };
+    })
+    .sort((a, b) => b.quantity - a.quantity);
+
+  return {
+    stock_id: stockId,
+    symbol,
+    company_name: companyName,
+    current_price: currentPrice,
+    total_quantity: totalQuantity,
+    total_value: totalValue,
+    teams_count: teams.length,
+    teams,
+  };
+}

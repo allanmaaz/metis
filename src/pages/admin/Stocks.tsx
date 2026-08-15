@@ -4,6 +4,7 @@ import { getStocks, updateStockPrice, createStock, deleteStock, getActiveGlides 
 import { Event, Stock } from '../../types';
 import { PriceChangeModal } from '../../components/admin/PriceChangeModal';
 import { CreateStockModal } from '../../components/admin/CreateStockModal';
+import { StockHoldingsModal } from '../../components/admin/StockHoldingsModal';
 import { formatCurrency, formatPercent } from '../../lib/formatting';
 import {
   BarChart3,
@@ -12,7 +13,7 @@ import {
   TrendingDown,
   DollarSign,
   Search,
-  Trash2,
+  PieChart,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
@@ -23,6 +24,7 @@ export const AdminStocks: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [activePriceStock, setActivePriceStock] = useState<Stock | null>(null);
+  const [activeHoldingsStock, setActiveHoldingsStock] = useState<Stock | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const loadStocks = useCallback(async () => {
@@ -233,13 +235,21 @@ export const AdminStocks: React.FC = () => {
                 </div>
 
                 {/* Bottom Row: Actions */}
-                <div className="pt-1">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => setActivePriceStock(stock)}
-                    className="w-full py-2.5 px-3 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98"
+                    className="flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98"
                   >
                     <DollarSign className="w-4 h-4 text-orange-500" />
                     <span>Adjust Price</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveHoldingsStock(stock)}
+                    title="View Team Holdings & Ownership"
+                    className="w-10 h-10 rounded-xl bg-white hover:bg-orange-50 text-slate-500 hover:text-orange-600 border border-slate-200 hover:border-orange-200 flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0 active:scale-95"
+                  >
+                    <PieChart className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -253,10 +263,10 @@ export const AdminStocks: React.FC = () => {
         <table className="w-full text-left text-sm table-fixed">
           <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
             <tr>
-              <th className="py-3.5 px-4 w-[40%]">Asset & Sector</th>
+              <th className="py-3.5 px-4 w-[38%]">Asset & Sector</th>
               <th className="py-3.5 px-4 text-right w-[20%]">Price & 24h Trend</th>
               <th className="py-3.5 px-4 text-right w-[20%]">Session Range</th>
-              <th className="py-3.5 px-4 text-right w-[20%]">Actions</th>
+              <th className="py-3.5 px-4 text-right w-[22%]">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-mono">
@@ -343,13 +353,21 @@ export const AdminStocks: React.FC = () => {
 
                     {/* Quick Actions */}
                     <td className="py-3.5 px-4 align-middle text-right">
-                      <div className="flex items-center justify-end">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => setActivePriceStock(stock)}
                           className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200/80 hover:border-orange-300 transition-all flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
                         >
                           <DollarSign className="w-3.5 h-3.5 text-orange-500" />
                           <span>Adjust Price</span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveHoldingsStock(stock)}
+                          title="View Team Holdings & Ownership"
+                          className="w-8 h-8 rounded-xl bg-white hover:bg-orange-50 text-slate-500 hover:text-orange-600 border border-slate-200 hover:border-orange-200 flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0"
+                        >
+                          <PieChart className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -368,6 +386,15 @@ export const AdminStocks: React.FC = () => {
           isOpen={!!activePriceStock}
           onClose={() => setActivePriceStock(null)}
           onConfirmChange={handlePriceUpdate}
+        />
+      )}
+
+      {/* Stock Holdings Breakdown Modal */}
+      {activeHoldingsStock && (
+        <StockHoldingsModal
+          stock={activeHoldingsStock}
+          isOpen={!!activeHoldingsStock}
+          onClose={() => setActiveHoldingsStock(null)}
         />
       )}
 
