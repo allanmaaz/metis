@@ -4,33 +4,29 @@ import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
-  if (isSupabaseConfigured) {
+  const db = getMockDB();
+  const localPublished = db.news.filter((n) => n.is_published);
+
+  if (isSupabaseConfigured && eventId && isValidUuid(eventId)) {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('news')
         .select('*')
         .eq('is_published', true)
+        .eq('event_id', eventId)
         .order('published_at', { ascending: false });
-
-      if (eventId && isValidUuid(eventId)) {
-        query = query.eq('event_id', eventId);
-      }
-
-      const { data, error } = await query;
 
       if (!error && data && data.length > 0) {
         return data as NewsItem[];
       }
     } catch (err) {
-      // Clean fallback to mock data
+      // Fallback to local database
     }
   }
 
-  // Fallback to local database
-  const db = getMockDB();
-  return db.news
-    .filter((n) => n.is_published)
-    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+  return localPublished.sort(
+    (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+  );
 }
 
 export async function publishNews(data: {
@@ -63,8 +59,8 @@ export async function publishNews(data: {
     entity_type: 'NEWS',
     entity_id: newItem.id,
     old_value: null,
-    new_value: { headline: data.headline, sector: data.sector },
-    reason: 'Published market breaking news',
+    new_value: { headline: newItem.headline, sector: newItem.sector },
+    reason: 'Published breaking wire broadcast',
     metadata: null,
     created_at: new Date().toISOString(),
   });
@@ -74,16 +70,16 @@ export async function publishNews(data: {
   broadcastRealtimeEvent('NEWS_UPDATED', newItem);
 
   // 2. Also insert into remote Supabase database if configured
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(data.event_id)) {
     try {
       const { data: created, error } = await supabase
         .from('news')
         .insert({
-          event_id: data.event_id === 'e1' ? (db.events[0]?.id || data.event_id) : data.event_id,
+          event_id: data.event_id,
           headline: data.headline.trim(),
           body: data.body.trim(),
           sector: data.sector.trim(),
-          published_by: data.admin_id || null,
+          published_by: data.admin_id && isValidUuid(data.admin_id) ? data.admin_id : null,
           is_published: true,
           published_at: newItem.published_at,
         })
@@ -104,6 +100,8 @@ export async function publishNews(data: {
 export async function deleteNews(newsId: string): Promise<{ success: boolean; error?: string }> {
   // 1. Remove from local DB
   const db = getMockDB();
+  const targetNews = db.news.find((n) => n.id === newsId);
+  const targetHeadline = targetNews?.headline;
   db.news = db.news.filter((n) => n.id !== newsId);
   db.auditLogs.unshift({
     id: `al_${Date.now()}`,
@@ -121,17 +119,21 @@ export async function deleteNews(newsId: string): Promise<{ success: boolean; er
   });
   saveMockDB(db);
 
-  // Instant Realtime Bus broadcast
-  broadcastRealtimeEvent('NEWS_UPDATED', { deletedId: newsId });
-
   // 2. Remove from Supabase
   if (isSupabaseConfigured) {
     try {
-      await supabase.from('news').delete().eq('id', newsId);
+      if (isValidUuid(newsId)) {
+        await supabase.from('news').delete().eq('id', newsId);
+      } else if (targetHeadline) {
+        await supabase.from('news').delete().eq('headline', targetHeadline);
+      }
     } catch (err) {
-      console.error('Error deleting news from Supabase:', err);
+      console.warn('Supabase delete news error:', err);
     }
   }
+
+  // Instant Realtime Bus broadcast
+  broadcastRealtimeEvent('NEWS_UPDATED', { deletedId: newsId });
 
   return { success: true };
 }

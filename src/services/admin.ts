@@ -1,11 +1,14 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Team, TeamMember, TeamStatus } from '../types';
 import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getTeams(eventId: string): Promise<Team[]> {
-  if (isSupabaseConfigured) {
+  const db = getMockDB();
+  const localTeams = db.teams.filter((t) => t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1');
+
+  if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase
         .from('teams')
@@ -13,7 +16,7 @@ export async function getTeams(eventId: string): Promise<Team[]> {
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as Team[];
       }
     } catch (err) {
@@ -21,8 +24,7 @@ export async function getTeams(eventId: string): Promise<Team[]> {
     }
   }
 
-  const db = getMockDB();
-  return db.teams.filter((t) => t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1');
+  return localTeams;
 }
 
 export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
@@ -318,26 +320,61 @@ export async function setTeamStatus(
 }
 
 export async function deleteTeam(teamId: string): Promise<{ success: boolean; error?: string }> {
+  const db = getMockDB();
+  const targetTeam = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
+  const teamCode = targetTeam?.team_code;
+
+  // 1. Remove from local DB
+  db.teams = db.teams.filter((t) => t.id !== teamId && t.team_code !== teamCode);
+  db.teamMembers = db.teamMembers.filter((m) => m.team_id !== teamId);
+  db.holdings = db.holdings.filter((h) => h.team_id !== teamId);
+  db.trades = db.trades.filter((tr) => tr.team_id !== teamId);
+  db.auditLogs.unshift({
+    id: `al_${Date.now()}`,
+    event_id: db.events[0]?.id || 'e1',
+    actor_type: 'ADMIN',
+    actor_id: null,
+    action: 'TEAM_DELETED',
+    entity_type: 'TEAM',
+    entity_id: teamId,
+    old_value: { team_code: teamCode, name: targetTeam?.name },
+    new_value: null,
+    reason: 'Deleted team by Admin',
+    metadata: null,
+    created_at: new Date().toISOString(),
+  });
+  saveMockDB(db);
+
+  // 2. Remove from Supabase if configured
   if (isSupabaseConfigured) {
     try {
-      await supabase.from('team_members').delete().eq('team_id', teamId);
-      await supabase.from('holdings').delete().eq('team_id', teamId);
-      await supabase.from('trades').delete().eq('team_id', teamId);
-      const { error } = await supabase.from('teams').delete().eq('id', teamId);
-      if (error) console.warn('Supabase delete error:', error);
+      if (isValidUuid(teamId)) {
+        await supabase.from('team_members').delete().eq('team_id', teamId);
+        await supabase.from('holdings').delete().eq('team_id', teamId);
+        await supabase.from('trades').delete().eq('team_id', teamId);
+        await supabase.from('teams').delete().eq('id', teamId);
+      } else if (teamCode) {
+        await supabase.from('teams').delete().eq('team_code', teamCode);
+      }
     } catch (err: any) {
       console.warn('Supabase deleteTeam error:', err);
     }
   }
 
-  const db = getMockDB();
-  db.teams = db.teams.filter((t) => t.id !== teamId);
-  db.teamMembers = db.teamMembers.filter((m) => m.team_id !== teamId);
-  db.holdings = db.holdings.filter((h) => h.team_id !== teamId);
-  db.trades = db.trades.filter((tr) => tr.team_id !== teamId);
-  saveMockDB(db);
+  // 3. Clear participant session if deleting the active logged-in team
+  if (typeof window !== 'undefined') {
+    const sessionStr = localStorage.getItem('metis_participant_session_v1');
+    if (sessionStr) {
+      try {
+        const sess = JSON.parse(sessionStr);
+        if (sess?.team?.id === teamId || sess?.team?.team_code === teamCode) {
+          localStorage.removeItem('metis_participant_session_v1');
+        }
+      } catch {}
+    }
+  }
 
-  broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId, deleted: true });
   broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
   return { success: true };
 }
