@@ -141,8 +141,8 @@ export const LiveNotificationBanner: React.FC = () => {
           });
         }
 
-        // Price Surge (Hike)
-        else if (payload.isHike || payload.pctChange > 0) {
+        // Price Surge (Hike) - Only notify on non-tick final jumps or large shifts
+        else if (!payload.isTick && (payload.isHike || payload.pctChange > 0)) {
           const sym = payload.symbol || 'STOCK';
           const pct = Math.abs(payload.pctChange || 0).toFixed(1);
           const newPrice = payload.newPrice || payload.stock?.current_price || 0;
@@ -159,8 +159,8 @@ export const LiveNotificationBanner: React.FC = () => {
           });
         }
 
-        // Price Crash (Reduction)
-        else if (payload.isCrash || payload.pctChange < 0) {
+        // Price Crash (Reduction) - Only notify on non-tick final jumps or large shifts
+        else if (!payload.isTick && (payload.isCrash || payload.pctChange < 0)) {
           const sym = payload.symbol || 'STOCK';
           const pct = Math.abs(payload.pctChange || 0).toFixed(1);
           const newPrice = payload.newPrice || payload.stock?.current_price || 0;

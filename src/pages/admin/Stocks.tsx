@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getActiveEvent } from '../../services/event';
-import { getStocks, updateStockPrice, createStock, deleteStock } from '../../services/stock';
+import { getStocks, updateStockPrice, createStock, deleteStock, getActiveGlides } from '../../services/stock';
 import { Event, Stock } from '../../types';
 import { PriceChangeModal } from '../../components/admin/PriceChangeModal';
 import { CreateStockModal } from '../../components/admin/CreateStockModal';
@@ -19,6 +19,7 @@ import { useRealtimeSubscription } from '../../lib/realtimeBus';
 export const AdminStocks: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [stocks, setStocks] = useState<Stock[]>([]);
+  const [activeGlides, setActiveGlides] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [activePriceStock, setActivePriceStock] = useState<Stock | null>(null);
@@ -35,17 +36,42 @@ export const AdminStocks: React.FC = () => {
     }
   }, []);
 
+  const refreshGlides = useCallback(() => {
+    setActiveGlides(getActiveGlides());
+  }, []);
+
   useEffect(() => {
     loadStocks();
-  }, [loadStocks]);
+    refreshGlides();
+  }, [loadStocks, refreshGlides]);
+
+  useEffect(() => {
+    const interval = setInterval(refreshGlides, 800);
+    return () => clearInterval(interval);
+  }, [refreshGlides]);
 
   // Universal Real-Time Sync
-  useRealtimeSubscription(['STOCK_PRICE_UPDATED'], loadStocks, 1500);
+  useRealtimeSubscription(['STOCK_PRICE_UPDATED'], () => {
+    loadStocks();
+    refreshGlides();
+  }, 1000);
 
-  const handlePriceUpdate = async (stockId: string, newPrice: number, reason: string) => {
-    const res = await updateStockPrice(stockId, newPrice, reason);
+  const handlePriceUpdate = async (
+    stockId: string,
+    newPrice: number,
+    reason: string,
+    durationSec?: number
+  ) => {
+    const res = await updateStockPrice(
+      stockId,
+      newPrice,
+      reason,
+      undefined,
+      durationSec ?? 15
+    );
     if (res.success) {
       loadStocks();
+      refreshGlides();
     }
     return res;
   };
@@ -177,9 +203,16 @@ export const AdminStocks: React.FC = () => {
 
                       {/* Current Price */}
                       <td className="py-4 px-6 text-right">
-                        <span className="text-base font-extrabold text-slate-900">
-                          {formatCurrency(stock.current_price)}
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-base font-extrabold text-slate-900">
+                            {formatCurrency(stock.current_price)}
+                          </span>
+                          {activeGlides.find((g) => g.stockId === stock.id) && (
+                            <span className="text-[10px] text-orange-500 font-bold font-mono animate-pulse flex items-center gap-1 mt-0.5">
+                              <span>🌊 Gliding ➔ {formatCurrency(activeGlides.find((g) => g.stockId === stock.id)!.targetPrice)}</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Round Change */}

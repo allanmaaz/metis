@@ -45,82 +45,18 @@ export async function getStock(stockId: string): Promise<Stock | null> {
   return db.stocks.find((s) => s.id === stockId) || null;
 }
 
+import { startPriceGlide, updateStockPriceInstant, getActiveGlides, cancelGlide } from './stockPriceEngine';
+
+export { getActiveGlides, cancelGlide };
+
 export async function updateStockPrice(
   stockId: string,
   newPrice: number,
   reason: string,
-  adminId?: string
+  adminId?: string,
+  transitionDurationSec: number = 15
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  if (newPrice <= 0) {
-    return { success: false, error: 'Price must be greater than 0' };
-  }
-
-  // 1. Update local DB
-  const db = getMockDB();
-  const stock = db.stocks.find((s) => s.id === stockId);
-  let oldPrice = 0;
-  let pctChange = 0;
-
-  if (stock) {
-    oldPrice = stock.current_price;
-    const priceDiff = newPrice - oldPrice;
-    pctChange = oldPrice > 0 ? (priceDiff / oldPrice) * 100 : 0;
-
-    stock.current_price = newPrice;
-    stock.high_price = Math.max(stock.high_price, newPrice);
-    stock.low_price = Math.min(stock.low_price, newPrice);
-    stock.updated_at = new Date().toISOString();
-
-    db.auditLogs.unshift({
-      id: `al_${Date.now()}`,
-      event_id: stock.event_id,
-      actor_type: 'ADMIN',
-      actor_id: adminId || null,
-      action: 'PRICE_CHANGE',
-      entity_type: 'STOCK',
-      entity_id: stock.id,
-      old_value: { price: oldPrice, symbol: stock.symbol },
-      new_value: { price: newPrice, symbol: stock.symbol, high: stock.high_price, low: stock.low_price },
-      reason,
-      metadata: null,
-      created_at: new Date().toISOString(),
-    });
-
-    saveMockDB(db);
-  }
-
-  // Broadcast price update to all screens in real time with rich metrics
-  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {
-    type: 'STOCK_PRICE_CHANGED',
-    stockId,
-    symbol: stock?.symbol || 'STOCK',
-    companyName: stock?.company_name || 'Market Asset',
-    oldPrice,
-    newPrice,
-    pctChange,
-    isHike: newPrice > oldPrice,
-    isCrash: newPrice < oldPrice,
-    reason,
-    stock,
-  });
-
-  // 2. Update Supabase if configured
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.rpc('update_stock_price', {
-        p_stock_id: stockId,
-        p_new_price: newPrice,
-        p_reason: reason,
-        p_admin_id: adminId || null,
-      });
-
-      if (!error) return { success: true, data };
-    } catch (err: any) {
-      console.warn('Supabase update_stock_price warning (saved locally):', err);
-    }
-  }
-
-  return { success: true, data: stock };
+  return startPriceGlide(stockId, newPrice, transitionDurationSec, reason, adminId);
 }
 
 export async function createStock(data: {

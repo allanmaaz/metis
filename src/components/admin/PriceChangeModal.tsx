@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stock } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { formatCurrency, formatPercent } from '../../lib/formatting';
-import { AlertTriangle, TrendingUp, TrendingDown, CheckCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Zap,
+  Waves,
+  Clock,
+  Sparkles,
+} from 'lucide-react';
 
 interface PriceChangeModalProps {
   isOpen: boolean;
   onClose: () => void;
   stock: Stock | null;
-  onConfirmChange: (stockId: string, newPrice: number, reason: string) => Promise<{ success: boolean; error?: string }>;
+  onConfirmChange: (
+    stockId: string,
+    newPrice: number,
+    reason: string,
+    durationSec?: number
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
@@ -21,13 +35,15 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
 }) => {
   const [newPrice, setNewPrice] = useState<string>('');
   const [reason, setReason] = useState<string>('Market news adjustment');
+  const [durationSec, setDurationSec] = useState<number>(15);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (stock) {
       setNewPrice(stock.current_price.toString());
       setReason('Market dynamics adjustment');
+      setDurationSec(15);
       setError(null);
     }
   }, [stock]);
@@ -61,7 +77,12 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
     setIsLoading(true);
     setError(null);
 
-    const result = await onConfirmChange(stock.id, numPrice, reason.trim());
+    const result = await onConfirmChange(
+      stock.id,
+      numPrice,
+      reason.trim(),
+      durationSec
+    );
     setIsLoading(false);
 
     if (result.success) {
@@ -71,6 +92,8 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
     }
   };
 
+  const estimatedTicks = durationSec > 0 ? Math.max(4, Math.round((durationSec * 1000) / 800)) : 1;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -78,34 +101,36 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
       title={
         <div className="flex items-center gap-2">
           <span>Adjust Price:</span>
-          <span className="text-orange-400 font-extrabold">{stock.symbol}</span>
+          <span className="text-orange-400 font-extrabold font-mono">
+            {stock.symbol}
+          </span>
         </div>
       }
-      subtitle={stock.company_name}
+      subtitle={`${stock.company_name} · ${stock.sector}`}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Current vs New Price Comparison */}
         <div className="grid grid-cols-2 gap-2.5 p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block font-mono">
               Current Price
             </span>
-            <div className="text-xl font-bold font-display text-slate-300 mt-0.5">
+            <div className="text-xl font-black font-mono text-slate-300 mt-0.5">
               {formatCurrency(currentPrice)}
             </div>
           </div>
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              New Price
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block font-mono">
+              Target Price
             </span>
-            <div className="text-xl font-extrabold font-display text-white mt-0.5 flex items-center gap-1.5">
+            <div className="text-xl font-black font-mono text-white mt-0.5 flex items-center gap-1.5">
               {formatCurrency(numPrice)}
               {pctChange !== 0 && (
                 <span
                   className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded ${
                     pctChange > 0
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-rose-500/20 text-rose-400'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   }`}
                 >
                   {formatPercent(pctChange)}
@@ -117,7 +142,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
 
         {/* Quick Percent Multipliers */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">
             Quick Multipliers
           </label>
           <div className="grid grid-cols-5 gap-1.5">
@@ -126,7 +151,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
                 key={pct}
                 type="button"
                 onClick={() => applyDeltaPercent(pct)}
-                className={`text-xs py-1.5 rounded-lg border font-mono font-bold transition-colors ${
+                className={`text-xs py-1.5 rounded-xl border font-mono font-black transition-all active:scale-95 ${
                   pct < 0
                     ? 'border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
                     : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
@@ -141,7 +166,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
         {/* Custom Price Input */}
         <div>
           <Input
-            label="Custom Stock Price (₹)"
+            label="Target Stock Price (₹)"
             type="number"
             step="any"
             min="0.01"
@@ -152,6 +177,85 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
             }}
             placeholder="Enter target price"
           />
+        </div>
+
+        {/* Dynamic Transition Duration Control */}
+        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-mono">
+              <Activity className="w-3.5 h-3.5 text-orange-500" />
+              <span>Transition Speed & Duration</span>
+            </label>
+            <span className="text-[10px] text-orange-400 font-mono font-bold">
+              {durationSec === 0 ? 'Instant (0s)' : `${durationSec}s Glide (~${estimatedTicks} ticks)`}
+            </span>
+          </div>
+
+          {/* Quick Duration Preset Pills */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+            {[
+              { label: '⚡ 0s (Instant)', sec: 0 },
+              { label: '5s (Fast)', sec: 5 },
+              { label: '10s', sec: 10 },
+              { label: '15s (Default)', sec: 15 },
+              { label: '30s (Smooth)', sec: 30 },
+              { label: '60s (Slow)', sec: 60 },
+            ].map((p) => (
+              <button
+                key={p.sec}
+                type="button"
+                onClick={() => setDurationSec(p.sec)}
+                className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all text-center ${
+                  durationSec === p.sec
+                    ? 'bg-orange-500 text-white shadow-xs'
+                    : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Custom Duration Input Slider/Number */}
+          <div className="flex items-center gap-3 pt-1">
+            <input
+              type="range"
+              min="0"
+              max="60"
+              step="1"
+              value={durationSec}
+              onChange={(e) => setDurationSec(Number(e.target.value))}
+              className="flex-1 accent-orange-500 cursor-pointer"
+            />
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                min="0"
+                max="300"
+                value={durationSec}
+                onChange={(e) => setDurationSec(Math.max(0, Number(e.target.value)))}
+                className="w-16 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white font-mono font-bold text-xs text-center focus:outline-none focus:border-orange-500"
+              />
+              <span className="text-xs text-slate-400 font-mono">sec</span>
+            </div>
+          </div>
+
+          {/* Explanation Banner */}
+          <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/40 text-[11px] text-slate-300 font-medium">
+            {durationSec === 0 ? (
+              <span className="flex items-center gap-1.5 text-amber-300 font-bold">
+                <Zap className="w-3.5 h-3.5" />
+                <span>Price will update immediately on all screens with zero delay.</span>
+              </span>
+            ) : (
+              <span className="flex items-start gap-1.5 text-slate-300">
+                <Waves className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                <span>
+                  Price will gradually glide from <b>{formatCurrency(currentPrice)}</b> to <b>{formatCurrency(numPrice)}</b> with realistic micro-fluctuations over <b>{durationSec} seconds</b> (~{estimatedTicks} live ticks).
+                </span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Reason Input */}
@@ -171,7 +275,7 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
             <div>
               <span className="font-bold block">⚠️ LARGE PRICE CHANGE DETECTED</span>
               <span>
-                You are adjusting the stock price by {formatPercent(pctChange)}. This will immediately alter the total wealth and leaderboard ranking of all teams holding this stock.
+                You are adjusting the stock price by {formatPercent(pctChange)}. This will alter the portfolio valuations and leaderboard ranks of all teams holding this stock.
               </span>
             </div>
           </div>
@@ -179,26 +283,23 @@ export const PriceChangeModal: React.FC<PriceChangeModalProps> = ({
 
         {/* Error Alert */}
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs">
             {error}
           </div>
         )}
 
-        {/* Action CTAs */}
+        {/* Modal Buttons */}
         <div className="grid grid-cols-2 gap-3 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant={isLargeChange ? 'danger' : 'primary'}
-            isLoading={isLoading}
-            leftIcon={<CheckCircle className="w-4 h-4" />}
-          >
-            {isLargeChange ? 'Confirm Large Change' : 'Apply Price'}
+          <Button type="submit" variant="primary" isLoading={isLoading}>
+            {durationSec === 0 ? 'Apply Instant Price' : `Start ${durationSec}s Glide`}
           </Button>
         </div>
       </form>
     </Modal>
   );
 };
+
+export default PriceChangeModal;
