@@ -34,3 +34,19 @@ DROP POLICY IF EXISTS "Allow public/anon to manage stocks" ON stocks;
 CREATE POLICY "Allow public/anon to manage stocks" ON stocks
 FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can manage stock price history" ON stock_price_history;
+DROP POLICY IF EXISTS "Allow public/anon to manage stock_price_history" ON stock_price_history;
+CREATE POLICY "Allow public/anon to manage stock_price_history" ON stock_price_history
+FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admins can manage market sessions" ON market_sessions;
+DROP POLICY IF EXISTS "Allow public/anon to manage market_sessions" ON market_sessions;
+CREATE POLICY "Allow public/anon to manage market_sessions" ON market_sessions
+FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admins can manage events" ON events;
+DROP POLICY IF EXISTS "Allow public/anon to manage events" ON events;
+CREATE POLICY "Allow public/anon to manage events" ON events
+FOR ALL USING (true) WITH CHECK (true);
+
+

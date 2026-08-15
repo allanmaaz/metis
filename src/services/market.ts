@@ -110,19 +110,34 @@ export async function setMarketStatus(
 
   // 2. Also execute on remote Supabase if configured
   if (isSupabaseConfigured) {
+    const targetEventId = eventId === 'e1' ? (db.events[0]?.id || eventId) : eventId;
     try {
-      const { data, error } = await supabase.rpc('set_market_status', {
-        p_event_id: eventId === 'e1' ? (db.events[0]?.id || eventId) : eventId,
+      const { error } = await supabase.rpc('set_market_status', {
+        p_event_id: targetEventId,
         p_status: status,
         p_duration_minutes: durationMinutes || null,
         p_admin_id: adminId || null,
         p_reason: reason || `Admin set status to ${status}`,
       });
 
-      if (!error) {
-        return { success: true, data };
+      if (error) {
+        // Fallback: direct table insert so phones receive the open session
+        await supabase.from('market_sessions').insert({
+          event_id: targetEventId,
+          status,
+          started_at: newSession.started_at,
+          ends_at,
+        });
       }
     } catch (err: any) {
+      try {
+        await supabase.from('market_sessions').insert({
+          event_id: targetEventId,
+          status,
+          started_at: newSession.started_at,
+          ends_at,
+        });
+      } catch {}
       console.warn('Supabase set_market_status warning (saved locally):', err);
     }
   }
