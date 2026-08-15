@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Holding, PortfolioSummary } from '../types';
-import { getMockDB } from './mockData';
+import { getMockDB, saveMockDB } from './mockData';
 
 export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
   if (isSupabaseConfigured) {
@@ -58,10 +58,31 @@ export async function getTeamPortfolioSummary(
     }
   } else {
     const db = getMockDB();
-    const team = db.teams.find((t) => t.id === teamId);
+    let team = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
+
+    if (!team) {
+      const storedSession = localStorage.getItem('metis_participant_session_v1');
+      let sessionTeam = null;
+      if (storedSession) {
+        try {
+          sessionTeam = JSON.parse(storedSession)?.team;
+        } catch {}
+      }
+      if (sessionTeam) {
+        team = sessionTeam;
+        if (!db.teams.some((t) => t.id === sessionTeam.id)) {
+          db.teams.push(sessionTeam);
+          saveMockDB(db);
+        }
+      }
+    }
+
     if (team) {
-      cashBalance = team.cash_balance;
-      startingWealth = team.starting_wealth;
+      cashBalance = Number(team.cash_balance ?? 100000000);
+      startingWealth = Number(team.starting_wealth ?? 100000000);
+    } else {
+      cashBalance = 100000000;
+      startingWealth = 100000000;
     }
     holdings = await getTeamHoldings(teamId);
   }

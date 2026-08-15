@@ -486,136 +486,142 @@ export const AdminDashboard: React.FC = () => {
             onTouchEnd={handleTouchEnd}
             onMouseEnter={() => setIsCarouselPaused(true)}
             onMouseLeave={() => setIsCarouselPaused(false)}
-            className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 transition-all select-none relative group cursor-grab active:cursor-grabbing"
+            className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs transition-all select-none relative group cursor-grab active:cursor-grabbing overflow-hidden"
           >
-            {/* Top row: Sector, Symbol, Company, Price & % Change */}
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-200/60 shrink-0">
-                  {React.createElement(getSectorIcon(currentStock.sector), { className: 'w-4 h-4' })}
-                </div>
-                <div>
-                  <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
-                    {currentStock.sector || 'EV & AUTO'}
-                  </span>
-                  <div className="text-base font-black text-slate-900 tracking-tight">
-                    {currentStock.symbol}
+            {/* Animated Slide Wrapper */}
+            <div
+              key={currentStock.id}
+              className="space-y-3 animate-in fade-in slide-in-from-right-6 duration-300 fill-mode-both"
+            >
+              {/* Top row: Sector, Symbol, Company, Price & % Change */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-200/60 shrink-0">
+                    {React.createElement(getSectorIcon(currentStock.sector), { className: 'w-4 h-4' })}
                   </div>
-                  <span className="text-[10px] text-slate-400 truncate block max-w-[140px]">
-                    {currentStock.company_name}
-                  </span>
+                  <div>
+                    <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block font-mono">
+                      {currentStock.sector || 'EV & AUTO'}
+                    </span>
+                    <div className="text-base font-black text-slate-900 tracking-tight">
+                      {currentStock.symbol}
+                    </div>
+                    <span className="text-[10px] text-slate-400 truncate block max-w-[140px]">
+                      {currentStock.company_name}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-xl font-black text-slate-900 font-mono">
+                    {formatCurrency(currentStock.current_price)}
+                  </div>
+                  <div
+                    className={`flex items-center justify-end gap-1 text-[10px] font-bold font-mono ${
+                      isPositive ? 'text-emerald-600' : 'text-rose-600'
+                    }`}
+                  >
+                    <span>
+                      {isPositive ? '▲ +' : '▼ '}
+                      {Math.abs(pctChange).toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-slate-400 font-mono">
+                    Open: {formatCurrency(currentStock.opening_price)}
+                  </div>
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-xl font-black text-slate-900 font-mono">
-                  {formatCurrency(currentStock.current_price)}
-                </div>
-                <div
-                  className={`flex items-center justify-end gap-1 text-[10px] font-bold font-mono ${
-                    isPositive ? 'text-emerald-600' : 'text-rose-600'
-                  }`}
-                >
-                  <span>
-                    {isPositive ? '▲ +' : '▼ '}
-                    {Math.abs(pctChange).toFixed(2)}%
-                  </span>
-                </div>
-                <div className="text-[9px] text-slate-400 font-mono">
-                  Open: {formatCurrency(currentStock.opening_price)}
-                </div>
-              </div>
-            </div>
-
-            {/* Sparkline */}
-            <div className="h-10 w-full overflow-hidden flex items-end">
-              <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id={`grad_${currentStock.id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor={isPositive ? '#10B981' : '#F43F5E'}
-                      stopOpacity="0.25"
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor={isPositive ? '#10B981' : '#F43F5E'}
-                      stopOpacity="0.0"
-                    />
-                  </linearGradient>
-                </defs>
-                <path
-                  d={
-                    isPositive
-                      ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z'
-                      : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25 L100,30 L0,30 Z'
-                  }
-                  fill={`url(#grad_${currentStock.id})`}
-                />
-                <path
-                  d={
-                    isPositive
-                      ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5'
-                      : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25'
-                  }
-                  fill="none"
-                  stroke={isPositive ? '#10B981' : '#F43F5E'}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-
-            {/* Action Chips: -10%, -5%, +5%, +10%, Custom Price */}
-            <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100 flex-wrap">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickPercentChange(currentStock, -10);
-                  }}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
-                >
-                  -10%
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickPercentChange(currentStock, -5);
-                  }}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
-                >
-                  -5%
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickPercentChange(currentStock, 5);
-                  }}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
-                >
-                  +5%
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickPercentChange(currentStock, 10);
-                  }}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
-                >
-                  +10%
-                </button>
+              {/* Sparkline */}
+              <div className="h-10 w-full overflow-hidden flex items-end">
+                <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id={`grad_${currentStock.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="0%"
+                        stopColor={isPositive ? '#10B981' : '#F43F5E'}
+                        stopOpacity="0.25"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={isPositive ? '#10B981' : '#F43F5E'}
+                        stopOpacity="0.0"
+                      />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d={
+                      isPositive
+                        ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5 L100,30 L0,30 Z'
+                        : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25 L100,30 L0,30 Z'
+                    }
+                    fill={`url(#grad_${currentStock.id})`}
+                  />
+                  <path
+                    d={
+                      isPositive
+                        ? 'M0,25 Q15,20 30,22 T60,12 T85,14 T100,5'
+                        : 'M0,5 Q15,10 30,8 T60,18 T85,16 T100,25'
+                    }
+                    fill="none"
+                    stroke={isPositive ? '#10B981' : '#F43F5E'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePriceStock(currentStock);
-                }}
-                className="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-              >
-                Custom Price
-              </button>
+              {/* Action Chips: -10%, -5%, +5%, +10%, Custom Price */}
+              <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickPercentChange(currentStock, -10);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
+                  >
+                    -10%
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickPercentChange(currentStock, -5);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/70 transition-colors cursor-pointer"
+                  >
+                    -5%
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickPercentChange(currentStock, 5);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
+                  >
+                    +5%
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickPercentChange(currentStock, 10);
+                    }}
+                    className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/70 transition-colors cursor-pointer"
+                  >
+                    +10%
+                  </button>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivePriceStock(currentStock);
+                  }}
+                  className="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                >
+                  Custom Price
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -628,10 +634,10 @@ export const AdminDashboard: React.FC = () => {
                 key={s.id}
                 onClick={() => setActiveStockIndex(idx)}
                 aria-label={`Show ${s.symbol}`}
-                className={`transition-all duration-300 cursor-pointer ${
+                className={`transition-all duration-300 ease-out cursor-pointer ${
                   activeStockIndex === idx
-                    ? 'w-6 h-1.5 rounded-full bg-orange-500'
-                    : 'w-2 h-1.5 rounded-full bg-slate-200 hover:bg-slate-300'
+                    ? 'w-7 h-2 rounded-full bg-orange-500 shadow-xs shadow-orange-500/30 scale-105'
+                    : 'w-2 h-2 rounded-full bg-slate-200 hover:bg-slate-300 hover:scale-110'
                 }`}
               />
             ))}

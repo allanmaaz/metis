@@ -120,8 +120,18 @@ export const Dashboard: React.FC = () => {
   };
 
   const isMarketOpen = session?.status === 'OPEN';
-  const totalWealth = summary?.total_wealth ?? participant?.team.cash_balance ?? 100000000;
-  const cashBalance = summary ? summary.cash_balance : (participant?.team.cash_balance ?? 100000000);
+  const teamDisplayName = participant?.team?.name
+    ? participant.team.name.startsWith('Team')
+      ? participant.team.name
+      : `Team ${participant.team.name}`
+    : 'Team Alpha';
+
+  const totalWealth = (summary?.total_wealth !== undefined && summary.total_wealth > 0)
+    ? summary.total_wealth
+    : (participant?.team?.cash_balance ?? 100000000);
+  const cashBalance = (summary?.cash_balance !== undefined && summary.cash_balance > 0)
+    ? summary.cash_balance
+    : (participant?.team?.cash_balance ?? 100000000);
   const portfolioVal = summary?.current_value ?? 0;
   const pnlVal = summary?.today_pnl ?? 0;
   const pnlPct = summary?.today_pnl_pct ?? 0;
@@ -149,14 +159,14 @@ export const Dashboard: React.FC = () => {
       <div
         className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-colors ${
           isDark
-            ? 'bg-[#131B2E] border border-white/5 shadow-xs'
+            ? 'bg-[#131B2E] border border-white/5 shadow-md'
             : 'bg-white border border-slate-200/80 shadow-xs'
         }`}
       >
-        {/* Left: Dynamic Market Status */}
+        {/* Left: Live Status Pill */}
         <div className="flex items-center gap-2">
           <span
-            className={`w-2 h-2 rounded-full ${
+            className={`w-2.5 h-2.5 rounded-full ${
               session?.status === 'OPEN'
                 ? 'bg-emerald-500 animate-pulse'
                 : session?.status === 'PAUSED'
@@ -177,7 +187,7 @@ export const Dashboard: React.FC = () => {
                 : 'text-rose-500'
             }`}
           >
-            MARKET {session?.status || 'OPEN'}
+            MARKET {session?.status || 'CLOSED'}
           </span>
         </div>
 
@@ -219,14 +229,14 @@ export const Dashboard: React.FC = () => {
             </span>
             <button
               onClick={() => setIsWealthMasked(!isWealthMasked)}
-              className="text-slate-400 hover:text-slate-600 ml-0.5"
+              className="text-slate-400 hover:text-slate-600 ml-0.5 cursor-pointer"
             >
               {isWealthMasked ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             </button>
           </div>
 
           <span className="text-xs font-bold text-orange-500">
-            Team {participant?.team.name || 'Alpha'}
+            {teamDisplayName}
           </span>
         </div>
 

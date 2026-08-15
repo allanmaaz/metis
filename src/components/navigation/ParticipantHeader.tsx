@@ -130,10 +130,16 @@ export const ParticipantHeader: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-orange-500/40 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-orange-500/40 transition-colors cursor-pointer"
             >
               <span className="w-2 h-2 rounded-full bg-orange-500" />
-              <span>Team {participant?.team.name || 'Alpha'}</span>
+              <span>
+                {participant?.team.name
+                  ? participant.team.name.startsWith('Team')
+                    ? participant.team.name
+                    : `Team ${participant.team.name}`
+                  : 'Team Alpha'}
+              </span>
             </button>
           </div>
         </div>
@@ -163,7 +169,11 @@ export const ParticipantHeader: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-black text-sm leading-tight">
-                      Team {participant?.team.name}
+                      {participant?.team.name
+                        ? participant.team.name.startsWith('Team')
+                          ? participant.team.name
+                          : `Team ${participant.team.name}`
+                        : 'Team Alpha'}
                     </h3>
                     <span className="text-[10px] font-mono text-slate-400">
                       {participant?.team.team_code}
