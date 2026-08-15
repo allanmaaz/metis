@@ -70,14 +70,11 @@ export const AdminNews: React.FC = () => {
 
       {/* Published News List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-orange-500 animate-pulse" />
-            <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
-              Broadcasted Wires ({newsList.length})
-            </h3>
-          </div>
-          <span className="text-xs text-slate-400 font-medium">Real-time synchronized</span>
+        <div className="flex items-center gap-2">
+          <Radio className="w-4 h-4 text-orange-500 animate-pulse" />
+          <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+            Broadcasted Wires ({newsList.length})
+          </h3>
         </div>
 
         {newsList.length === 0 ? (
