@@ -50,9 +50,6 @@ export const Landing: React.FC = () => {
               Meets Fortune.
             </span>
           </h1>
-          <p className="text-base sm:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed">
-            A high-stakes, mobile-first virtual market arena. Read breaking news, decode market catalysts, execute strategic trades, and lead the live rankings.
-          </p>
         </div>
 
         {/* Active Event Card */}
