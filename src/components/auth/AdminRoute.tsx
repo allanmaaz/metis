@@ -46,21 +46,12 @@ export const AdminRoute: React.FC = () => {
           </span>
         </Link>
 
-        {/* Right: Avatar + Notification Bell */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-            {admin?.full_name?.charAt(0) || 'M'}
+        {/* Right Action: Clean Quick Status / Logout Icon */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[9px] font-extrabold text-emerald-600 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>LIVE</span>
           </div>
-
-          <Link
-            to={`${prefix}/news`}
-            className="relative p-1 rounded-xl text-slate-700 hover:text-orange-500 transition-colors"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
-              12
-            </span>
-          </Link>
         </div>
       </header>
 
