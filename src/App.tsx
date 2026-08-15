@@ -38,6 +38,26 @@ const queryClient = new QueryClient({
   },
 });
 
+// Check if user is accessing through an admin subdomain (e.g. admin.metis.pages.dev or admin.localhost)
+const isAdminSubdomain =
+  typeof window !== 'undefined' &&
+  (window.location.hostname.startsWith('admin.') ||
+    window.location.hostname.includes('-admin.') ||
+    window.location.hostname.startsWith('metis-admin.'));
+
+// Root Redirection Handler based on Subdomain
+const DynamicRoot: React.FC = () => {
+  const { isAdminAuthenticated } = useAuth();
+  if (isAdminSubdomain) {
+    return isAdminAuthenticated ? (
+      <Navigate to="/control/dashboard" replace />
+    ) : (
+      <Navigate to="/control/login" replace />
+    );
+  }
+  return <Landing />;
+};
+
 // Admin Root Redirection Handler
 const AdminRootRedirect: React.FC = () => {
   const { isAdminAuthenticated } = useAuth();
@@ -54,8 +74,10 @@ export function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Entry Routes */}
-            <Route path="/" element={<Landing />} />
+            {/* Dynamic Root based on Subdomain */}
+            <Route path="/" element={<DynamicRoot />} />
+
+            {/* Public Participant Routes */}
             <Route path="/join" element={<Join />} />
             <Route path="/verify" element={<Verify />} />
 
@@ -68,7 +90,8 @@ export function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
             </Route>
 
-            {/* Admin Control Routes */}
+            {/* Admin Control Routes (Supports /control, /login, or direct subdomain) */}
+            <Route path="/login" element={<AdminLogin />} />
             <Route path="/control" element={<AdminRootRedirect />} />
             <Route path="/control/login" element={<AdminLogin />} />
 
