@@ -126,27 +126,15 @@ export const ParticipantHeader: React.FC = () => {
             ))}
           </nav>
 
-          {/* Right: Team Indicator + Notification Bell */}
+          {/* Right: Team Indicator */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-orange-500/40 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-orange-500/40 transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-orange-500" />
               <span>Team {participant?.team.name || 'Alpha'}</span>
             </button>
-
-            <Link
-              to="/news"
-              className={`relative p-1.5 rounded-xl transition-colors ${
-                isDark ? 'text-slate-300 hover:text-orange-400' : 'text-slate-700 hover:text-orange-500'
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
-                12
-              </span>
-            </Link>
           </div>
         </div>
       </header>
