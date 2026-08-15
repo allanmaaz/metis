@@ -106,38 +106,19 @@ export async function setMarketStatus(
   saveMockDB(db);
 
   // Broadcast to all participant tabs and windows immediately
-  broadcastRealtimeEvent('MARKET_SESSION_CHANGED', { status, ends_at });
+  broadcastRealtimeEvent('MARKET_SESSION_CHANGED', { status, ends_at, session: newSession });
 
   // 2. Also execute on remote Supabase if configured
   if (isSupabaseConfigured) {
-    const targetEventId = eventId === 'e1' ? (db.events[0]?.id || eventId) : eventId;
+    const targetEventId = isValidUuid(eventId) ? eventId : (db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111');
     try {
-      const { error } = await supabase.rpc('set_market_status', {
-        p_event_id: targetEventId,
-        p_status: status,
-        p_duration_minutes: durationMinutes || null,
-        p_admin_id: adminId || null,
-        p_reason: reason || `Admin set status to ${status}`,
+      await supabase.from('market_sessions').insert({
+        event_id: targetEventId,
+        status,
+        started_at: newSession.started_at,
+        ends_at,
       });
-
-      if (error) {
-        // Fallback: direct table insert so phones receive the open session
-        await supabase.from('market_sessions').insert({
-          event_id: targetEventId,
-          status,
-          started_at: newSession.started_at,
-          ends_at,
-        });
-      }
     } catch (err: any) {
-      try {
-        await supabase.from('market_sessions').insert({
-          event_id: targetEventId,
-          status,
-          started_at: newSession.started_at,
-          ends_at,
-        });
-      } catch {}
       console.warn('Supabase set_market_status warning (saved locally):', err);
     }
   }
