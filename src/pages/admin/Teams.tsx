@@ -47,6 +47,7 @@ export const AdminTeams: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeAdjustTeam, setActiveAdjustTeam] = useState<Team | null>(null);
   const [selectedDetailTeam, setSelectedDetailTeam] = useState<Team | null>(null);
+  const [selectedRosterTeam, setSelectedRosterTeam] = useState<Team | null>(null);
   const [activeMenuTeamId, setActiveMenuTeamId] = useState<string | null>(null);
 
   // Show/Hide PIN toggle map
@@ -327,10 +328,16 @@ export const AdminTeams: React.FC = () => {
 
                       {/* 3. Registered Members */}
                       <td className="py-4 px-6 align-middle whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 text-slate-800 font-extrabold text-xs font-mono border border-slate-200/80">
-                          <Users2 className="w-3.5 h-3.5 text-slate-500" />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRosterTeam(team)}
+                          title="Click to view team members"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-orange-50 text-slate-800 hover:text-orange-600 font-extrabold text-xs font-mono border border-slate-200/80 hover:border-orange-200 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                        >
+                          <Users2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-orange-500 transition-colors" />
                           <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
-                        </div>
+                          <span className="text-[10px] text-orange-500 font-sans font-bold ml-0.5 group-hover:translate-x-0.5 transition-transform">›</span>
+                        </button>
                       </td>
 
                       {/* 4. Available Cash */}
@@ -589,6 +596,77 @@ export const AdminTeams: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Team Roster Modal */}
+      {selectedRosterTeam && (
+        <Modal
+          isOpen={!!selectedRosterTeam}
+          onClose={() => setSelectedRosterTeam(null)}
+          title={`Team ${selectedRosterTeam.name} — Members Roster`}
+          subtitle={`Total: ${(membersMap[selectedRosterTeam.id] || []).length} registered competitor(s)`}
+        >
+          <div className="space-y-4">
+            {/* Header Credentials Box */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200/80 text-xs">
+              <div>
+                <span className="text-slate-500 font-bold block text-[10px] uppercase font-mono">Team Code:</span>
+                <span className="font-mono font-black text-orange-600 text-sm">{selectedRosterTeam.team_code}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 font-bold block text-[10px] uppercase font-mono">Access PIN:</span>
+                <span className="font-mono font-black text-slate-900 text-sm">{selectedRosterTeam.pin_hash || '4821'}</span>
+              </div>
+            </div>
+
+            {/* List of members */}
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block font-mono">
+                Team Competitors Roster
+              </span>
+              {(membersMap[selectedRosterTeam.id] || []).length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs font-medium">
+                  No members have been added to this team yet.
+                </div>
+              ) : (
+                (membersMap[selectedRosterTeam.id] || []).map((member, idx) => (
+                  <div
+                    key={member.id || idx}
+                    className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 shadow-2xs flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center font-mono">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <span className="font-extrabold text-sm text-slate-900 block">
+                          {member.full_name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {member.is_trader ? 'Primary Trader' : 'Team Member'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                      ● Active
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedRosterTeam(null)}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-colors"
+              >
+                Close Roster
+              </button>
             </div>
           </div>
         </Modal>
