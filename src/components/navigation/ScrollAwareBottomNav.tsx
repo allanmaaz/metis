@@ -1,17 +1,43 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Home, BarChart2, Briefcase, FileText, Trophy } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { getPublishedNews } from '../../services/news';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const ScrollAwareBottomNav: React.FC = () => {
   const { theme } = useTheme();
+  const location = useLocation();
   const isDark = theme === 'dark';
+  const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
+
+  const checkUnreadNews = useCallback(async () => {
+    try {
+      const allNews = await getPublishedNews();
+      const total = allNews.length;
+      const readRaw = localStorage.getItem('metis_read_news_count');
+      const readCount = readRaw ? parseInt(readRaw, 10) : 0;
+
+      if (location.pathname === '/news') {
+        localStorage.setItem('metis_read_news_count', total.toString());
+        setUnreadNewsCount(0);
+      } else {
+        setUnreadNewsCount(Math.max(0, total - readCount));
+      }
+    } catch {}
+  }, [location.pathname]);
+
+  useEffect(() => {
+    checkUnreadNews();
+  }, [checkUnreadNews]);
+
+  useRealtimeSubscription(['NEWS_UPDATED'], checkUnreadNews, 1000);
 
   const navItems = [
     { label: 'Home', path: '/dashboard', icon: Home },
     { label: 'Market', path: '/market', icon: BarChart2 },
     { label: 'Portfolio', path: '/portfolio', icon: Briefcase },
-    { label: 'News', path: '/news', icon: FileText },
+    { label: 'News', path: '/news', icon: FileText, badge: unreadNewsCount },
     { label: 'Ranks', path: '/leaderboard', icon: Trophy },
   ];
 
@@ -29,12 +55,14 @@ export const ScrollAwareBottomNav: React.FC = () => {
       >
         {navItems.map((item) => {
           const Icon = item.icon;
+          const badgeCount = item.badge || 0;
+
           return (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-2 px-1 rounded-full transition-all duration-200 cursor-pointer ${
+                `flex flex-col items-center justify-center py-2 px-1 rounded-full transition-all duration-200 cursor-pointer relative ${
                   isActive
                     ? isDark
                       ? 'bg-gradient-to-b from-orange-500/25 to-orange-500/15 text-orange-400 border border-orange-500/30 shadow-xs'
@@ -47,13 +75,20 @@ export const ScrollAwareBottomNav: React.FC = () => {
             >
               {({ isActive }) => (
                 <>
-                  <Icon
-                    className={`w-5 h-5 transition-transform duration-200 ${
-                      isActive
-                        ? 'text-orange-500 stroke-[2.5] scale-105'
-                        : 'stroke-[2] text-slate-400 hover:text-slate-200'
-                    }`}
-                  />
+                  <div className="relative">
+                    <Icon
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        isActive
+                          ? 'text-orange-500 stroke-[2.5] scale-105'
+                          : 'stroke-[2] text-slate-400 hover:text-slate-200'
+                      }`}
+                    />
+                    {badgeCount > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[9px] font-black font-mono flex items-center justify-center shadow-xs animate-bounce">
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`text-[10px] tracking-tight mt-1 truncate max-w-full leading-none ${
                       isActive

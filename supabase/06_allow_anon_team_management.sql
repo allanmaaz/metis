@@ -28,3 +28,9 @@ DROP POLICY IF EXISTS "Admins can manage news" ON news;
 DROP POLICY IF EXISTS "Allow public/anon to manage news" ON news;
 CREATE POLICY "Allow public/anon to manage news" ON news
 FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admins can manage stocks" ON stocks;
+DROP POLICY IF EXISTS "Allow public/anon to manage stocks" ON stocks;
+CREATE POLICY "Allow public/anon to manage stocks" ON stocks
+FOR ALL USING (true) WITH CHECK (true);
+

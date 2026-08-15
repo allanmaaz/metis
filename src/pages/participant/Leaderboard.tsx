@@ -114,8 +114,8 @@ export const Leaderboard: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-black text-sm tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className={`font-black text-sm tracking-tight truncate whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
                           {entry.team_name}
                         </span>
                         {isMyTeam && (

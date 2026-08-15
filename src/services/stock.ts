@@ -4,6 +4,9 @@ import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getStocks(eventId: string): Promise<Stock[]> {
+  const db = getMockDB();
+  const localList = db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1' || s.event_id === 'e1');
+
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase
@@ -12,17 +15,46 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        return data as Stock[];
+      if (!error && data) {
+        const remoteStocks = data as Stock[];
+        const remoteSymbols = new Set(remoteStocks.map((s) => s.symbol));
+
+        // Merge any newly added local stocks that are missing on remote
+        const merged = [...remoteStocks];
+        localList.forEach(async (ls) => {
+          if (!remoteSymbols.has(ls.symbol)) {
+            merged.unshift(ls);
+
+            // Auto-sync missing stock to Supabase
+            try {
+              await supabase
+                .from('stocks')
+                .insert({
+                  event_id: eventId,
+                  symbol: ls.symbol,
+                  company_name: ls.company_name,
+                  sector: ls.sector,
+                  starting_price: ls.starting_price,
+                  current_price: ls.current_price,
+                  opening_price: ls.opening_price,
+                  high_price: ls.high_price,
+                  low_price: ls.low_price,
+                  is_active: ls.is_active,
+                });
+            } catch {}
+          }
+        });
+
+        if (merged.length > 0) {
+          return merged;
+        }
       }
     } catch (err) {
       // Fallback to local database
     }
   }
 
-  const db = getMockDB();
-  const list = db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1');
-  return [...list].sort((a, b) => {
+  return [...localList].sort((a, b) => {
     const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
     const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
     if (timeA !== timeB) return timeB - timeA;

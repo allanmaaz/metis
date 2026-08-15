@@ -28,9 +28,14 @@ import {
 } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 
+import { getPublishedNews } from '../../services/news';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
+import { useLocation } from 'react-router-dom';
+
 export const ParticipantHeader: React.FC = () => {
   const { participant, logoutParticipant, setParticipantSession } = useAuth();
   const { theme, toggleTheme, setTheme } = useTheme();
+  const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -39,8 +44,31 @@ export const ParticipantHeader: React.FC = () => {
   const [isPinVisible, setIsPinVisible] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
 
   const isDark = theme === 'dark';
+
+  const checkUnreadNews = async () => {
+    try {
+      const allNews = await getPublishedNews();
+      const total = allNews.length;
+      const readRaw = localStorage.getItem('metis_read_news_count');
+      const readCount = readRaw ? parseInt(readRaw, 10) : 0;
+
+      if (location.pathname === '/news') {
+        localStorage.setItem('metis_read_news_count', total.toString());
+        setUnreadNewsCount(0);
+      } else {
+        setUnreadNewsCount(Math.max(0, total - readCount));
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    checkUnreadNews();
+  }, [location.pathname]);
+
+  useRealtimeSubscription(['NEWS_UPDATED'], checkUnreadNews, 1000);
 
   useEffect(() => {
     if (participant?.team?.id) {
@@ -112,7 +140,7 @@ export const ParticipantHeader: React.FC = () => {
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `px-4 py-1.5 rounded-full text-xs font-extrabold transition-all ${
+                  `px-4 py-1.5 rounded-full text-xs font-extrabold transition-all relative flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-orange-500 text-white shadow-xs'
                       : isDark
@@ -121,7 +149,12 @@ export const ParticipantHeader: React.FC = () => {
                   }`
                 }
               >
-                {link.label}
+                <span>{link.label}</span>
+                {link.path === '/news' && unreadNewsCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[9px] font-black font-mono flex items-center justify-center shadow-xs">
+                    {unreadNewsCount > 9 ? '9+' : unreadNewsCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
