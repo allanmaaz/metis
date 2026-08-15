@@ -12,7 +12,7 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v1';
+const STORAGE_KEY = 'metis_mock_database_v2';
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -128,12 +128,38 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       is_trader: true,
       created_at: new Date().toISOString(),
     },
-    // Bulls
     {
       id: 'm2222222-2222-2222-2222-222222222221',
       team_id: 't2222222-2222-2222-2222-222222222222',
       full_name: 'Rohan Sharma',
       normalized_name: 'rohan sharma',
+      is_active: true,
+      is_trader: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'm3333333-3333-3333-3333-333333333331',
+      team_id: 't3333333-3333-3333-3333-333333333333',
+      full_name: 'Aditya Varma',
+      normalized_name: 'aditya varma',
+      is_active: true,
+      is_trader: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'm4444444-4444-4444-4444-444444444441',
+      team_id: 't4444444-4444-4444-4444-444444444444',
+      full_name: 'Varun Chopra',
+      normalized_name: 'varun chopra',
+      is_active: true,
+      is_trader: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'm5555555-5555-5555-5555-555555555551',
+      team_id: 't5555555-5555-5555-5555-555555555555',
+      full_name: 'Karan Malhotra',
+      normalized_name: 'karan malhotra',
       is_active: true,
       is_trader: true,
       created_at: new Date().toISOString(),
@@ -144,12 +170,12 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       id: 's1111111-1111-1111-1111-111111111111',
       event_id: 'e1111111-1111-1111-1111-111111111111',
       symbol: 'NOVA',
-      company_name: 'Nova Electric Mobility',
+      company_name: 'Nova Electric Mobility Ltd',
       sector: 'EV & Auto',
       starting_price: 120,
-      current_price: 145,
+      current_price: 145.20,
       opening_price: 120,
-      high_price: 152,
+      high_price: 150,
       low_price: 118,
       is_active: true,
       created_at: new Date().toISOString(),
@@ -160,9 +186,9 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       event_id: 'e1111111-1111-1111-1111-111111111111',
       symbol: 'FINEDGE',
       company_name: 'FinEdge Capital & Banking',
-      sector: 'Banking',
+      sector: 'Banking & Finance',
       starting_price: 95,
-      current_price: 92,
+      current_price: 92.35,
       opening_price: 95,
       high_price: 98,
       low_price: 89,
@@ -174,10 +200,10 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       id: 's3333333-3333-3333-3333-333333333333',
       event_id: 'e1111111-1111-1111-1111-111111111111',
       symbol: 'GREENX',
-      company_name: 'GreenX Clean Energy',
-      sector: 'Energy',
+      company_name: 'GreenX Clean Energy Corp',
+      sector: 'Renewable Energy',
       starting_price: 170,
-      current_price: 184,
+      current_price: 184.60,
       opening_price: 170,
       high_price: 192,
       low_price: 168,
@@ -189,10 +215,10 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       id: 's4444444-4444-4444-4444-444444444444',
       event_id: 'e1111111-1111-1111-1111-111111111111',
       symbol: 'MEDIX',
-      company_name: 'Medix Healthcare Global',
-      sector: 'Pharma',
+      company_name: 'Medix Global Healthcare',
+      sector: 'Pharma & Biotech',
       starting_price: 210,
-      current_price: 235,
+      current_price: 235.80,
       opening_price: 210,
       high_price: 240,
       low_price: 208,
@@ -204,10 +230,10 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       id: 's5555555-5555-5555-5555-555555555555',
       event_id: 'e1111111-1111-1111-1111-111111111111',
       symbol: 'FOODCO',
-      company_name: 'FoodCo Consumer Products',
-      sector: 'FMCG',
+      company_name: 'FoodCo Consumer Essentials',
+      sector: 'FMCG & Retail',
       starting_price: 310,
-      current_price: 298,
+      current_price: 298.10,
       opening_price: 310,
       high_price: 315,
       low_price: 292,
@@ -222,7 +248,7 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       event_id: 'e1111111-1111-1111-1111-111111111111',
       status: 'OPEN',
       started_at: new Date().toISOString(),
-      ends_at: new Date(Date.now() + 25 * 60000).toISOString(),
+      ends_at: new Date(Date.now() + 45 * 60000).toISOString(),
       started_by: null,
       ended_by: null,
       created_at: new Date().toISOString(),
@@ -232,31 +258,21 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
     {
       id: 'n1111111-1111-1111-1111-111111111111',
       event_id: 'e1111111-1111-1111-1111-111111111111',
-      headline: 'Government Announces ₹25,000 Cr Incentive Scheme for EV Manufacturers',
-      body: 'The Ministry of Heavy Industries has unveiled a flagship package providing substantial production-linked subsidies to domestic electric battery and vehicle manufacturers.',
+      headline: 'EV Sector Sees Major Growth',
+      body: 'Government announces major incentives for electric vehicle manufacturers.',
       sector: 'EV & Auto',
       published_by: null,
-      published_at: new Date(Date.now() - 4 * 60000).toISOString(),
+      published_at: new Date(Date.now() - 8 * 60000).toISOString(),
       is_published: true,
     },
     {
       id: 'n2222222-2222-2222-2222-222222222222',
       event_id: 'e1111111-1111-1111-1111-111111111111',
-      headline: 'Central Bank Hints at Possible Repo Rate Hike in Upcoming Review',
-      body: 'Surging core inflation figures have prompted monetary authorities to signal stricter liquidity controls, creating cautious outlook across credit and lending institutions.',
-      sector: 'Banking',
+      headline: 'Central Bank Hints at Possible Rate Adjustments',
+      body: 'Surging quarterly inflation data signals liquidity adjustments across leading lenders.',
+      sector: 'Banking & Finance',
       published_by: null,
-      published_at: new Date(Date.now() - 11 * 60000).toISOString(),
-      is_published: true,
-    },
-    {
-      id: 'n3333333-3333-3333-3333-333333333333',
-      event_id: 'e1111111-1111-1111-1111-111111111111',
-      headline: 'Medix Healthcare Secures Key Patent for Oncology Therapeutic Molecule',
-      body: 'Global clinical trials across Phase III concluded with exceptional efficacy metrics, clearing path for accelerated commercial distribution across international jurisdictions.',
-      sector: 'Pharma',
-      published_by: null,
-      published_at: new Date(Date.now() - 18 * 60000).toISOString(),
+      published_at: new Date(Date.now() - 15 * 60000).toISOString(),
       is_published: true,
     }
   ],
@@ -316,7 +332,20 @@ export function getMockDB(): MockDatabase {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved) as MockDatabase;
+      // Ensure seed teams exist
+      const existingCodes = new Set(parsed.teams.map((t) => t.team_code));
+      let updated = false;
+      INITIAL_MOCK_DATA.teams.forEach((t) => {
+        if (!existingCodes.has(t.team_code)) {
+          parsed.teams.push(t);
+          updated = true;
+        }
+      });
+      if (updated) {
+        saveMockDB(parsed);
+      }
+      return parsed;
     } catch {
       // ignore
     }
