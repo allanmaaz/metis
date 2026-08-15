@@ -4,7 +4,7 @@ import { MetisLogo } from '../../components/ui/MetisLogo';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowRight, KeyRound, Shield } from 'lucide-react';
+import { ArrowRight, ArrowLeft, KeyRound, Shield } from 'lucide-react';
 
 export const Join: React.FC = () => {
   const navigate = useNavigate();
@@ -29,9 +29,10 @@ export const Join: React.FC = () => {
     <div className="min-h-screen flex flex-col justify-between px-4 py-8 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link to="/">
-          <MetisLogo size="sm" />
+        <Link to="/" className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back
         </Link>
+        <MetisLogo size="sm" />
         <span className="text-xs font-mono text-slate-400">
           STEP 1 OF 2
         </span>

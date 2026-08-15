@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MetisLogo } from '../../components/ui/MetisLogo';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { adminSignIn } from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
-import { Shield, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -40,8 +40,18 @@ export const AdminLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-between px-4 py-12 max-w-md mx-auto bg-[#070B12]">
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <Link to="/" className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Arena
+        </Link>
+        <span className="text-xs font-mono font-bold tracking-widest text-orange-400 uppercase">
+          CONTROL ACCESS
+        </span>
+      </div>
+
       {/* Top Logo */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-2 mt-4">
         <MetisLogo size="lg" className="justify-center" />
         <span className="text-xs font-mono font-bold tracking-widest text-orange-400 uppercase">
           CONTROL CENTER ACCESS
