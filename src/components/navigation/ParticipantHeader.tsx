@@ -320,10 +320,10 @@ export const ParticipantHeader: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <span className="w-4 h-4 rounded-full bg-slate-500/20 text-[9px] font-bold flex items-center justify-center">
+                          <span className="w-4 h-4 rounded-full bg-slate-500/20 text-[9px] font-bold flex items-center justify-center uppercase shrink-0">
                             {m.full_name.charAt(0)}
                           </span>
-                          <span className="truncate">{m.full_name}</span>
+                          <span className="truncate capitalize">{m.full_name}</span>
                         </div>
                         {isCurrent && (
                           <CheckCircle2 className="w-3.5 h-3.5 text-orange-500 shrink-0" />

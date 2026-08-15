@@ -2,35 +2,56 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { LeaderboardEntry } from '../types';
 import { getMockDB } from './mockData';
 
+function getDeletedTeamIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem('metis_deleted_team_ids_v1');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+
 export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[]> {
+  const deletedSet = getDeletedTeamIds();
+
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
         p_event_id: eventId,
       });
 
-      if (!error && data) {
-        return (data as any[]).map((row) => ({
-          team_id: row.team_id,
-          team_name: row.team_name,
-          team_status: row.team_status,
-          cash_balance: Number(row.cash_balance),
-          portfolio_value: Number(row.portfolio_value),
-          total_wealth: Number(row.total_wealth),
-          starting_wealth: Number(row.starting_wealth),
-          today_pnl: Number(row.today_pnl),
-          today_pnl_pct: Number(row.today_pnl_pct),
-          rank: Number(row.rank),
-        }));
+      if (!error && data && data.length > 0) {
+        return (data as any[])
+          .filter((row) => !deletedSet.has(row.team_id) && !deletedSet.has(row.team_name))
+          .map((row) => ({
+            team_id: row.team_id,
+            team_name: row.team_name,
+            team_status: row.team_status,
+            cash_balance: Number(row.cash_balance),
+            portfolio_value: Number(row.portfolio_value),
+            total_wealth: Number(row.total_wealth),
+            starting_wealth: Number(row.starting_wealth),
+            today_pnl: Number(row.today_pnl),
+            today_pnl_pct: Number(row.today_pnl_pct),
+            rank: Number(row.rank),
+          }));
       }
     } catch (err) {
       // Fallback to local database
     }
   }
 
-  // Fallback Dynamic Calculation
+  // Fallback Dynamic Calculation - Match all valid active teams
   const db = getMockDB();
-  const teams = db.teams.filter((t) => t.event_id === eventId);
+  const teams = db.teams.filter(
+    (t) =>
+      (!eventId ||
+        eventId === 'e1' ||
+        t.event_id === eventId ||
+        t.event_id === 'e1' ||
+        t.event_id === 'e1111111-1111-1111-1111-111111111111') &&
+      !deletedSet.has(t.id) &&
+      !deletedSet.has(t.team_code)
+  );
 
   const calculated = teams.map((team) => {
     const teamHoldings = db.holdings.filter((h) => h.team_id === team.id);

@@ -12,7 +12,7 @@ export const ScrollAwareBottomNav: React.FC = () => {
     { label: 'Market', path: '/market', icon: BarChart2 },
     { label: 'Portfolio', path: '/portfolio', icon: Briefcase },
     { label: 'News', path: '/news', icon: FileText },
-    { label: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+    { label: 'Ranks', path: '/leaderboard', icon: Trophy },
   ];
 
   return (
