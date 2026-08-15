@@ -554,31 +554,31 @@ export const AdminTeams: React.FC = () => {
           onClose={() => setSelectedDetailTeam(null)}
           title={
             <div className="flex items-center gap-2">
-              <span>{selectedDetailTeam.name} — Full Overview</span>
+              <span className="text-white font-black">{selectedDetailTeam.name} — Full Overview</span>
             </div>
           }
           subtitle={`Access Code: ${selectedDetailTeam.team_code} · Team ID: ${selectedDetailTeam.id}`}
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
-                <span className="text-[11px] font-extrabold uppercase text-slate-400 block">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block font-mono tracking-wider">
                   Available Cash
                 </span>
-                <span className="text-xl font-black font-mono text-slate-900 mt-1 block">
+                <span className="text-xl font-black font-mono text-white mt-1 block">
                   {formatCurrency(selectedDetailTeam.cash_balance)}
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 font-medium">
                   {formatWealth(selectedDetailTeam.cash_balance)}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
-                <span className="text-[11px] font-extrabold uppercase text-slate-400 block">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block font-mono tracking-wider">
                   Team PIN
                 </span>
-                <span className="text-xl font-black font-mono text-orange-500 mt-1 block tracking-wider">
+                <span className="text-xl font-black font-mono text-orange-400 mt-1 block tracking-widest">
                   {selectedDetailTeam.pin_hash || '4821'}
                 </span>
                 <span className="text-[11px] text-slate-400">
@@ -589,26 +589,31 @@ export const AdminTeams: React.FC = () => {
 
             {/* Roster Members */}
             <div className="space-y-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block">
-                Registered Roster Members ({(membersMap[selectedDetailTeam.id] || []).length})
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block font-mono">
+                Registered Competitors ({(membersMap[selectedDetailTeam.id] || []).length})
               </span>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <div className="space-y-2 max-h-56 overflow-y-auto">
                 {(membersMap[selectedDetailTeam.id] || []).length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No registered members yet.</p>
+                  <p className="text-xs text-slate-400 italic py-4 text-center">No registered members yet.</p>
                 ) : (
                   (membersMap[selectedDetailTeam.id] || []).map((member, idx) => (
                     <div
                       key={member.id || idx}
-                      className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs"
+                      className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 font-bold flex items-center justify-center text-[10px]">
+                      <div className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-xl bg-orange-500/20 text-orange-400 font-black flex items-center justify-center text-xs border border-orange-500/30 font-mono">
                           {idx + 1}
                         </span>
-                        <span className="font-bold text-slate-900">{member.full_name}</span>
+                        <div>
+                          <span className="font-extrabold text-white block text-sm">{member.full_name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {member.is_trader ? '⚡ Primary Trader' : 'Team Member'}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-600 font-bold">
-                        Verified
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                        ● Verified
                       </span>
                     </div>
                   ))
@@ -629,14 +634,14 @@ export const AdminTeams: React.FC = () => {
         >
           <div className="space-y-4">
             {/* Header Credentials Box */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-orange-50/80 border border-orange-200/80 text-xs">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 text-xs">
               <div>
-                <span className="text-slate-500 font-bold block text-[10px] uppercase font-mono">Team Code:</span>
-                <span className="font-mono font-black text-orange-600 text-sm">{selectedRosterTeam.team_code}</span>
+                <span className="text-slate-400 font-bold block text-[10px] uppercase font-mono tracking-wider">Team Code:</span>
+                <span className="font-mono font-black text-orange-400 text-base">{selectedRosterTeam.team_code}</span>
               </div>
               <div className="text-right">
-                <span className="text-slate-500 font-bold block text-[10px] uppercase font-mono">Access PIN:</span>
-                <span className="font-mono font-black text-slate-900 text-sm">{selectedRosterTeam.pin_hash || '4821'}</span>
+                <span className="text-slate-400 font-bold block text-[10px] uppercase font-mono tracking-wider">Access PIN:</span>
+                <span className="font-mono font-black text-white text-base tracking-widest">{selectedRosterTeam.pin_hash || '4821'}</span>
               </div>
             </div>
 
@@ -653,23 +658,23 @@ export const AdminTeams: React.FC = () => {
                 (membersMap[selectedRosterTeam.id] || []).map((member, idx) => (
                   <div
                     key={member.id || idx}
-                    className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 shadow-2xs flex items-center justify-between"
+                    className="p-3.5 rounded-2xl bg-white/5 border border-white/10 shadow-xs flex items-center justify-between hover:border-orange-500/30 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center font-mono">
+                      <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 font-black text-xs flex items-center justify-center font-mono border border-orange-500/30">
                         {idx + 1}
                       </div>
                       <div>
-                        <span className="font-extrabold text-sm text-slate-900 block">
+                        <span className="font-extrabold text-sm text-white block">
                           {member.full_name}
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
-                          {member.is_trader ? 'Primary Trader' : 'Team Member'}
+                          {member.is_trader ? '⚡ Primary Trader' : 'Team Member'}
                         </span>
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                       ● Active
                     </span>
                   </div>
@@ -681,7 +686,7 @@ export const AdminTeams: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedRosterTeam(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-colors"
+                className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs transition-colors shadow-xs"
               >
                 Close Roster
               </button>
