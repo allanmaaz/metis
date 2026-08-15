@@ -12,7 +12,7 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v4';
+const STORAGE_KEY = 'metis_mock_database_v5';
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -29,8 +29,88 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
       ended_at: null,
     }
   ],
-  teams: [],
-  teamMembers: [],
+  teams: [
+    {
+      id: 't_zeus_we61',
+      event_id: 'e1111111-1111-1111-1111-111111111111',
+      name: 'Team ZEUS-1',
+      team_code: 'ZEUS-WE61',
+      pin_hash: '4821',
+      cash_balance: 100000000,
+      starting_wealth: 100000000,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 't_alpha_7k29',
+      event_id: 'e1111111-1111-1111-1111-111111111111',
+      name: 'Team Alpha Traders',
+      team_code: 'ALPHA-7K29',
+      pin_hash: '4821',
+      cash_balance: 100000000,
+      starting_wealth: 100000000,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 't_bulls_9x12',
+      event_id: 'e1111111-1111-1111-1111-111111111111',
+      name: 'Team Bulls of Dalal',
+      team_code: 'BULLS-9X12',
+      pin_hash: '4821',
+      cash_balance: 100000000,
+      starting_wealth: 100000000,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 't_titan_4m88',
+      event_id: 'e1111111-1111-1111-1111-111111111111',
+      name: 'Team Titan Ventures',
+      team_code: 'TITAN-4M88',
+      pin_hash: '4821',
+      cash_balance: 100000000,
+      starting_wealth: 100000000,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 't_nova_3b45',
+      event_id: 'e1111111-1111-1111-1111-111111111111',
+      name: 'Team Nova Capital',
+      team_code: 'NOVA-3B45',
+      pin_hash: '4821',
+      cash_balance: 100000000,
+      starting_wealth: 100000000,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ],
+  teamMembers: [
+    {
+      id: 'm_farhan_zeus',
+      team_id: 't_zeus_we61',
+      full_name: 'Farhan Khan',
+      normalized_name: 'farhan khan',
+      is_active: true,
+      is_trader: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'm_alex_alpha',
+      team_id: 't_alpha_7k29',
+      full_name: 'Alex Mercer',
+      normalized_name: 'alex mercer',
+      is_active: true,
+      is_trader: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
   stocks: [
     {
       id: 's1111111-1111-1111-1111-111111111111',

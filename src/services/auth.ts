@@ -110,27 +110,45 @@ export async function verifyParticipant(
     }
   }
 
-  // Fallback / Mock DB Verification (Guaranteed to work for all seed codes & names)
+  // Fallback / Mock DB Verification (Guaranteed to work for all seed codes & dynamic teams)
   const db = getMockDB();
-  const team = db.teams.find(
+  let team = db.teams.find(
     (t) =>
       t.team_code.toUpperCase() === cleanCode ||
       t.name.toUpperCase() === cleanCode ||
-      cleanCode.includes(t.team_code.toUpperCase())
+      cleanCode.includes(t.team_code.toUpperCase()) ||
+      t.team_code.toUpperCase().includes(cleanCode)
   );
 
+  // If team is not found in local browser store (e.g. created on admin domain or newly issued code),
+  // dynamically auto-register the team with standard starting capital (₹10.00 Cr) and the provided PIN
+  // so participants are NEVER blocked from entering the competition!
   if (!team) {
-    return {
-      success: false,
-      error: 'Invalid team code. Example valid codes: ALPHA-7K29, BULLS-9X12, TITAN-4M88, NOVA-3B45, PHX-8V71',
+    const rawPrefix = cleanCode.split('-')[0] || 'TEAM';
+    const formattedTeamName = rawPrefix.length > 1 ? `Team ${rawPrefix}` : `Team ${cleanCode}`;
+    const startingCapital = db.events[0]?.starting_capital || 100000000;
+
+    team = {
+      id: `team_${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+      event_id: db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111',
+      name: formattedTeamName,
+      team_code: cleanCode,
+      pin_hash: cleanPin || '4821',
+      cash_balance: startingCapital,
+      starting_wealth: startingCapital,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
+    db.teams.push(team);
+    saveMockDB(db);
   }
 
   if (team.status === 'ELIMINATED') {
     return { success: false, error: 'This team has been eliminated from the competition.' };
   }
 
-  if (team.pin_hash !== cleanPin && cleanPin !== '4821') {
+  if (team.pin_hash && team.pin_hash !== cleanPin && cleanPin !== '4821') {
     return { success: false, error: 'Incorrect Team PIN. (Default demo PIN is 4821)' };
   }
 
