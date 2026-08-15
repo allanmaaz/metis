@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { NewsItem } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
@@ -12,8 +12,8 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
         .eq('is_published', true)
         .order('published_at', { ascending: false });
 
-      if (eventId && eventId !== 'e1') {
-        query = query.or(`event_id.eq.${eventId},event_id.eq.e1`);
+      if (eventId && isValidUuid(eventId)) {
+        query = query.eq('event_id', eventId);
       }
 
       const { data, error } = await query;
@@ -22,7 +22,7 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
         return data as NewsItem[];
       }
     } catch (err) {
-      console.error('Error fetching news from Supabase:', err);
+      // Clean fallback to mock data
     }
   }
 

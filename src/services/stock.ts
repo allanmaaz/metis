@@ -1,10 +1,10 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Stock, StockPriceHistory } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getStocks(eventId: string): Promise<Stock[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase
         .from('stocks')
@@ -16,7 +16,7 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
         return data as Stock[];
       }
     } catch (err) {
-      console.error('Error fetching stocks:', err);
+      // Fallback to local database
     }
   }
 
@@ -31,7 +31,7 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
 }
 
 export async function getStock(stockId: string): Promise<Stock | null> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(stockId)) {
     try {
       const { data, error } = await supabase
         .from('stocks')
@@ -43,7 +43,7 @@ export async function getStock(stockId: string): Promise<Stock | null> {
         return data as Stock;
       }
     } catch (err) {
-      console.error('Error fetching stock:', err);
+      // Fallback to local database
     }
   }
 

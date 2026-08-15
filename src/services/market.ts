@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { MarketSession, MarketStatus } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
@@ -12,8 +12,8 @@ export async function getCurrentMarketSession(eventId?: string): Promise<MarketS
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (eventId && eventId !== 'e1') {
-        query = query.or(`event_id.eq.${eventId},event_id.eq.e1`);
+      if (eventId && isValidUuid(eventId)) {
+        query = query.eq('event_id', eventId);
       }
 
       const { data, error } = await query.maybeSingle();
@@ -22,7 +22,7 @@ export async function getCurrentMarketSession(eventId?: string): Promise<MarketS
         return data as MarketSession;
       }
     } catch (err) {
-      console.error('Error fetching market session from Supabase:', err);
+      // Fallback to local database
     }
   }
 

@@ -1,9 +1,9 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Holding, PortfolioSummary } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 
 export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data, error } = await supabase
         .from('holdings')
@@ -18,7 +18,7 @@ export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
         return data as Holding[];
       }
     } catch (err) {
-      console.error('Error fetching team holdings:', err);
+      // Fallback to local database
     }
   }
 
@@ -39,7 +39,7 @@ export async function getTeamPortfolioSummary(
   let startingWealth = 100000000;
   let holdings: Holding[] = [];
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
       const { data: team } = await supabase
         .from('teams')
@@ -54,9 +54,11 @@ export async function getTeamPortfolioSummary(
 
       holdings = await getTeamHoldings(teamId);
     } catch (err) {
-      console.error('Error fetching portfolio summary:', err);
+      // Fallback to local database
     }
-  } else {
+  }
+
+  if (cashBalance === 0) {
     const db = getMockDB();
     let team = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
 
