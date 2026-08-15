@@ -4,6 +4,9 @@ import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getStocks(eventId: string): Promise<Stock[]> {
+  const db = getMockDB();
+  const localList = db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1' || s.event_id === 'e1');
+
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase
@@ -12,17 +15,48 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        return data as Stock[];
+      if (!error && data) {
+        const remoteStocks = data as Stock[];
+        const remoteSymbols = new Set(remoteStocks.map((s) => s.symbol.toUpperCase()));
+
+        // Auto-sync: if any stock created on this machine (like TCS) is missing from Supabase, upload it!
+        const missingLocal = localList.filter((ls) => !remoteSymbols.has(ls.symbol.toUpperCase()));
+
+        if (missingLocal.length > 0) {
+          missingLocal.forEach(async (s) => {
+            try {
+              await supabase
+                .from('stocks')
+                .upsert(
+                  {
+                    event_id: eventId,
+                    symbol: s.symbol.toUpperCase(),
+                    company_name: s.company_name,
+                    sector: s.sector,
+                    starting_price: s.starting_price,
+                    current_price: s.current_price,
+                    opening_price: s.opening_price,
+                    high_price: s.high_price,
+                    low_price: s.low_price,
+                    is_active: true,
+                  },
+                  { onConflict: 'event_id,symbol' }
+                );
+            } catch {}
+          });
+          return [...missingLocal, ...remoteStocks];
+        }
+
+        if (remoteStocks.length > 0) {
+          return remoteStocks;
+        }
       }
     } catch (err) {
       // Fallback to local database
     }
   }
 
-  const db = getMockDB();
-  const list = db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1' || s.event_id === 'e1');
-  return [...list].sort((a, b) => {
+  return [...localList].sort((a, b) => {
     const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
     const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
     if (timeA !== timeB) return timeB - timeA;
