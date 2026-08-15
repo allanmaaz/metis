@@ -12,9 +12,9 @@ export const ParticipantRoute: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-24">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-orange-500/20 pb-28">
       <ParticipantHeader />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <main className="flex-1 max-w-lg w-full mx-auto px-4 py-3 sm:py-4">
         <Outlet />
       </main>
       <ScrollAwareBottomNav />

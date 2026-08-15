@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, TrendingUp, Briefcase, Newspaper, Trophy } from 'lucide-react';
+import { Home, BarChart2, Briefcase, FileText, Trophy } from 'lucide-react';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
 
 export const ScrollAwareBottomNav: React.FC = () => {
@@ -9,21 +9,19 @@ export const ScrollAwareBottomNav: React.FC = () => {
 
   const navItems = [
     { label: 'Home', path: '/dashboard', icon: Home },
-    { label: 'Market', path: '/market', icon: TrendingUp },
+    { label: 'Market', path: '/market', icon: BarChart2 },
     { label: 'Portfolio', path: '/portfolio', icon: Briefcase },
-    { label: 'News', path: '/news', icon: Newspaper },
-    { label: 'Ranks', path: '/leaderboard', icon: Trophy },
+    { label: 'News', path: '/news', icon: FileText },
+    { label: 'Leaderboard', path: '/leaderboard', icon: Trophy },
   ];
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none pb-safe px-3 mb-3 sm:mb-5 transition-all duration-300"
+      className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none pb-safe px-3 mb-2 transition-all duration-300"
       aria-label="Participant Bottom Navigation"
     >
       <div
-        className={`pointer-events-auto flex items-center glass-nav rounded-2xl sm:rounded-full p-1.5 shadow-2xl border border-white/10 max-w-md w-full sm:w-auto justify-between sm:justify-center gap-1 transition-all duration-300 ${
-          isCompact ? 'py-2 px-3' : 'px-2 py-1.5'
-        }`}
+        className="pointer-events-auto flex items-center bg-white/95 backdrop-blur-xl rounded-full px-2 py-1.5 shadow-xl border border-slate-200/90 max-w-sm w-full justify-between gap-1 transition-all duration-300"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -32,22 +30,28 @@ export const ScrollAwareBottomNav: React.FC = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center justify-center gap-1.5 rounded-xl sm:rounded-full font-medium transition-all duration-200 ${
-                  isCompact
-                    ? 'p-2.5'
-                    : 'flex-1 sm:flex-initial px-3 sm:px-4 py-2 text-xs sm:text-sm'
-                } ${
+                `flex flex-col items-center justify-center py-1 px-2.5 rounded-full transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-orange-50 text-orange-600 font-extrabold shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`
               }
             >
-              <Icon className="w-4 h-4 sm:w-4 sm:h-4 shrink-0" />
-              {!isCompact && (
-                <span className="truncate tracking-wide text-xs">
-                  {item.label}
-                </span>
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    className={`w-4 h-4 transition-colors ${
+                      isActive ? 'text-orange-500 fill-orange-500/20' : 'text-slate-500'
+                    }`}
+                  />
+                  <span
+                    className={`text-[10px] tracking-tight mt-0.5 ${
+                      isActive ? 'font-black text-orange-600' : 'font-semibold text-slate-500'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </>
               )}
             </NavLink>
           );
@@ -56,3 +60,5 @@ export const ScrollAwareBottomNav: React.FC = () => {
     </nav>
   );
 };
+
+export default ScrollAwareBottomNav;

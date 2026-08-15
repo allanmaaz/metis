@@ -4,7 +4,6 @@ import { getTeamHoldings, getTeamPortfolioSummary } from '../../services/portfol
 import { getTeamTrades, sellStock } from '../../services/trade';
 import { getCurrentMarketSession } from '../../services/market';
 import { Holding, PortfolioSummary, Trade, MarketSession } from '../../types';
-import { GlassCard } from '../../components/ui/GlassCard';
 import { HoldingCard } from '../../components/portfolio/HoldingCard';
 import { SellModal } from '../../components/market/SellModal';
 import { formatCurrency, formatWealth, formatPercent, formatQuantity, formatClockTime } from '../../lib/formatting';
@@ -18,7 +17,7 @@ import {
   Wallet,
   Coins,
   Receipt,
-  Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const Portfolio: React.FC = () => {
@@ -59,11 +58,15 @@ export const Portfolio: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadPortfolio]);
 
+  const handleSellHolding = (holding: Holding) => {
+    setActiveSellHolding(holding);
+  };
+
   const handleConfirmSell = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
     const res = await sellStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
-      setTradeMessage({ type: 'success', text: `Successfully sold ${quantity.toLocaleString('en-IN')} shares!` });
+      setTradeMessage({ type: 'success', text: `Successfully liquidated ${quantity.toLocaleString('en-IN')} shares!` });
       setTimeout(() => setTradeMessage(null), 4000);
       loadPortfolio();
     }
@@ -71,185 +74,141 @@ export const Portfolio: React.FC = () => {
   };
 
   const isMarketOpen = session?.status === 'OPEN';
-  const isProfit = (summary?.total_pnl ?? 0) >= 0;
+  const cashBalance = participant?.team.cash_balance || 42000000;
+  const portfolioVal = summary?.current_value || 0;
+  const totalWealth = summary?.total_wealth || cashBalance + portfolioVal;
+  const totalPnL = summary?.total_pnl || 0;
+  const pnlPct = summary?.unrealized_pnl_pct || 0;
+  const isProfitable = totalPnL >= 0;
 
   return (
-    <div className="space-y-6 pb-6">
-      {/* Toast Notification */}
+    <div className="space-y-4 max-w-lg mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
+          <Briefcase className="w-6 h-6 text-orange-500" />
+          Team Portfolio
+        </h1>
+        <p className="text-xs text-slate-500 font-medium">
+          Live equity holdings, cost-basis valuations, and completed trade execution history.
+        </p>
+      </div>
+
       {tradeMessage && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-2xl border shadow-2xl bg-emerald-500/20 text-emerald-300 border-emerald-500/40 flex items-center gap-3 text-sm font-bold animate-slide-up backdrop-blur-xl">
-          <Sparkles className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div
+          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs ${
+            tradeMessage.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
           <span>{tradeMessage.text}</span>
         </div>
       )}
 
-      {/* Title */}
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-          <Briefcase className="w-7 h-7 text-orange-500" />
-          Team Portfolio
-        </h2>
-        <p className="text-xs text-slate-400">
-          Holdings, live valuations, and realized returns for Team {participant?.team.name}
-        </p>
-      </div>
-
-      {/* Main Portfolio Value Card */}
-      <GlassCard variant="profit-glow" className="p-6 sm:p-8 space-y-4">
+      {/* Summary Wealth Card */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            CURRENT PORTFOLIO VALUE
-          </span>
-          <span className="text-xs font-mono text-emerald-400 font-bold">
-            {holdings.length} Active Positions
-          </span>
-        </div>
-
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <div className="text-4xl sm:text-5xl font-extrabold font-display text-white tracking-tight">
-            {formatWealth(summary?.current_value ?? 0)}
+          <div>
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
+              Total Team Wealth
+            </span>
+            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 mt-0.5">
+              {formatWealth(totalWealth)}
+            </div>
           </div>
 
+          {/* P&L Badge */}
           <div
-            className={`flex items-center gap-1 text-sm font-bold font-mono px-3 py-1 rounded-full ${
-              isProfit
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+            className={`flex items-center gap-1 text-xs font-black px-3 py-1 rounded-xl border ${
+              isProfitable
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                : 'bg-rose-50 text-rose-600 border-rose-200'
             }`}
           >
-            {isProfit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-            <span>Total P/L: {isProfit ? '+' : ''}{formatCurrency(summary?.total_pnl ?? 0, true)}</span>
+            {isProfitable ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+            <span>{formatPercent(pnlPct)}</span>
           </div>
         </div>
 
-        {/* 4 Summary Mini Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-slate-800">
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Total Invested
-            </span>
-            <span className="text-sm font-bold font-mono text-white mt-0.5 block">
-              {formatWealth(summary?.total_invested ?? 0)}
-            </span>
+        {/* 2-Column Cash & Portfolio Grid */}
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
+              <Wallet className="w-3.5 h-3.5 text-orange-500" />
+              <span>Available Cash</span>
+            </div>
+            <div className="text-sm font-black font-mono text-slate-900 mt-1">
+              {formatWealth(cashBalance)}
+            </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Unrealized P/L
-            </span>
-            <span
-              className={`text-sm font-bold font-mono mt-0.5 block ${
-                (summary?.unrealized_pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-              }`}
-            >
-              {(summary?.unrealized_pnl ?? 0) >= 0 ? '+' : ''}
-              {formatWealth(summary?.unrealized_pnl ?? 0)}
-            </span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Realized P/L
-            </span>
-            <span
-              className={`text-sm font-bold font-mono mt-0.5 block ${
-                (summary?.realized_pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-              }`}
-            >
-              {(summary?.realized_pnl ?? 0) >= 0 ? '+' : ''}
-              {formatWealth(summary?.realized_pnl ?? 0)}
-            </span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-              Cash Balance
-            </span>
-            <span className="text-sm font-bold font-mono text-orange-400 mt-0.5 block">
-              {formatWealth(summary?.cash_balance ?? 0)}
-            </span>
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
+              <Coins className="w-3.5 h-3.5 text-orange-500" />
+              <span>Invested Value</span>
+            </div>
+            <div className="text-sm font-black font-mono text-slate-900 mt-1">
+              {formatWealth(portfolioVal)}
+            </div>
           </div>
         </div>
-      </GlassCard>
-
-      {/* Active Holdings Grid */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-          <Coins className="w-5 h-5 text-orange-400" />
-          Active Holdings ({holdings.length})
-        </h3>
-
-        {holdings.length === 0 ? (
-          <div className="text-center py-12 glass-panel rounded-3xl space-y-3">
-            <p className="text-slate-400 text-sm">You currently hold no stocks.</p>
-            <a
-              href="/market"
-              className="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl"
-            >
-              Explore Market & Buy Stocks
-            </a>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {holdings.map((holding) => (
-              <HoldingCard
-                key={holding.id}
-                holding={holding}
-                onSell={() => setActiveSellHolding(holding)}
-                marketOpen={isMarketOpen}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Trade History Log */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-          <Receipt className="w-5 h-5 text-orange-400" />
-          Transaction Audit History ({trades.length})
-        </h3>
+      {/* Active Holdings */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <Coins className="w-4 h-4 text-orange-500" />
+            <span>Active Holdings ({holdings.length})</span>
+          </h3>
+        </div>
 
-        {trades.length === 0 ? (
-          <div className="text-center py-8 glass-panel rounded-2xl">
-            <p className="text-slate-400 text-xs">No transactions recorded yet.</p>
+        {holdings.length === 0 ? (
+          <div className="py-8 text-center text-slate-400 text-xs font-medium">
+            No stock holdings yet. Visit the Market tab to place your first trade!
           </div>
         ) : (
-          <div className="glass-panel rounded-2xl overflow-hidden divide-y divide-slate-800">
-            {trades.map((trade) => {
-              const isBuy = trade.side === 'BUY';
-              return (
-                <div key={trade.id} className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-800/40 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs ${
-                        isBuy
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      }`}
-                    >
-                      {trade.side}
-                    </div>
+          <div className="space-y-2.5">
+            {holdings.map((holding) => {
+              if (!holding.stock) return null;
+              const curValue = holding.quantity * holding.stock.current_price;
+              const totalCost = holding.quantity * holding.average_cost;
+              const pnl = curValue - totalCost;
+              const pnlPct = totalCost > 0 ? (pnl / totalCost) * 100 : 0;
+              const isUp = pnl >= 0;
 
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">
-                          {trade.stock?.symbol || 'STOCK'}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          {formatQuantity(trade.quantity)} shares @ {formatCurrency(trade.price)}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-400">
-                        Executed by {trade.team_member?.full_name || 'Team Member'} · {formatClockTime(trade.created_at)}
+              return (
+                <div
+                  key={holding.id}
+                  className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/60 flex items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm text-slate-900">
+                        {holding.stock.symbol}
                       </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {holding.quantity.toLocaleString('en-IN')} shares
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      Avg: {formatCurrency(holding.average_cost)} · Cur: {formatCurrency(holding.stock.current_price)}
                     </div>
                   </div>
 
-                  <div className="text-right font-mono">
-                    <span className={`text-sm font-bold block ${isBuy ? 'text-slate-200' : 'text-emerald-400'}`}>
-                      {isBuy ? '-' : '+'}{formatCurrency(trade.total_value)}
-                    </span>
+                  <div className="text-right">
+                    <div className="text-sm font-black font-mono text-slate-900">
+                      {formatCurrency(curValue)}
+                    </div>
+                    <div
+                      className={`text-[10px] font-bold font-mono ${
+                        isUp ? 'text-emerald-600' : 'text-rose-600'
+                      }`}
+                    >
+                      {isUp ? '+' : ''}{formatCurrency(pnl)} ({formatPercent(pnlPct)})
+                    </div>
                   </div>
                 </div>
               );
@@ -258,17 +217,75 @@ export const Portfolio: React.FC = () => {
         )}
       </div>
 
-      {/* Sell Modal */}
-      {activeSellHolding && (
+      {/* Trade Execution History */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <History className="w-4 h-4 text-orange-500" />
+            <span>Recent Trades ({trades.length})</span>
+          </h3>
+        </div>
+
+        {trades.length === 0 ? (
+          <div className="py-8 text-center text-slate-400 text-xs font-medium">
+            No trades executed in this session.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {trades.slice(0, 5).map((trade) => {
+              const isBuy = trade.side === 'BUY';
+              return (
+                <div
+                  key={trade.id}
+                  className="p-3 rounded-2xl bg-slate-50/70 border border-slate-200/60 flex items-center justify-between text-xs font-mono"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${
+                        isBuy
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}
+                    >
+                      {trade.side}
+                    </span>
+                    <div className="font-sans">
+                      <span className="font-black text-slate-900">
+                        {trade.stock?.symbol || 'STOCK'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">
+                        {formatClockTime(trade.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-bold text-slate-900">
+                      {trade.quantity.toLocaleString('en-IN')} @ {formatCurrency(trade.price)}
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      {formatCurrency(trade.total_value)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Liquidate Modal */}
+      {activeSellHolding && activeSellHolding.stock && participant && (
         <SellModal
-          isOpen={Boolean(activeSellHolding)}
-          onClose={() => setActiveSellHolding(null)}
-          stock={activeSellHolding.stock || null}
+          stock={activeSellHolding.stock}
           ownedQuantity={activeSellHolding.quantity}
-          averageCost={activeSellHolding.average_cost}
+          isOpen={!!activeSellHolding}
+          onClose={() => setActiveSellHolding(null)}
           onConfirmSell={handleConfirmSell}
         />
       )}
     </div>
   );
 };
+
+export default Portfolio;

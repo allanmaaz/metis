@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getPublishedNews } from '../../services/news';
 import { NewsItem } from '../../types';
-import { NewsCard } from '../../components/news/NewsCard';
-import { Newspaper, Radio, Filter } from 'lucide-react';
+import { formatClockTime } from '../../lib/formatting';
+import { Newspaper, Radio, Filter, FileText } from 'lucide-react';
 
 export const News: React.FC = () => {
   const { participant } = useAuth();
@@ -34,37 +34,36 @@ export const News: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-4 max-w-lg mx-auto pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-            <Newspaper className="w-7 h-7 text-orange-500" />
-            Market Wire & News
+          <h2 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
+            <FileText className="w-6 h-6 text-orange-500" />
+            Market News & Wires
           </h2>
-          <p className="text-xs text-slate-400">
-            Real-time macroeconomic updates, regulatory policies & sector reports
+          <p className="text-xs text-slate-500 font-medium">
+            Real-time macroeconomic flashes, regulatory policies & sector catalysts.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs font-bold font-mono px-3 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400">
-          <Radio className="w-3.5 h-3.5 animate-pulse" />
-          <span>LIVE FEED</span>
+        <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-600">
+          <Radio className="w-3 h-3 animate-pulse" />
+          <span>LIVE</span>
         </div>
       </div>
 
       {/* Sector Filter Chips */}
       {sectors.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1" />
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {sectors.map((sec) => (
             <button
               key={sec}
               onClick={() => setSelectedSector(sec)}
-              className={`text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 selectedSector === sec
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20'
-                  : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
               }`}
             >
               {sec}
@@ -73,18 +72,47 @@ export const News: React.FC = () => {
         </div>
       )}
 
-      {/* News Feed Stream */}
-      {filteredNews.length === 0 ? (
-        <div className="text-center py-16 glass-panel rounded-3xl space-y-2">
-          <p className="text-slate-400 text-sm">No market news published yet.</p>
-        </div>
-      ) : (
-        <div className="space-y-3.5">
-          {filteredNews.map((item, index) => (
-            <NewsCard key={item.id} news={item} isBreaking={index === 0} />
-          ))}
-        </div>
-      )}
+      {/* News Feed Cards */}
+      <div className="space-y-3">
+        {filteredNews.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center text-slate-400 text-xs font-medium">
+            No breaking market news published yet. Check back soon!
+          </div>
+        ) : (
+          filteredNews.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-2 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 font-mono">
+                  ● BREAKING
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {formatClockTime(item.published_at)}
+                </span>
+              </div>
+
+              <h3 className="font-extrabold text-sm text-slate-900 leading-snug">
+                {item.headline}
+              </h3>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {item.body}
+              </p>
+
+              {item.sector && (
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase font-mono">
+                  <span>Sector: {item.sector}</span>
+                  <span className="text-slate-300">METIS Official Dispatch</span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
+
+export default News;

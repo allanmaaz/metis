@@ -8,9 +8,8 @@ import { Stock, MarketSession, Holding, PortfolioSummary } from '../../types';
 import { StockCard } from '../../components/market/StockCard';
 import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
-import { MarketStatusBadge } from '../../components/ui/MarketStatusBadge';
 import { formatWealth } from '../../lib/formatting';
-import { Search, Filter, Sparkles, TrendingUp } from 'lucide-react';
+import { Search, BarChart2, ShieldCheck } from 'lucide-react';
 
 export const Market: React.FC = () => {
   const { participant } = useAuth();
@@ -64,11 +63,22 @@ export const Market: React.FC = () => {
     return matchesSearch && matchesSector;
   });
 
+  const isMarketOpen = session?.status === 'OPEN';
+  const cashBalance = participant?.team.cash_balance || 42000000;
+
+  const handleBuy = (stock: Stock) => {
+    setActiveBuyStock(stock);
+  };
+
+  const handleSell = (stock: Stock) => {
+    setActiveSellStock(stock);
+  };
+
   const handleConfirmBuy = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
     const res = await buyStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
-      setTradeMessage({ type: 'success', text: `Successfully bought ${quantity.toLocaleString('en-IN')} shares!` });
+      setTradeMessage({ type: 'success', text: `Order executed! Bought ${quantity.toLocaleString('en-IN')} shares.` });
       setTimeout(() => setTradeMessage(null), 4000);
       loadMarket();
     }
@@ -79,97 +89,79 @@ export const Market: React.FC = () => {
     if (!participant) return { success: false, error: 'No active session' };
     const res = await sellStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
-      setTradeMessage({ type: 'success', text: `Successfully sold ${quantity.toLocaleString('en-IN')} shares!` });
+      setTradeMessage({ type: 'success', text: `Order executed! Sold ${quantity.toLocaleString('en-IN')} shares.` });
       setTimeout(() => setTradeMessage(null), 4000);
       loadMarket();
     }
     return res;
   };
 
-  const isMarketOpen = session?.status === 'OPEN';
-
   return (
-    <div className="space-y-5 pb-6">
-      {/* Toast Notification */}
+    <div className="space-y-4 max-w-lg mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black font-display text-slate-900 tracking-tight flex items-center gap-2">
+            <BarChart2 className="w-6 h-6 text-orange-500" />
+            Market Board
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Browse listed equities, track live prices, and execute buy/sell orders.
+          </p>
+        </div>
+      </div>
+
+      {/* Trade Feedback */}
       {tradeMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-2xl border shadow-2xl flex items-center gap-3 text-sm font-bold animate-slide-up backdrop-blur-xl ${
+          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs ${
             tradeMessage.type === 'success'
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/20'
-              : 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-rose-500/20'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
           }`}
         >
-          <Sparkles className="w-5 h-5 text-emerald-400 shrink-0" />
+          <ShieldCheck className="w-4 h-4" />
           <span>{tradeMessage.text}</span>
         </div>
       )}
 
-      {/* Header with Market Status & Team Cash */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white tracking-tight flex items-center gap-2">
-            <TrendingUp className="w-7 h-7 text-orange-500" />
-            Live Market
-          </h2>
-          <p className="text-xs text-slate-400">
-            Real-time simulated stock exchange for college challenge
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <MarketStatusBadge status={session?.status || 'OPEN'} size="md" />
-          <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-right">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
-              Available Cash
-            </span>
-            <span className="text-sm font-extrabold font-display text-orange-400">
-              {formatWealth(summary?.cash_balance ?? participant?.team.cash_balance ?? 0)}
-            </span>
-          </div>
-        </div>
+      {/* Search Filter */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+        <input
+          type="text"
+          placeholder="Search by ticker symbol or company..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
+        />
       </div>
 
-      {/* Search & Sector Filters */}
-      <div className="space-y-3">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-          <input
-            type="text"
-            placeholder="Search stocks by name or symbol..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900/80 text-white placeholder:text-slate-500 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500 transition-colors"
-          />
-        </div>
-
-        {/* Sector Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1" />
-          {sectors.map((sec) => (
-            <button
-              key={sec}
-              onClick={() => setSelectedSector(sec)}
-              className={`text-xs px-3.5 py-1.5 rounded-full font-medium whitespace-nowrap transition-all ${
-                selectedSector === sec
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20'
-                  : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {sec}
-            </button>
-          ))}
-        </div>
+      {/* Sector Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        {sectors.map((sector) => (
+          <button
+            key={sector}
+            onClick={() => setSelectedSector(sector)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              selectedSector === sector
+                ? 'bg-orange-500 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
+            }`}
+          >
+            {sector}
+          </button>
+        ))}
       </div>
 
       {/* Stock Cards Grid */}
-      {filteredStocks.length === 0 ? (
-        <div className="text-center py-16 glass-panel rounded-3xl space-y-2">
-          <p className="text-slate-400 text-sm">No stocks found matching your filter.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredStocks.map((stock) => {
+      <div className="grid grid-cols-1 gap-3">
+        {filteredStocks.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center text-slate-400 text-sm">
+            No stocks found matching your filters.
+          </div>
+        ) : (
+          filteredStocks.map((stock) => {
             const holding = holdings.find((h) => h.stock_id === stock.id);
             return (
               <StockCard
@@ -177,31 +169,39 @@ export const Market: React.FC = () => {
                 stock={stock}
                 ownedQuantity={holding?.quantity || 0}
                 marketOpen={isMarketOpen}
-                onBuy={() => setActiveBuyStock(stock)}
-                onSell={() => setActiveSellStock(stock)}
+                onBuy={handleBuy}
+                onSell={handleSell}
               />
             );
-          })}
-        </div>
+          })
+        )}
+      </div>
+
+      {/* Buy Modal */}
+      {activeBuyStock && participant && (
+        <BuyModal
+          stock={activeBuyStock}
+          availableCash={cashBalance}
+          isOpen={!!activeBuyStock}
+          onClose={() => setActiveBuyStock(null)}
+          onConfirmBuy={handleConfirmBuy}
+        />
       )}
 
-      {/* Buy & Sell Modals */}
-      <BuyModal
-        isOpen={Boolean(activeBuyStock)}
-        onClose={() => setActiveBuyStock(null)}
-        stock={activeBuyStock}
-        availableCash={summary?.cash_balance ?? participant?.team.cash_balance ?? 0}
-        onConfirmBuy={handleConfirmBuy}
-      />
-
-      <SellModal
-        isOpen={Boolean(activeSellStock)}
-        onClose={() => setActiveSellStock(null)}
-        stock={activeSellStock}
-        ownedQuantity={holdings.find((h) => h.stock_id === activeSellStock?.id)?.quantity || 0}
-        averageCost={holdings.find((h) => h.stock_id === activeSellStock?.id)?.average_cost || 0}
-        onConfirmSell={handleConfirmSell}
-      />
+      {/* Sell Modal */}
+      {activeSellStock && participant && (
+        <SellModal
+          stock={activeSellStock}
+          ownedQuantity={
+            holdings.find((h) => h.stock_id === activeSellStock.id)?.quantity || 0
+          }
+          isOpen={!!activeSellStock}
+          onClose={() => setActiveSellStock(null)}
+          onConfirmSell={handleConfirmSell}
+        />
+      )}
     </div>
   );
 };
+
+export default Market;
