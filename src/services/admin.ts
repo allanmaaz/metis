@@ -61,49 +61,7 @@ export async function createTeam(data: {
   const teamCode = `${prefix}-${randomSuffix}`;
   const pin = Math.floor(1000 + Math.random() * 9000).toString();
 
-  if (isSupabaseConfigured) {
-    try {
-      const { data: team, error } = await supabase
-        .from('teams')
-        .insert({
-          event_id: data.event_id,
-          name: teamName,
-          team_code: teamCode,
-          pin_hash: pin,
-          cash_balance: capital,
-          starting_wealth: capital,
-          status: 'ACTIVE',
-        })
-        .select()
-        .single();
-
-      if (error) return { success: false, error: error.message };
-
-      if (data.members.length > 0) {
-        const memberRows = data.members
-          .filter((m) => m.trim().length > 0)
-          .map((m) => ({
-            team_id: team.id,
-            full_name: m.trim(),
-            normalized_name: normalizeName(m),
-            is_active: true,
-            is_trader: true,
-          }));
-
-        if (memberRows.length > 0) {
-          await supabase.from('team_members').insert(memberRows);
-        }
-      }
-
-      broadcastRealtimeEvent('TEAM_UPDATED', { teamId: team.id });
-      broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
-
-      return { success: true, data: team as Team };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  }
-
+  // 1. Create team in local reactive database
   const db = getMockDB();
   const newTeam: Team = {
     id: `t_${Date.now()}`,
@@ -123,7 +81,7 @@ export async function createTeam(data: {
   data.members.forEach((m) => {
     if (m.trim().length > 0) {
       db.teamMembers.push({
-        id: `m_${Date.now()}_${Math.random()}`,
+        id: `m_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         team_id: newTeam.id,
         full_name: m.trim(),
         normalized_name: normalizeName(m),
@@ -137,6 +95,46 @@ export async function createTeam(data: {
   saveMockDB(db);
   broadcastRealtimeEvent('TEAM_UPDATED', { teamId: newTeam.id });
   broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+
+  // 2. Also insert into remote Supabase database if configured
+  if (isSupabaseConfigured && isValidUuid(data.event_id)) {
+    try {
+      const { data: team, error } = await supabase
+        .from('teams')
+        .insert({
+          event_id: data.event_id,
+          name: teamName,
+          team_code: teamCode,
+          pin_hash: pin,
+          cash_balance: capital,
+          starting_wealth: capital,
+          status: 'ACTIVE',
+        })
+        .select()
+        .single();
+
+      if (!error && team) {
+        if (data.members.length > 0) {
+          const memberRows = data.members
+            .filter((m) => m.trim().length > 0)
+            .map((m) => ({
+              team_id: team.id,
+              full_name: m.trim(),
+              normalized_name: normalizeName(m),
+              is_active: true,
+              is_trader: true,
+            }));
+
+          if (memberRows.length > 0) {
+            await supabase.from('team_members').insert(memberRows);
+          }
+        }
+        return { success: true, data: team as Team };
+      }
+    } catch (err: any) {
+      console.warn('Supabase createTeam warning (saved to local sync):', err);
+    }
+  }
 
   return { success: true, data: newTeam };
 }
