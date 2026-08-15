@@ -14,6 +14,7 @@ import {
 import { Event, Team, TeamMember } from '../../types';
 import { CreateTeamModal } from '../../components/admin/CreateTeamModal';
 import { CashAdjustModal } from '../../components/admin/CashAdjustModal';
+import { TeamCredentialsModal } from '../../components/admin/TeamCredentialsModal';
 import { Modal } from '../../components/ui/Modal';
 import { formatCurrency, formatWealth } from '../../lib/formatting';
 import {
@@ -34,6 +35,9 @@ import {
   ChevronRight,
   CircleDot,
   Trash2,
+  Printer,
+  FileText,
+  Share2,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
@@ -45,6 +49,9 @@ export const AdminTeams: React.FC = () => {
 
   // Modals & Popovers
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
+  const [selectedCredentialsTeam, setSelectedCredentialsTeam] = useState<Team | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeAdjustTeam, setActiveAdjustTeam] = useState<Team | null>(null);
   const [selectedDetailTeam, setSelectedDetailTeam] = useState<Team | null>(null);
   const [selectedRosterTeam, setSelectedRosterTeam] = useState<Team | null>(null);
@@ -150,6 +157,22 @@ export const AdminTeams: React.FC = () => {
     setTimeout(() => setCopiedCodeId(null), 2000);
   };
 
+  const handleCopySingleCredentials = (team: Team) => {
+    const pin = team.pin_hash || '4821';
+    const text = `🏛️ *METIS 2026 — Team Access Credentials*
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 *Team Name:* ${team.name}
+🎟️ *Team Code:* \`${team.team_code}\`
+🔑 *Access PIN:* \`${pin}\`
+💰 *Starting Capital:* ${formatWealth(team.cash_balance)}
+🌐 *Participant Portal:* https://metis-bvx.pages.dev
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+_Keep your credentials confidential. Log in at the portal to trade._`;
+    navigator.clipboard.writeText(text);
+    setToastMessage(`Credentials for ${team.name} copied to clipboard!`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const filteredTeams = teams.filter(
     (t) =>
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -166,6 +189,14 @@ export const AdminTeams: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-bold flex items-center gap-2 shadow-xs animate-in fade-in duration-200">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -175,20 +206,34 @@ export const AdminTeams: React.FC = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           {teams.length > 0 && (
-            <button
-              onClick={handleClearAllTeams}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold transition-all shadow-xs"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Clear All Teams</span>
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setSelectedCredentialsTeam(null);
+                  setIsCredentialsModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 text-xs font-extrabold transition-all shadow-xs cursor-pointer"
+                title="Export or print all team credentials and graphic passes"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Export Passes (PDF)</span>
+              </button>
+
+              <button
+                onClick={handleClearAllTeams}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold transition-all shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Clear All</span>
+              </button>
+            </>
           )}
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Register New Team</span>
@@ -282,13 +327,35 @@ export const AdminTeams: React.FC = () => {
                           className="fixed inset-0 z-30"
                           onClick={() => setActiveMenuTeamId(null)}
                         />
-                        <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute right-0 top-10 w-52 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                          <button
+                            onClick={() => {
+                              handleCopySingleCredentials(team);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-600 flex items-center gap-2 transition-colors cursor-pointer"
+                          >
+                            <Copy className="w-3.5 h-3.5 text-orange-500" />
+                            <span>Copy Credentials</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedCredentialsTeam(team);
+                              setIsCredentialsModalOpen(true);
+                              setActiveMenuTeamId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Print Pass (PDF)</span>
+                          </button>
+                          <div className="border-t border-slate-100 my-1" />
                           <button
                             onClick={() => {
                               handleRegenerateCode(team.id);
                               setActiveMenuTeamId(null);
                             }}
-                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                           >
                             <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
                             <span>Regenerate Code</span>
@@ -298,7 +365,7 @@ export const AdminTeams: React.FC = () => {
                               handleRegeneratePin(team.id);
                               setActiveMenuTeamId(null);
                             }}
-                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                           >
                             <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
                             <span>Regenerate PIN</span>
@@ -308,7 +375,7 @@ export const AdminTeams: React.FC = () => {
                               handleToggleStatus(team);
                               setActiveMenuTeamId(null);
                             }}
-                            className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
+                            className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 cursor-pointer ${
                               isEliminated
                                 ? 'text-emerald-600 hover:bg-emerald-50'
                                 : 'text-rose-600 hover:bg-rose-50'
@@ -331,7 +398,7 @@ export const AdminTeams: React.FC = () => {
                               handleDeleteTeam(team);
                               setActiveMenuTeamId(null);
                             }}
-                            className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                            className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Delete Team</span>
@@ -608,13 +675,35 @@ export const AdminTeams: React.FC = () => {
                                 className="fixed inset-0 z-30"
                                 onClick={() => setActiveMenuTeamId(null)}
                               />
-                              <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                              <div className="absolute right-0 top-10 w-52 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                                <button
+                                  onClick={() => {
+                                    handleCopySingleCredentials(team);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-600 flex items-center gap-2 transition-colors cursor-pointer"
+                                >
+                                  <Copy className="w-3.5 h-3.5 text-orange-500" />
+                                  <span>Copy Credentials</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedCredentialsTeam(team);
+                                    setIsCredentialsModalOpen(true);
+                                    setActiveMenuTeamId(null);
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                >
+                                  <Printer className="w-3.5 h-3.5 text-slate-500" />
+                                  <span>Print Pass (PDF)</span>
+                                </button>
+                                <div className="border-t border-slate-100 my-1" />
                                 <button
                                   onClick={() => {
                                     handleRegenerateCode(team.id);
                                     setActiveMenuTeamId(null);
                                   }}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                                 >
                                   <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
                                   <span>Regenerate Code</span>
@@ -624,7 +713,7 @@ export const AdminTeams: React.FC = () => {
                                     handleRegeneratePin(team.id);
                                     setActiveMenuTeamId(null);
                                   }}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                                 >
                                   <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
                                   <span>Regenerate PIN</span>
@@ -634,7 +723,7 @@ export const AdminTeams: React.FC = () => {
                                     handleToggleStatus(team);
                                     setActiveMenuTeamId(null);
                                   }}
-                                  className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
+                                  className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 cursor-pointer ${
                                     isEliminated
                                       ? 'text-emerald-600 hover:bg-emerald-50'
                                       : 'text-rose-600 hover:bg-rose-50'
@@ -657,7 +746,7 @@ export const AdminTeams: React.FC = () => {
                                     handleDeleteTeam(team);
                                     setActiveMenuTeamId(null);
                                   }}
-                                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100 cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                   <span>Delete Team</span>
@@ -907,6 +996,18 @@ export const AdminTeams: React.FC = () => {
           onConfirmAdjust={handleCashAdjust}
         />
       )}
+
+      {/* Team Credentials & PDF Passes Modal */}
+      <TeamCredentialsModal
+        isOpen={isCredentialsModalOpen}
+        onClose={() => {
+          setIsCredentialsModalOpen(false);
+          setSelectedCredentialsTeam(null);
+        }}
+        teams={teams}
+        membersMap={membersMap}
+        singleTeam={selectedCredentialsTeam}
+      />
     </div>
   );
 };
