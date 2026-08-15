@@ -439,32 +439,32 @@ export const AdminDashboard: React.FC = () => {
 
       {/* 5. Quick Stock Price Control Card with Auto-Slide & Touch-Swipe */}
       <div className="space-y-3 pt-1">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-orange-500" />
-            <h3 className="text-xs font-black tracking-wide uppercase text-slate-900">
-              Quick Stock Price Control
+        <div className="flex items-center justify-between gap-3 px-1 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <BarChart3 className="w-4 h-4 text-orange-500 shrink-0" />
+            <h3 className="text-xs sm:text-sm font-black tracking-wide uppercase text-slate-900 whitespace-nowrap">
+              Quick Stock Control
             </h3>
             {stocks.length > 1 && (
-              <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                {activeStockIndex + 1} / {stocks.length}
+              <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100/90 border border-slate-200/60 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                {activeStockIndex + 1} of {stocks.length}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             {stocks.length > 1 && (
               <div className="flex items-center gap-1">
                 <button
                   onClick={handlePrevStock}
-                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                  className="w-7 h-7 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80 flex items-center justify-center transition-all shadow-2xs cursor-pointer hover:text-orange-600"
                   title="Previous Stock"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={handleNextStock}
-                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                  className="w-7 h-7 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80 flex items-center justify-center transition-all shadow-2xs cursor-pointer hover:text-orange-600"
                   title="Next Stock"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -473,7 +473,7 @@ export const AdminDashboard: React.FC = () => {
             )}
             <Link
               to={`${prefix}/stocks`}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600"
+              className="text-xs font-extrabold text-orange-500 hover:text-orange-600 whitespace-nowrap"
             >
               Manage All Stocks ›
             </Link>
