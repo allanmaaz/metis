@@ -54,10 +54,10 @@ export function useMarketPulse(stocks: Stock[], session: MarketSession | null) {
       setPulseDeltas(newDeltas);
       setFlashStates(newFlashes);
 
-      // Smoothly fade highlight after 1.5s
+      // Smoothly fade highlight over 2.5s
       const timer = setTimeout(() => {
         setFlashStates({});
-      }, 1500);
+      }, 2500);
 
       return () => clearTimeout(timer);
     }, 4000);

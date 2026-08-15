@@ -34,7 +34,7 @@ export const StockCard: React.FC<StockCardProps> = ({
       }
       prevPriceRef.current = stock.current_price;
 
-      const timer = setTimeout(() => setTickFlash(null), 1000);
+      const timer = setTimeout(() => setTickFlash(null), 2000);
       return () => clearTimeout(timer);
     }
   }, [stock.current_price]);
@@ -106,7 +106,7 @@ export const StockCard: React.FC<StockCardProps> = ({
         <div className="flex items-center justify-between gap-3 pt-1">
           <div>
             <div
-              className={`text-2xl font-black font-mono tracking-tight transition-colors duration-500 flex items-center gap-2 ${
+              className={`text-2xl font-black font-mono tracking-tight transition-colors duration-1000 ease-out flex items-center gap-2 ${
                 tickFlash === 'up'
                   ? 'text-emerald-400'
                   : tickFlash === 'down'

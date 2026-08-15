@@ -503,11 +503,11 @@ export const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <div
-                      className={`text-xl font-black font-mono transition-all duration-300 flex items-center gap-1.5 ${
+                      className={`text-xl font-black font-mono transition-colors duration-1000 ease-out flex items-center gap-1.5 ${
                         flash === 'up'
-                          ? 'text-emerald-400 scale-[1.03]'
+                          ? 'text-emerald-400'
                           : flash === 'down'
-                          ? 'text-rose-400 scale-[0.97]'
+                          ? 'text-rose-400'
                           : isDark
                           ? 'text-white'
                           : 'text-slate-900'
@@ -515,7 +515,7 @@ export const Dashboard: React.FC = () => {
                     >
                       <span>{formattedPrice}</span>
                       {isMarketOpen && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" title="Live Market Active" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50 inline-block shrink-0" title="Live Market Active" />
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
