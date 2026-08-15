@@ -198,9 +198,9 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-3">
-          <Users2 className="w-8 h-8 text-orange-500 shrink-0" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 sm:gap-3 whitespace-nowrap shrink-0">
+          <Users2 className="w-7 h-7 sm:w-8 sm:h-8 text-orange-500 shrink-0" />
           <span>Team & Participant Management</span>
         </h1>
 
