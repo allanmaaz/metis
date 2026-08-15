@@ -128,20 +128,22 @@ export const Dashboard: React.FC = () => {
   const isLoss = pnlVal < 0;
 
   return (
-    <div className="space-y-3.5 max-w-md mx-auto">
-      {/* Trade Success / Error Feedback Toast */}
-      {tradeMessage && (
-        <div
-          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm ${
-            tradeMessage.type === 'success'
-              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>{tradeMessage.text}</span>
-        </div>
-      )}
+    <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-12 md:gap-6">
+      {/* LEFT COLUMN: Team, Market Status, Total Wealth & Breaking Wire */}
+      <div className="md:col-span-5 space-y-3.5">
+        {/* Trade Success / Error Feedback Toast */}
+        {tradeMessage && (
+          <div
+            className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm ${
+              tradeMessage.type === 'success'
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>{tradeMessage.text}</span>
+          </div>
+        )}
 
       {/* 1. Team Profile Pill Card */}
       <div
@@ -380,9 +382,12 @@ export const Dashboard: React.FC = () => {
         </div>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
       </Link>
+    </div>
 
+    {/* RIGHT COLUMN: Market Watchlist */}
+    <div className="md:col-span-7 space-y-3.5">
       {/* 5. Market Watchlist */}
-      <div className="space-y-3 pt-1">
+      <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4 text-orange-500" />
@@ -521,6 +526,7 @@ export const Dashboard: React.FC = () => {
           })}
         </div>
       </div>
+    </div>
 
       {/* Buy Modal */}
       {activeBuyStock && participant && (

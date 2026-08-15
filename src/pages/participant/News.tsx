@@ -40,7 +40,7 @@ export const News: React.FC = () => {
   });
 
   return (
-    <div className="space-y-4 max-w-md mx-auto pb-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -49,24 +49,19 @@ export const News: React.FC = () => {
             Market News & Wires
           </h2>
           <p className="text-xs text-slate-400 font-medium">
-            Real-time macroeconomic flashes, regulatory policies & sector catalysts.
+            Live administrative dispatches, regulatory changes, and corporate earnings wires.
           </p>
-        </div>
-
-        <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400">
-          <Radio className="w-3 h-3 animate-pulse" />
-          <span>LIVE</span>
         </div>
       </div>
 
-      {/* Sector Filter Chips */}
+      {/* Sector Filter */}
       {sectors.length > 1 && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {sectors.map((sec) => (
             <button
               key={sec}
               onClick={() => setSelectedSector(sec)}
-              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 selectedSector === sec
                   ? 'bg-orange-500 text-white shadow-xs'
                   : isDark
@@ -81,10 +76,10 @@ export const News: React.FC = () => {
       )}
 
       {/* News Feed Cards */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {filteredNews.length === 0 ? (
           <div
-            className={`rounded-3xl p-12 text-center text-xs font-medium border ${
+            className={`col-span-full rounded-3xl p-12 text-center text-xs font-medium border ${
               isDark
                 ? 'bg-[#131B2E] text-slate-400 border-white/5'
                 : 'bg-white text-slate-400 border-slate-200/80'

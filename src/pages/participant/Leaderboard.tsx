@@ -38,7 +38,7 @@ export const Leaderboard: React.FC = () => {
   const qualificationCutoff = participant?.event.qualification_count || 5;
 
   return (
-    <div className="space-y-4 max-w-md mx-auto pb-6">
+    <div className="space-y-4 max-w-4xl mx-auto pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

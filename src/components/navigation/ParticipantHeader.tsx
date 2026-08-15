@@ -26,7 +26,7 @@ import {
   History,
   Receipt,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 export const ParticipantHeader: React.FC = () => {
   const { participant, logoutParticipant, setParticipantSession } = useAuth();
@@ -43,10 +43,10 @@ export const ParticipantHeader: React.FC = () => {
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (participant?.team.id) {
+    if (participant?.team?.id) {
       getTeamMembers(participant.team.id).then(setMembers);
     }
-  }, [participant?.team.id]);
+  }, [participant?.team?.id]);
 
   const handleCopyCredentials = () => {
     if (!participant) return;
@@ -63,6 +63,7 @@ export const ParticipantHeader: React.FC = () => {
       member,
     };
     setParticipantSession(updated);
+    setIsDrawerOpen(false);
   };
 
   return (
@@ -74,41 +75,79 @@ export const ParticipantHeader: React.FC = () => {
             : 'bg-white/95 border-b border-slate-200/80 text-slate-900 shadow-xs'
         }`}
       >
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          {/* Left: Menu Drawer Toggle */}
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-1 text-slate-400 hover:text-orange-500 transition-colors"
-            aria-label="Open team menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Left: Menu Drawer Toggle + Brand */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="p-1 text-slate-400 hover:text-orange-500 transition-colors"
+              aria-label="Open team menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-          {/* Center: Clean Brand */}
-          <Link to="/dashboard" className="flex items-center gap-1.5">
-            {/* Flame Logo */}
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-xs">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="currentColor"/>
-              </svg>
-            </div>
-            <span className={`text-base font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              MET<span className="text-orange-500">I</span>S
-            </span>
-          </Link>
+            <Link to="/dashboard" className="flex items-center gap-1.5">
+              {/* Flame Logo */}
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-xs">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="currentColor"/>
+                </svg>
+              </div>
+              <span className={`text-base font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                MET<span className="text-orange-500">I</span>S
+              </span>
+            </Link>
+          </div>
 
-          {/* Right: Notification Bell */}
-          <Link
-            to="/news"
-            className={`relative p-1.5 rounded-xl transition-colors ${
-              isDark ? 'text-slate-300 hover:text-orange-400' : 'text-slate-700 hover:text-orange-500'
-            }`}
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
-              12
-            </span>
-          </Link>
+          {/* Center: Desktop Navigation Bar */}
+          <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-200/80 dark:border-white/5">
+            {[
+              { path: '/dashboard', label: 'Dashboard' },
+              { path: '/market', label: 'Market' },
+              { path: '/portfolio', label: 'Portfolio' },
+              { path: '/news', label: 'News' },
+              { path: '/leaderboard', label: 'Leaderboard' },
+            ].map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                className={({ isActive }) =>
+                  `px-4 py-1.5 rounded-full text-xs font-extrabold transition-all ${
+                    isActive
+                      ? 'bg-orange-500 text-white shadow-xs'
+                      : isDark
+                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Right: Team Indicator + Notification Bell */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-orange-500/40 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-orange-500" />
+              <span>Team {participant?.team.name || 'Alpha'}</span>
+            </button>
+
+            <Link
+              to="/news"
+              className={`relative p-1.5 rounded-xl transition-colors ${
+                isDark ? 'text-slate-300 hover:text-orange-400' : 'text-slate-700 hover:text-orange-500'
+              }`}
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 text-white text-[8px] font-black flex items-center justify-center shadow-xs">
+                12
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
 

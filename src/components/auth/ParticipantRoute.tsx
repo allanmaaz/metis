@@ -17,15 +17,17 @@ export const ParticipantRoute: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/20 pb-28 transition-colors duration-300 ${
+      className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/20 pb-28 md:pb-8 transition-colors duration-300 ${
         isDark ? 'bg-[#0B0F19] text-slate-100' : 'bg-[#F8FAFC] text-slate-900'
       }`}
     >
       <ParticipantHeader />
-      <main className="flex-1 max-w-md w-full mx-auto px-3.5 py-3 sm:py-4">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-3 sm:py-6">
         <Outlet />
       </main>
-      <ScrollAwareBottomNav />
+      <div className="md:hidden">
+        <ScrollAwareBottomNav />
+      </div>
     </div>
   );
 };

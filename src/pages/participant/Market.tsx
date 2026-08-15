@@ -168,7 +168,7 @@ export const Market: React.FC = () => {
       </div>
 
       {/* Stock Cards Grid */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {filteredStocks.length === 0 ? (
           <div
             className={`rounded-3xl p-12 text-center text-xs font-medium border ${
