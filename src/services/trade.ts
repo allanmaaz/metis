@@ -276,10 +276,10 @@ export async function getTeamTrades(teamId: string): Promise<Trade[]> {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function getAllTrades(eventId: string): Promise<Trade[]> {
+export async function getAllTrades(eventId?: string): Promise<Trade[]> {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('trades')
         .select(`
           *,
@@ -287,10 +287,15 @@ export async function getAllTrades(eventId: string): Promise<Trade[]> {
           stock:stocks(*),
           team_member:team_members(*)
         `)
-        .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (eventId && eventId !== 'e1') {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data) {
         return data as Trade[];
       }
     } catch (err) {
@@ -300,6 +305,7 @@ export async function getAllTrades(eventId: string): Promise<Trade[]> {
 
   const db = getMockDB();
   return db.trades
+    .filter((t) => !eventId || eventId === 'e1' || t.event_id === eventId || t.event_id === 'e1')
     .map((t) => {
       const team = db.teams.find((tm) => tm.id === t.team_id);
       const stock = db.stocks.find((s) => s.id === t.stock_id);

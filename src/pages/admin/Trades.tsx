@@ -4,6 +4,7 @@ import { getAllTrades } from '../../services/trade';
 import { Event, Trade } from '../../types';
 import { formatCurrency, formatQuantity, formatClockTime } from '../../lib/formatting';
 import { Receipt, Search, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const AdminTrades: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -24,9 +25,9 @@ export const AdminTrades: React.FC = () => {
 
   useEffect(() => {
     loadTrades();
-    const interval = setInterval(loadTrades, 3000);
-    return () => clearInterval(interval);
   }, [loadTrades]);
+
+  useRealtimeSubscription(['TRADE_EXECUTED', 'PORTFOLIO_CHANGED'], loadTrades, 1500);
 
   const filteredTrades = trades.filter((t) => {
     const matchesSearch =

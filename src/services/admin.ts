@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Team, TeamMember, TeamStatus } from '../types';
 import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getTeams(eventId: string): Promise<Team[]> {
   if (isSupabaseConfigured) {
@@ -21,7 +22,7 @@ export async function getTeams(eventId: string): Promise<Team[]> {
   }
 
   const db = getMockDB();
-  return db.teams.filter((t) => t.event_id === eventId);
+  return db.teams.filter((t) => t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1');
 }
 
 export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
@@ -76,7 +77,6 @@ export async function createTeam(data: {
 
       if (error) return { success: false, error: error.message };
 
-      // Insert members
       if (data.members.length > 0) {
         const memberRows = data.members
           .filter((m) => m.trim().length > 0)
@@ -92,6 +92,9 @@ export async function createTeam(data: {
           await supabase.from('team_members').insert(memberRows);
         }
       }
+
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId: team.id });
+      broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
 
       return { success: true, data: team as Team };
     } catch (err: any) {
@@ -130,6 +133,9 @@ export async function createTeam(data: {
   });
 
   saveMockDB(db);
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId: newTeam.id });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+
   return { success: true, data: newTeam };
 }
 
@@ -145,6 +151,7 @@ export async function regenerateTeamCode(teamId: string): Promise<{ success: boo
         .eq('id', teamId);
 
       if (error) return { success: false, error: error.message };
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
       return { success: true, newCode };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -157,6 +164,7 @@ export async function regenerateTeamCode(teamId: string): Promise<{ success: boo
     team.team_code = newCode;
     team.updated_at = new Date().toISOString();
     saveMockDB(db);
+    broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
     return { success: true, newCode };
   }
   return { success: false, error: 'Team not found' };
@@ -173,6 +181,7 @@ export async function regenerateTeamPin(teamId: string): Promise<{ success: bool
         .eq('id', teamId);
 
       if (error) return { success: false, error: error.message };
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
       return { success: true, newPin };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -185,6 +194,7 @@ export async function regenerateTeamPin(teamId: string): Promise<{ success: bool
     team.pin_hash = newPin;
     team.updated_at = new Date().toISOString();
     saveMockDB(db);
+    broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
     return { success: true, newPin };
   }
   return { success: false, error: 'Team not found' };
@@ -206,6 +216,9 @@ export async function adjustTeamCash(
       });
 
       if (error) return { success: false, error: error.message };
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+      broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+      broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
       return { success: true, data };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -240,6 +253,10 @@ export async function adjustTeamCash(
   });
 
   saveMockDB(db);
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+  broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+
   return {
     success: true,
     data: { team_name: team.name, previous_balance: prev, adjustment: amount, new_balance: team.cash_balance },
@@ -262,6 +279,8 @@ export async function setTeamStatus(
       });
 
       if (error) return { success: false, error: error.message };
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+      broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
       return { success: true, data };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -292,5 +311,8 @@ export async function setTeamStatus(
   });
 
   saveMockDB(db);
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+
   return { success: true, data: { team_name: team.name, old_status: oldStatus, new_status: status } };
 }

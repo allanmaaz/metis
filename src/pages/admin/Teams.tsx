@@ -36,6 +36,7 @@ import {
   Award,
   CircleDot,
 } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const AdminTeams: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -82,9 +83,9 @@ export const AdminTeams: React.FC = () => {
 
   useEffect(() => {
     loadTeams();
-    const interval = setInterval(loadTeams, 3000);
-    return () => clearInterval(interval);
   }, [loadTeams]);
+
+  useRealtimeSubscription(['TEAM_UPDATED', 'LEADERBOARD_UPDATED', 'PORTFOLIO_CHANGED'], loadTeams, 1500);
 
   const handleRegenerateCode = async (teamId: string) => {
     const res = await regenerateTeamCode(teamId);
