@@ -12,6 +12,7 @@ import {
 import { Event, Team, TeamMember } from '../../types';
 import { CreateTeamModal } from '../../components/admin/CreateTeamModal';
 import { CashAdjustModal } from '../../components/admin/CashAdjustModal';
+import { Modal } from '../../components/ui/Modal';
 import { formatCurrency, formatWealth } from '../../lib/formatting';
 import {
   Users2,
@@ -21,6 +22,19 @@ import {
   UserX,
   UserCheck,
   Search,
+  Copy,
+  Eye,
+  EyeOff,
+  Check,
+  CheckCircle2,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  Zap,
+  Flame,
+  Award,
+  CircleDot,
 } from 'lucide-react';
 
 export const AdminTeams: React.FC = () => {
@@ -29,8 +43,19 @@ export const AdminTeams: React.FC = () => {
   const [membersMap, setMembersMap] = useState<Record<string, TeamMember[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Modals & Popovers
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeAdjustTeam, setActiveAdjustTeam] = useState<Team | null>(null);
+  const [selectedDetailTeam, setSelectedDetailTeam] = useState<Team | null>(null);
+  const [activeMenuTeamId, setActiveMenuTeamId] = useState<string | null>(null);
+
+  // Show/Hide PIN toggle map
+  const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const loadTeams = useCallback(async () => {
     try {
@@ -79,6 +104,7 @@ export const AdminTeams: React.FC = () => {
     const nextStatus = team.status === 'ELIMINATED' ? 'ACTIVE' : 'ELIMINATED';
     const reason = nextStatus === 'ELIMINATED' ? 'Eliminated by event admin' : 'Restored by event admin';
     await setTeamStatus(team.id, nextStatus, reason);
+    setActiveMenuTeamId(null);
     loadTeams();
   };
 
@@ -98,11 +124,105 @@ export const AdminTeams: React.FC = () => {
     return res;
   };
 
+  const togglePinVisibility = (teamId: string) => {
+    setVisiblePins((prev) => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
+
+  const copyToClipboard = (text: string, teamId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCodeId(teamId);
+    setTimeout(() => setCopiedCodeId(null), 2000);
+  };
+
   const filteredTeams = teams.filter(
     (t) =>
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.team_code.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Pagination calculations
+  const totalTeams = filteredTeams.length;
+  const totalPages = Math.max(1, Math.ceil(totalTeams / pageSize));
+  const paginatedTeams = filteredTeams.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Team Logo / Icon Helper
+  const getTeamBadge = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('alpha')) {
+      return {
+        bg: 'bg-orange-50 text-orange-500 border-orange-200/80',
+        icon: <Flame className="w-5 h-5 fill-orange-500" />,
+      };
+    }
+    if (n.includes('bull')) {
+      return {
+        bg: 'bg-red-50 text-red-500 border-red-200/80',
+        icon: <Shield className="w-5 h-5 fill-red-500" />,
+      };
+    }
+    if (n.includes('titan')) {
+      return {
+        bg: 'bg-indigo-50 text-indigo-600 border-indigo-200/80',
+        icon: <Award className="w-5 h-5 fill-indigo-500" />,
+      };
+    }
+    if (n.includes('nova')) {
+      return {
+        bg: 'bg-amber-50 text-amber-500 border-amber-200/80',
+        icon: <Zap className="w-5 h-5 fill-amber-500" />,
+      };
+    }
+    if (n.includes('phoenix')) {
+      return {
+        bg: 'bg-rose-50 text-rose-500 border-rose-200/80',
+        icon: <Flame className="w-5 h-5 fill-rose-500" />,
+      };
+    }
+    return {
+      bg: 'bg-slate-100 text-slate-700 border-slate-200',
+      icon: <span className="font-extrabold text-sm">{name.charAt(0)}</span>,
+    };
+  };
+
+  // Avatar photos fallback generator
+  const getMemberAvatars = (members: TeamMember[], teamName: string) => {
+    if (members.length === 0) return null;
+    const avatars = [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=60&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=60&auto=format&fit=crop&q=80',
+    ];
+
+    const displayCount = Math.min(members.length, 4);
+    const extraCount = Math.max(0, members.length - 4);
+
+    return (
+      <div className="flex items-center -space-x-2">
+        {members.slice(0, displayCount).map((m, idx) => (
+          <div
+            key={m.id || idx}
+            title={m.full_name}
+            className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0"
+          >
+            <img
+              src={avatars[idx % avatars.length]}
+              alt={m.full_name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        {extraCount > 0 && (
+          <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 text-slate-700 text-[10px] font-black flex items-center justify-center shadow-xs shrink-0">
+            +{extraCount}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -134,7 +254,10 @@ export const AdminTeams: React.FC = () => {
           type="text"
           placeholder="Search teams by name or team code..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           className="w-full bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors shadow-xs"
         />
       </div>
@@ -145,7 +268,7 @@ export const AdminTeams: React.FC = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3.5 px-6">Team Name</th>
+                <th className="py-3.5 px-6">Team & Code</th>
                 <th className="py-3.5 px-6">Access Credentials</th>
                 <th className="py-3.5 px-6">Registered Members</th>
                 <th className="py-3.5 px-6 text-right">Available Cash</th>
@@ -154,134 +277,225 @@ export const AdminTeams: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredTeams.length === 0 ? (
+              {paginatedTeams.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 text-sm">
-                    No teams matching query.
+                  <td colSpan={6} className="py-16 text-center text-slate-400 text-sm font-medium">
+                    No teams matching your search query.
                   </td>
                 </tr>
               ) : (
-                filteredTeams.map((team) => {
+                paginatedTeams.map((team) => {
                   const members = membersMap[team.id] || [];
                   const isEliminated = team.status === 'ELIMINATED';
+                  const isDisabled = team.status === 'DISABLED';
+                  const isPinVisible = visiblePins[team.id];
+                  const { bg: badgeBg, icon: badgeIcon } = getTeamBadge(team.name);
 
                   return (
                     <tr
                       key={team.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${
+                      className={`hover:bg-slate-50/80 transition-colors group ${
                         isEliminated ? 'opacity-50 bg-slate-50/40' : ''
                       }`}
                     >
-                      {/* Team Name */}
+                      {/* 1. Team & Code */}
                       <td className="py-4 px-6">
-                        <div className="font-extrabold text-base text-slate-900">
-                          {team.name}
-                        </div>
-                        <div className="text-[11px] font-mono text-slate-400">
-                          ID: {team.id}
+                        <div className="flex items-center gap-3.5">
+                          <div
+                            className={`w-11 h-11 rounded-2xl flex items-center justify-center border shrink-0 ${badgeBg}`}
+                          >
+                            {badgeIcon}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-extrabold text-base text-slate-900 tracking-tight">
+                              {team.name}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400 font-bold">
+                              {team.team_code}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              Joined: 10 May 2026
+                            </span>
+                          </div>
                         </div>
                       </td>
 
-                      {/* Credentials */}
+                      {/* 2. Access Credentials */}
                       <td className="py-4 px-6">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-lg bg-orange-50 text-orange-600 border border-orange-200">
-                              {team.team_code}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                            Team Code
+                          </span>
+                          {/* Code Pill with Copy */}
+                          <div className="inline-flex items-center justify-between gap-3 px-3 py-1 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs">
+                            <span>{team.team_code}</span>
+                            <button
+                              onClick={() => copyToClipboard(team.team_code, team.id)}
+                              className="text-slate-400 hover:text-orange-600 transition-colors"
+                              title="Copy team code"
+                            >
+                              {copiedCodeId === team.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+
+                          {/* PIN with Eye Toggle & Regenerate */}
+                          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 pt-0.5">
+                            <span>
+                              PIN: {isPinVisible ? team.pin_hash || '4821' : '••••'}
                             </span>
                             <button
-                              onClick={() => handleRegenerateCode(team.id)}
-                              title="Regenerate Code"
-                              className="p-1 text-slate-400 hover:text-orange-500 transition-colors"
+                              onClick={() => togglePinVisibility(team.id)}
+                              className="text-slate-400 hover:text-slate-700 transition-colors"
+                              title={isPinVisible ? 'Hide PIN' : 'Show PIN'}
+                            >
+                              {isPinVisible ? (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleRegeneratePin(team.id)}
+                              className="text-slate-400 hover:text-orange-500 transition-colors"
+                              title="Regenerate PIN"
                             >
                               <RotateCcw className="w-3 h-3" />
                             </button>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
-                            <span>PIN: {team.pin_hash || '••••'}</span>
-                            <button
-                              onClick={() => handleRegeneratePin(team.id)}
-                              title="Regenerate PIN"
-                              className="p-0.5 text-slate-400 hover:text-orange-500 transition-colors"
-                            >
-                              <RotateCcw className="w-2.5 h-2.5" />
-                            </button>
-                          </div>
                         </div>
                       </td>
 
-                      {/* Members */}
+                      {/* 3. Registered Members */}
                       <td className="py-4 px-6">
                         {members.length > 0 ? (
-                          <div className="space-y-0.5">
-                            <div className="text-xs font-semibold text-slate-700 truncate max-w-xs">
-                              {members.map((m) => m.full_name).join(', ')}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-medium">
-                              {members.length} verified roster member{members.length > 1 ? 's' : ''}
+                          <div className="space-y-1.5">
+                            {getMemberAvatars(members, team.name)}
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
+                              <span>
+                                {members.length} Members • {members.length} Verified
+                              </span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">
-                            No members added
-                          </span>
+                          <div className="flex items-center gap-2 text-slate-400 text-xs italic">
+                            <Users2 className="w-4 h-4 text-slate-300" />
+                            <span>No members added yet</span>
+                          </div>
                         )}
                       </td>
 
-                      {/* Cash */}
+                      {/* 4. Available Cash */}
                       <td className="py-4 px-6 text-right font-mono">
-                        <div className="font-bold text-base text-slate-900">
+                        <div className="font-black text-base text-slate-900">
                           {formatCurrency(team.cash_balance)}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[11px] text-slate-400 font-sans font-medium">
                           ({formatWealth(team.cash_balance)})
                         </div>
                       </td>
 
-                      {/* Status */}
+                      {/* 5. Status */}
                       <td className="py-4 px-6 text-center">
-                        <span
-                          className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full font-mono border ${
-                            isEliminated
-                              ? 'bg-rose-50 text-rose-600 border-rose-200'
-                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                          }`}
-                        >
-                          {team.status}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => setActiveAdjustTeam(team)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200/80 hover:border-orange-200 transition-all flex items-center gap-1 shadow-xs"
-                          >
-                            <DollarSign className="w-3.5 h-3.5 text-orange-500" />
-                            <span>Adjust Cash</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleToggleStatus(team)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 transition-all shadow-xs border ${
+                        <div className="inline-flex flex-col items-center gap-0.5">
+                          <span
+                            className={`text-[10px] font-black uppercase px-3 py-1 rounded-full font-mono border ${
                               isEliminated
-                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'
-                                : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-200'
+                                ? 'bg-rose-50 text-rose-600 border-rose-200'
+                                : isDisabled
+                                ? 'bg-amber-50 text-amber-600 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-600 border-emerald-200'
                             }`}
                           >
-                            {isEliminated ? (
-                              <>
-                                <UserCheck className="w-3.5 h-3.5" />
-                                <span>Restore</span>
-                              </>
-                            ) : (
-                              <>
-                                <UserX className="w-3.5 h-3.5" />
-                                <span>Eliminate</span>
-                              </>
+                            {team.status}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium font-mono">
+                            {isEliminated ? 'Eliminated' : 'Round 2'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 6. Actions */}
+                      <td className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2 relative">
+                          <div className="flex flex-col gap-1.5">
+                            {/* Adjust Cash Button */}
+                            <button
+                              onClick={() => setActiveAdjustTeam(team)}
+                              disabled={isEliminated}
+                              className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                            >
+                              <span className="text-orange-500 font-black">$</span>
+                              <span>Adjust Cash</span>
+                            </button>
+
+                            {/* View Details Button */}
+                            <button
+                              onClick={() => setSelectedDetailTeam(team)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 transition-all flex items-center gap-1.5 shadow-xs"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-slate-400" />
+                              <span>View Details</span>
+                            </button>
+                          </div>
+
+                          {/* 3-dots Menu Button */}
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                setActiveMenuTeamId(
+                                  activeMenuTeamId === team.id ? null : team.id
+                                )
+                              }
+                              className="w-8 h-8 rounded-xl bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 border border-slate-200/80 flex items-center justify-center transition-all shadow-xs"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {activeMenuTeamId === team.id && (
+                              <div className="absolute right-0 top-10 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl py-1 z-30 space-y-0.5 text-left">
+                                <button
+                                  onClick={() => handleRegenerateCode(team.id)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                  <span>Regenerate Code</span>
+                                </button>
+                                <button
+                                  onClick={() => handleRegeneratePin(team.id)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+                                  <span>Regenerate PIN</span>
+                                </button>
+                                <button
+                                  onClick={() => handleToggleStatus(team)}
+                                  className={`w-full px-3.5 py-2 text-xs font-bold flex items-center gap-2 ${
+                                    isEliminated
+                                      ? 'text-emerald-600 hover:bg-emerald-50'
+                                      : 'text-rose-600 hover:bg-rose-50'
+                                  }`}
+                                >
+                                  {isEliminated ? (
+                                    <>
+                                      <UserCheck className="w-3.5 h-3.5" />
+                                      <span>Restore Team</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserX className="w-3.5 h-3.5" />
+                                      <span>Eliminate Team</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                             )}
-                          </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -291,7 +505,143 @@ export const AdminTeams: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Bottom Pagination Bar */}
+        <div className="p-4 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-medium">
+          <div>
+            Showing{' '}
+            <span className="font-bold text-slate-800">
+              {totalTeams === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+            </span>{' '}
+            to{' '}
+            <span className="font-bold text-slate-800">
+              {Math.min(currentPage * pageSize, totalTeams)}
+            </span>{' '}
+            of <span className="font-bold text-slate-800">{totalTeams}</span> teams
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Prev */}
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-8 h-8 rounded-xl font-bold text-xs transition-all ${
+                  currentPage === page
+                    ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Next */}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Page Size Selector */}
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-orange-500 shadow-xs ml-2"
+            >
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={20}>20 / page</option>
+            </select>
+          </div>
+        </div>
       </div>
+
+      {/* Team Details Modal */}
+      {selectedDetailTeam && (
+        <Modal
+          isOpen={!!selectedDetailTeam}
+          onClose={() => setSelectedDetailTeam(null)}
+          title={
+            <div className="flex items-center gap-2">
+              <span>{selectedDetailTeam.name} — Full Overview</span>
+            </div>
+          }
+          subtitle={`Access Code: ${selectedDetailTeam.team_code} · Team ID: ${selectedDetailTeam.id}`}
+        >
+          <div className="space-y-5">
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                <span className="text-[11px] font-extrabold uppercase text-slate-400 block">
+                  Available Cash
+                </span>
+                <span className="text-xl font-black font-mono text-slate-900 mt-1 block">
+                  {formatCurrency(selectedDetailTeam.cash_balance)}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {formatWealth(selectedDetailTeam.cash_balance)}
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                <span className="text-[11px] font-extrabold uppercase text-slate-400 block">
+                  Team PIN
+                </span>
+                <span className="text-xl font-black font-mono text-orange-500 mt-1 block tracking-wider">
+                  {selectedDetailTeam.pin_hash || '4821'}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Used for verified login
+                </span>
+              </div>
+            </div>
+
+            {/* Roster Members */}
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block">
+                Registered Roster Members ({(membersMap[selectedDetailTeam.id] || []).length})
+              </span>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {(membersMap[selectedDetailTeam.id] || []).length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No registered members yet.</p>
+                ) : (
+                  (membersMap[selectedDetailTeam.id] || []).map((member, idx) => (
+                    <div
+                      key={member.id || idx}
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 font-bold flex items-center justify-center text-[10px]">
+                          {idx + 1}
+                        </span>
+                        <span className="font-bold text-slate-900">{member.full_name}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-600 font-bold">
+                        Verified
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Create Team Modal */}
       {event && (
