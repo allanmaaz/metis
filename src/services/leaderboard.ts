@@ -40,10 +40,14 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
     }
   }
 
-  // Fallback Dynamic Calculation - Match all valid active teams
+  // Fallback Dynamic Calculation - Match all valid active teams (deduplicated)
   const db = getMockDB();
-  const teams = db.teams.filter(
-    (t) =>
+  const seenCodes = new Set<string>();
+  const seenNames = new Set<string>();
+  const uniqueTeams = [];
+
+  for (const t of db.teams) {
+    if (
       (!eventId ||
         eventId === 'e1' ||
         t.event_id === eventId ||
@@ -51,9 +55,18 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
         t.event_id === 'e1111111-1111-1111-1111-111111111111') &&
       !deletedSet.has(t.id) &&
       !deletedSet.has(t.team_code)
-  );
+    ) {
+      const codeKey = (t.team_code || '').trim().toUpperCase();
+      const nameKey = (t.name || '').trim().toLowerCase();
+      if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
+        if (codeKey) seenCodes.add(codeKey);
+        if (nameKey) seenNames.add(nameKey);
+        uniqueTeams.push(t);
+      }
+    }
+  }
 
-  const calculated = teams.map((team) => {
+  const calculated = uniqueTeams.map((team) => {
     const teamHoldings = db.holdings.filter((h) => h.team_id === team.id);
     const portfolioVal = teamHoldings.reduce((sum, h) => {
       const stock = db.stocks.find((s) => s.id === h.stock_id && s.is_active);

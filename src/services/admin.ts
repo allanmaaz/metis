@@ -23,11 +23,33 @@ function saveDeletedTeamId(idOrCode: string) {
 export async function getTeams(eventId: string): Promise<Team[]> {
   const db = getMockDB();
   const deletedSet = getDeletedTeamIds();
-  const localTeams = db.teams.filter(
-    (t) => (t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1') &&
+
+  // Clean and deduplicate local teams
+  const seenCodes = new Set<string>();
+  const seenNames = new Set<string>();
+  const uniqueLocalTeams: Team[] = [];
+
+  for (const t of db.teams) {
+    if (
+      (t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1') &&
       !deletedSet.has(t.id) &&
       !deletedSet.has(t.team_code)
-  );
+    ) {
+      const codeKey = (t.team_code || '').trim().toUpperCase();
+      const nameKey = (t.name || '').trim().toLowerCase();
+      if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
+        if (codeKey) seenCodes.add(codeKey);
+        if (nameKey) seenNames.add(nameKey);
+        uniqueLocalTeams.push(t);
+      }
+    }
+  }
+
+  // Prune any duplicate teams from local storage
+  if (uniqueLocalTeams.length !== db.teams.length) {
+    db.teams = uniqueLocalTeams;
+    saveMockDB(db);
+  }
 
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
@@ -38,52 +60,30 @@ export async function getTeams(eventId: string): Promise<Team[]> {
         .order('created_at', { ascending: true });
 
       if (!error && data) {
-        const filteredRemote = (data as Team[]).filter(
+        const remoteTeams = data as Team[];
+        const filteredRemote = remoteTeams.filter(
           (t) => !deletedSet.has(t.id) && !deletedSet.has(t.team_code)
         );
 
-        // Auto-sync: push any locally created team that is missing on remote Supabase
-        const remoteCodes = new Set(filteredRemote.map((r) => r.team_code));
-        localTeams.forEach(async (lt) => {
-          if (!remoteCodes.has(lt.team_code)) {
-            try {
-              const { data: createdTeam } = await supabase
-                .from('teams')
-                .insert({
-                  event_id: eventId,
-                  name: lt.name,
-                  team_code: lt.team_code,
-                  pin_hash: lt.pin_hash,
-                  cash_balance: lt.cash_balance,
-                  starting_wealth: lt.starting_wealth,
-                  status: lt.status,
-                })
-                .select()
-                .single();
-
-              if (createdTeam) {
-                const mRows = db.teamMembers
-                  .filter((m) => m.team_id === lt.id)
-                  .map((m) => ({
-                    team_id: createdTeam.id,
-                    full_name: m.full_name,
-                    normalized_name: m.normalized_name,
-                    is_active: true,
-                    is_trader: true,
-                  }));
-                if (mRows.length > 0) {
-                  await supabase.from('team_members').insert(mRows);
-                }
-                broadcastRealtimeEvent('TEAM_UPDATED', { teamId: createdTeam.id });
-              }
-            } catch (syncErr) {
-              // Ignore sync errors gracefully
-            }
+        // Deduplicate remote teams as well
+        const uniqueRemote: Team[] = [];
+        const rSeenCodes = new Set<string>();
+        const rSeenNames = new Set<string>();
+        for (const rt of filteredRemote) {
+          const codeKey = (rt.team_code || '').trim().toUpperCase();
+          const nameKey = (rt.name || '').trim().toLowerCase();
+          if (!rSeenCodes.has(codeKey) && !rSeenNames.has(nameKey)) {
+            if (codeKey) rSeenCodes.add(codeKey);
+            if (nameKey) rSeenNames.add(nameKey);
+            uniqueRemote.push(rt);
           }
-        });
+        }
 
-        if (filteredRemote.length > 0) {
-          return filteredRemote;
+        if (uniqueRemote.length > 0) {
+          // Sync unique remote teams into local DB
+          db.teams = uniqueRemote;
+          saveMockDB(db);
+          return uniqueRemote;
         }
       }
     } catch (err) {
@@ -91,7 +91,7 @@ export async function getTeams(eventId: string): Promise<Team[]> {
     }
   }
 
-  return localTeams;
+  return uniqueLocalTeams;
 }
 
 export async function getTeamMembers(teamId: string): Promise<TeamMember[]> {
@@ -130,37 +130,49 @@ export async function createTeam(data: {
 
   // 1. Create team in local reactive database
   const db = getMockDB();
-  const newTeam: Team = {
-    id: `t_${Date.now()}`,
-    event_id: data.event_id,
-    name: teamName,
-    team_code: teamCode,
-    pin_hash: pin,
-    cash_balance: capital,
-    starting_wealth: capital,
-    status: 'ACTIVE',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
 
-  db.teams.push(newTeam);
+  // Check if team with same name or code already exists
+  const existingIdx = db.teams.findIndex(
+    (t) => t.name.toLowerCase() === teamName.toLowerCase() || t.team_code === teamCode
+  );
 
-  data.members.forEach((m) => {
-    if (m.trim().length > 0) {
-      db.teamMembers.push({
-        id: `m_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        team_id: newTeam.id,
-        full_name: m.trim(),
-        normalized_name: normalizeName(m),
-        is_active: true,
-        is_trader: true,
-        created_at: new Date().toISOString(),
-      });
-    }
-  });
+  let createdLocalTeam: Team;
 
-  saveMockDB(db);
-  broadcastRealtimeEvent('TEAM_UPDATED', { teamId: newTeam.id });
+  if (existingIdx >= 0) {
+    createdLocalTeam = db.teams[existingIdx];
+  } else {
+    createdLocalTeam = {
+      id: `t_${Date.now()}`,
+      event_id: data.event_id,
+      name: teamName,
+      team_code: teamCode,
+      pin_hash: pin,
+      cash_balance: capital,
+      starting_wealth: capital,
+      status: 'ACTIVE',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    db.teams.push(createdLocalTeam);
+
+    data.members.forEach((m) => {
+      if (m.trim().length > 0) {
+        db.teamMembers.push({
+          id: `m_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          team_id: createdLocalTeam.id,
+          full_name: m.trim(),
+          normalized_name: normalizeName(m),
+          is_active: true,
+          is_trader: true,
+          created_at: new Date().toISOString(),
+        });
+      }
+    });
+
+    saveMockDB(db);
+  }
+
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId: createdLocalTeam.id });
   broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
 
   // 2. Also insert into remote Supabase database if configured
@@ -171,8 +183,8 @@ export async function createTeam(data: {
         .insert({
           event_id: data.event_id,
           name: teamName,
-          team_code: teamCode,
-          pin_hash: pin,
+          team_code: createdLocalTeam.team_code,
+          pin_hash: createdLocalTeam.pin_hash,
           cash_balance: capital,
           starting_wealth: capital,
           status: 'ACTIVE',
@@ -181,6 +193,18 @@ export async function createTeam(data: {
         .single();
 
       if (!error && team) {
+        // Replace temporary local ID with real Supabase UUID
+        const idx = db.teams.findIndex((t) => t.id === createdLocalTeam.id || t.team_code === createdLocalTeam.team_code);
+        if (idx >= 0) {
+          db.teams[idx] = team as Team;
+        }
+        db.teamMembers.forEach((m) => {
+          if (m.team_id === createdLocalTeam.id) {
+            m.team_id = team.id;
+          }
+        });
+        saveMockDB(db);
+
         if (data.members.length > 0) {
           const memberRows = data.members
             .filter((m) => m.trim().length > 0)
@@ -203,7 +227,7 @@ export async function createTeam(data: {
     }
   }
 
-  return { success: true, data: newTeam };
+  return { success: true, data: createdLocalTeam };
 }
 
 export async function regenerateTeamCode(teamId: string): Promise<{ success: boolean; newCode?: string; error?: string }> {
