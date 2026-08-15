@@ -113,16 +113,17 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
 
         {/* Members List */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-              Registered Team Members (for Participant Login Verification)
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-300 whitespace-nowrap">
+              Team Members
             </label>
             <button
               type="button"
               onClick={addMemberField}
-              className="text-xs text-orange-400 hover:text-orange-300 font-semibold flex items-center gap-1"
+              className="text-xs text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 whitespace-nowrap cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Member
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Member</span>
             </button>
           </div>
 
