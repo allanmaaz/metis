@@ -57,7 +57,24 @@ export const AdminLeaderboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-mono">
-              {entries.map((entry, index) => {
+              {entries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-20 text-center font-sans">
+                    <div className="max-w-sm mx-auto space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                        <Trophy className="w-6 h-6" />
+                      </div>
+                      <h3 className="font-extrabold text-base text-slate-800">
+                        No Leaderboard Standings Yet
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Rankings will calculate automatically once competing teams are registered and begin placing trades.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                entries.map((entry, index) => {
                 const isTop1 = entry.rank === 1;
                 const isQualified = entry.rank <= cutoff;
                 const isEliminated = entry.team_status === 'ELIMINATED';
@@ -170,7 +187,8 @@ export const AdminLeaderboard: React.FC = () => {
                     )}
                   </React.Fragment>
                 );
-              })}
+              })
+            )}
             </tbody>
           </table>
         </div>

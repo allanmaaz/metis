@@ -267,8 +267,29 @@ export const AdminTeams: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {paginatedTeams.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-slate-400 text-sm font-medium">
-                    No teams matching your search query.
+                  <td colSpan={6} className="py-20 text-center">
+                    <div className="max-w-sm mx-auto space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto">
+                        <Users2 className="w-6 h-6" />
+                      </div>
+                      <h3 className="font-extrabold text-base text-slate-800">
+                        {teams.length === 0 ? 'No Teams Registered Yet' : 'No matching teams found'}
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {teams.length === 0
+                          ? 'Get started by registering your first competing team to generate their unique code and access PIN.'
+                          : 'Try adjusting your search terms.'}
+                      </p>
+                      {teams.length === 0 && (
+                        <button
+                          onClick={() => setIsCreateModalOpen(true)}
+                          className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-sm hover:opacity-95 transition-opacity"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Register First Team</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

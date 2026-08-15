@@ -274,11 +274,11 @@ export const AdminDashboard: React.FC = () => {
               REGISTERED TEAMS
             </span>
             <div className="text-2xl font-black text-slate-900 font-display">
-              {teams.length || 5}
+              {teams.length}
             </div>
           </div>
           <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
-            <span className="truncate">{teams.filter((t) => t.status === 'ACTIVE').length || 5} Active Competitors</span>
+            <span className="truncate">{teams.filter((t) => t.status === 'ACTIVE').length} Active Competitors</span>
             <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:text-orange-500 group-hover:bg-orange-50 transition-colors shrink-0">
               <ChevronRight className="w-3 h-3" />
             </div>
@@ -298,7 +298,7 @@ export const AdminDashboard: React.FC = () => {
               ACTIVE STOCKS
             </span>
             <div className="text-2xl font-black text-slate-900 font-display">
-              {stocks.length || 5}
+              {stocks.length}
             </div>
           </div>
           <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
@@ -322,7 +322,7 @@ export const AdminDashboard: React.FC = () => {
               EXECUTED TRADES
             </span>
             <div className="text-2xl font-black text-slate-900 font-display">
-              {trades.length || 2}
+              {trades.length}
             </div>
           </div>
           <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
@@ -346,7 +346,7 @@ export const AdminDashboard: React.FC = () => {
               NEWS BROADCASTS
             </span>
             <div className="text-2xl font-black text-slate-900 font-display">
-              {news.length || 3}
+              {news.length}
             </div>
           </div>
           <div className="flex items-center justify-between text-[10.5px] text-slate-400 font-medium pt-1 border-t border-slate-100">
