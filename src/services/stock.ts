@@ -10,7 +10,7 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
         .from('stocks')
         .select('*')
         .eq('event_id', eventId)
-        .order('symbol', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
         return data as Stock[];
@@ -21,7 +21,13 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
   }
 
   const db = getMockDB();
-  return db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1');
+  const list = db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1');
+  return [...list].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (timeA !== timeB) return timeB - timeA;
+    return b.id.localeCompare(a.id);
+  });
 }
 
 export async function getStock(stockId: string): Promise<Stock | null> {
@@ -85,7 +91,7 @@ export async function createStock(data: {
     updated_at: new Date().toISOString(),
   };
 
-  db.stocks.push(newStock);
+  db.stocks.unshift(newStock);
   saveMockDB(db);
 
   broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {
