@@ -251,11 +251,12 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
             {teams.length === 0 ? 'No Teams Registered Yet' : 'No matching teams found'}
           </div>
         ) : (
-          paginatedTeams.map((team) => {
+          paginatedTeams.map((team, idx) => {
             const members = membersMap[team.id] || [];
             const isEliminated = team.status === 'ELIMINATED';
             const isDisabled = team.status === 'DISABLED';
             const isPinVisible = visiblePins[team.id];
+            const openUpward = idx >= Math.max(1, paginatedTeams.length - 2) && paginatedTeams.length > 2;
 
             return (
               <div
@@ -316,7 +317,11 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                           className="fixed inset-0 z-30"
                           onClick={() => setActiveMenuTeamId(null)}
                         />
-                        <div className="absolute right-0 top-10 w-56 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1.5 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                        <div
+                          className={`absolute right-0 ${
+                            openUpward ? 'bottom-full mb-1.5' : 'top-10'
+                          } w-56 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1.5 z-50 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100`}
+                        >
                           {/* Section 1: Overview & Balance */}
                           <button
                             onClick={() => {
@@ -515,11 +520,11 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
       </div>
 
       {/* 2. Desktop Table View (Visible on screens >= lg) */}
-      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200/80 shadow-sm">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-slate-50/80 border-b border-slate-100 text-[10.5px] font-black uppercase text-slate-400 tracking-wider font-mono">
             <tr>
-              <th className="py-4 px-6 w-[28%] text-left whitespace-nowrap align-middle">
+              <th className="py-4 px-6 w-[28%] text-left whitespace-nowrap align-middle rounded-tl-3xl">
                 Team & Status
               </th>
               <th className="py-4 px-6 w-[24%] text-left whitespace-nowrap align-middle">
@@ -531,7 +536,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
               <th className="py-4 px-6 w-[18%] text-right whitespace-nowrap align-middle">
                 Available Cash
               </th>
-              <th className="py-4 px-6 w-[14%] text-center whitespace-nowrap align-middle">
+              <th className="py-4 px-6 w-[14%] text-center whitespace-nowrap align-middle rounded-tr-3xl">
                 Actions
               </th>
             </tr>
@@ -565,11 +570,12 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                 </td>
               </tr>
             ) : (
-              paginatedTeams.map((team) => {
+              paginatedTeams.map((team, idx) => {
                 const members = membersMap[team.id] || [];
                 const isEliminated = team.status === 'ELIMINATED';
                 const isDisabled = team.status === 'DISABLED';
                 const isPinVisible = visiblePins[team.id];
+                const openUpward = idx >= Math.max(1, paginatedTeams.length - 2) && paginatedTeams.length > 2;
 
                 return (
                   <tr
@@ -685,7 +691,11 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                               className="fixed inset-0 z-30"
                               onClick={() => setActiveMenuTeamId(null)}
                             />
-                            <div className="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1.5 z-40 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                            <div
+                              className={`absolute right-0 ${
+                                openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+                              } w-56 bg-white rounded-2xl border border-slate-200 shadow-2xl py-1.5 z-50 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100`}
+                            >
                               {/* Section 1: Overview & Balance */}
                               <button
                                 onClick={() => {
