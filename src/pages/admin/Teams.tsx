@@ -490,14 +490,24 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
 
       {/* 2. Desktop Table View (Visible on screens >= lg) */}
       <div className="hidden lg:block bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm table-fixed">
-          <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
+        <table className="w-full text-sm table-fixed">
+          <thead className="bg-slate-50/80 border-b border-slate-100 text-[10.5px] font-black uppercase text-slate-400 tracking-wider font-mono">
             <tr>
-              <th className="py-3.5 px-5 w-[28%]">Team & Status</th>
-              <th className="py-3.5 px-5 w-[26%]">Access Credentials</th>
-              <th className="py-3.5 px-5 w-[16%] text-center">Members</th>
-              <th className="py-3.5 px-5 w-[16%] text-right">Available Cash</th>
-              <th className="py-3.5 px-5 w-[14%] text-center">Actions</th>
+              <th className="py-4 px-6 w-[28%] text-left whitespace-nowrap align-middle">
+                Team & Status
+              </th>
+              <th className="py-4 px-6 w-[24%] text-left whitespace-nowrap align-middle">
+                Access Credentials
+              </th>
+              <th className="py-4 px-4 w-[16%] text-center whitespace-nowrap align-middle">
+                Members
+              </th>
+              <th className="py-4 px-6 w-[18%] text-right whitespace-nowrap align-middle">
+                Available Cash
+              </th>
+              <th className="py-4 px-6 w-[14%] text-center whitespace-nowrap align-middle">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -519,7 +529,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     {teams.length === 0 && (
                       <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-sm hover:opacity-95 transition-opacity"
+                        className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-xs shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Register First Team</span>
@@ -543,8 +553,8 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     }`}
                   >
                     {/* 1. Team & Status */}
-                    <td className="py-4 px-5 align-middle">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <td className="py-4 px-6 align-middle text-left">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-orange-500/20 shrink-0">
                           {team.name.charAt(0) || 'T'}
                         </div>
@@ -552,7 +562,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                           <span className="font-extrabold text-sm text-slate-900 tracking-tight truncate block">
                             {team.name}
                           </span>
-                          <div className="flex items-center gap-1 mt-0.5">
+                          <div className="flex items-center gap-1.5 mt-0.5">
                             <span
                               className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full font-mono border ${
                                 isEliminated
@@ -573,13 +583,13 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     </td>
 
                     {/* 2. Access Credentials */}
-                    <td className="py-4 px-5 align-middle">
+                    <td className="py-4 px-6 align-middle text-left">
                       <div className="space-y-1">
                         <div className="inline-flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs">
                           <span className="truncate">{team.team_code}</span>
                           <button
                             onClick={() => copyToClipboard(team.team_code, team.id)}
-                            className="text-slate-400 hover:text-orange-600 transition-colors"
+                            className="text-slate-400 hover:text-orange-600 transition-colors cursor-pointer"
                             title="Copy team code"
                           >
                             {copiedCodeId === team.id ? (
@@ -595,14 +605,14 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                           <span>PIN: {isPinVisible ? team.pin_hash || '4821' : '••••'}</span>
                           <button
                             onClick={() => togglePinVisibility(team.id)}
-                            className="text-slate-400 hover:text-slate-700"
+                            className="text-slate-400 hover:text-slate-700 cursor-pointer"
                             title={isPinVisible ? 'Hide PIN' : 'Show PIN'}
                           >
                             {isPinVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                           </button>
                           <button
                             onClick={() => handleRegeneratePin(team.id)}
-                            className="text-slate-400 hover:text-orange-500"
+                            className="text-slate-400 hover:text-orange-500 cursor-pointer"
                             title="Regenerate PIN"
                           >
                             <RotateCcw className="w-3 h-3" />
@@ -612,7 +622,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     </td>
 
                     {/* 3. Registered Members */}
-                    <td className="py-4 px-5 align-middle text-center">
+                    <td className="py-4 px-4 align-middle text-center">
                       <button
                         type="button"
                         onClick={() => setSelectedRosterTeam(team)}
@@ -626,7 +636,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     </td>
 
                     {/* 4. Available Cash */}
-                    <td className="py-4 px-5 align-middle text-right font-mono">
+                    <td className="py-4 px-6 align-middle text-right font-mono whitespace-nowrap">
                       <div className="font-black text-sm text-slate-900">
                         {formatWealth(team.cash_balance)}
                       </div>
@@ -636,7 +646,7 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                     </td>
 
                     {/* 5. Actions */}
-                    <td className="py-4 px-5 align-middle text-center">
+                    <td className="py-4 px-6 align-middle text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => setActiveAdjustTeam(team)}
