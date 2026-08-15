@@ -1,0 +1,99 @@
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Holding, PortfolioSummary } from '../types';
+import { getMockDB } from './mockData';
+
+export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('holdings')
+        .select(`
+          *,
+          stock:stocks(*)
+        `)
+        .eq('team_id', teamId)
+        .gt('quantity', 0);
+
+      if (!error && data) {
+        return data as Holding[];
+      }
+    } catch (err) {
+      console.error('Error fetching team holdings:', err);
+    }
+  }
+
+  const db = getMockDB();
+  return db.holdings
+    .filter((h) => h.team_id === teamId && h.quantity > 0)
+    .map((h) => ({
+      ...h,
+      stock: db.stocks.find((s) => s.id === h.stock_id),
+    }));
+}
+
+export async function getTeamPortfolioSummary(
+  teamId: string,
+  eventId: string
+): Promise<PortfolioSummary> {
+  let cashBalance = 0;
+  let startingWealth = 100000000;
+  let holdings: Holding[] = [];
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data: team } = await supabase
+        .from('teams')
+        .select('cash_balance, starting_wealth')
+        .eq('id', teamId)
+        .single();
+
+      if (team) {
+        cashBalance = Number(team.cash_balance);
+        startingWealth = Number(team.starting_wealth);
+      }
+
+      holdings = await getTeamHoldings(teamId);
+    } catch (err) {
+      console.error('Error fetching portfolio summary:', err);
+    }
+  } else {
+    const db = getMockDB();
+    const team = db.teams.find((t) => t.id === teamId);
+    if (team) {
+      cashBalance = team.cash_balance;
+      startingWealth = team.starting_wealth;
+    }
+    holdings = await getTeamHoldings(teamId);
+  }
+
+  let totalInvested = 0;
+  let currentValue = 0;
+  let realizedPnl = 0;
+
+  holdings.forEach((h) => {
+    const currentPrice = h.stock?.current_price || h.average_cost;
+    totalInvested += h.quantity * h.average_cost;
+    currentValue += h.quantity * currentPrice;
+    realizedPnl += Number(h.realized_pnl || 0);
+  });
+
+  const unrealizedPnl = currentValue - totalInvested;
+  const unrealizedPnlPct = totalInvested > 0 ? (unrealizedPnl / totalInvested) * 100 : 0;
+  const totalPnl = unrealizedPnl + realizedPnl;
+  const totalWealth = cashBalance + currentValue;
+  const todayPnl = totalWealth - startingWealth;
+  const todayPnlPct = startingWealth > 0 ? (todayPnl / startingWealth) * 100 : 0;
+
+  return {
+    total_invested: totalInvested,
+    current_value: currentValue,
+    unrealized_pnl: unrealizedPnl,
+    unrealized_pnl_pct: unrealizedPnlPct,
+    realized_pnl: realizedPnl,
+    total_pnl: totalPnl,
+    total_wealth: totalWealth,
+    cash_balance: cashBalance,
+    today_pnl: todayPnl,
+    today_pnl_pct: todayPnlPct,
+  };
+}
