@@ -84,12 +84,6 @@ export const Join: React.FC = () => {
           </form>
         </GlassCard>
       </main>
-
-      {/* Footer */}
-      <footer className="text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-        <Shield className="w-3.5 h-3.5 text-slate-400" />
-        <span>End-to-end verified team sessions</span>
-      </footer>
     </div>
   );
 };

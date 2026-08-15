@@ -156,17 +156,6 @@ export const Landing: React.FC = () => {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="w-full pt-8 pb-4 text-center border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-        <div className="flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-amber-400" />
-          <span>SIMULATED MARKET · FOR EDUCATIONAL COMPETITIONS ONLY</span>
-        </div>
-        <div className="font-mono">
-          METIS © 2026 · ALL RIGHTS RESERVED
-        </div>
-      </footer>
     </div>
   );
 };

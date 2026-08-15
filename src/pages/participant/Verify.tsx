@@ -180,11 +180,6 @@ export const Verify: React.FC = () => {
           )}
         </GlassCard>
       </main>
-
-      {/* Footer */}
-      <footer className="text-center text-xs text-slate-400">
-        Session remains persistently active throughout the competition.
-      </footer>
     </div>
   );
 };

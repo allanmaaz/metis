@@ -116,11 +116,6 @@ export const AdminLogin: React.FC = () => {
           </Button>
         </form>
       </GlassCard>
-
-      {/* Footer */}
-      <footer className="text-center text-xs text-slate-400 font-mono">
-        RESTRICTED ACCESS · AUTHORIZED EVENT DIRECTORS ONLY
-      </footer>
     </div>
   );
 };
