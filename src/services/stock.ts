@@ -58,8 +58,14 @@ export async function updateStockPrice(
   // 1. Update local DB
   const db = getMockDB();
   const stock = db.stocks.find((s) => s.id === stockId);
+  let oldPrice = 0;
+  let pctChange = 0;
+
   if (stock) {
-    const oldPrice = stock.current_price;
+    oldPrice = stock.current_price;
+    const priceDiff = newPrice - oldPrice;
+    pctChange = oldPrice > 0 ? (priceDiff / oldPrice) * 100 : 0;
+
     stock.current_price = newPrice;
     stock.high_price = Math.max(stock.high_price, newPrice);
     stock.low_price = Math.min(stock.low_price, newPrice);
@@ -83,8 +89,20 @@ export async function updateStockPrice(
     saveMockDB(db);
   }
 
-  // Broadcast price update to all screens in real time
-  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', { stockId, newPrice, reason });
+  // Broadcast price update to all screens in real time with rich metrics
+  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {
+    type: 'STOCK_PRICE_CHANGED',
+    stockId,
+    symbol: stock?.symbol || 'STOCK',
+    companyName: stock?.company_name || 'Market Asset',
+    oldPrice,
+    newPrice,
+    pctChange,
+    isHike: newPrice > oldPrice,
+    isCrash: newPrice < oldPrice,
+    reason,
+    stock,
+  });
 
   // 2. Update Supabase if configured
   if (isSupabaseConfigured) {
@@ -134,7 +152,14 @@ export async function createStock(data: {
   db.stocks.push(newStock);
   saveMockDB(db);
 
-  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', { stock: newStock });
+  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', {
+    type: 'STOCK_CREATED',
+    stock: newStock,
+    symbol: newStock.symbol,
+    companyName: newStock.company_name,
+    price: newStock.current_price,
+    sector: newStock.sector,
+  });
 
   if (isSupabaseConfigured) {
     try {

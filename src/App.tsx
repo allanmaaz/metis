@@ -55,6 +55,7 @@ const DynamicRoot: React.FC = () => {
 };
 
 import { ThemeProvider } from './context/ThemeContext';
+import { LiveNotificationBanner } from './components/common/LiveNotificationBanner';
 
 export function App() {
   return (
@@ -62,7 +63,8 @@ export function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-          <Routes>
+            <LiveNotificationBanner />
+            <Routes>
             {/* If on admin subdomain, root "/" renders Admin directly */}
             {isAdminDomain ? (
               <>
