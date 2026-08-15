@@ -12,7 +12,7 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v7';
+const STORAGE_KEY = 'metis_mock_database_v8';
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -112,9 +112,9 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
     {
       id: 'ms111111-1111-1111-1111-111111111111',
       event_id: 'e1111111-1111-1111-1111-111111111111',
-      status: 'OPEN',
-      started_at: new Date(Date.now() - 600000).toISOString(),
-      ends_at: new Date(Date.now() + 1200000).toISOString(),
+      status: 'CLOSED',
+      started_at: null,
+      ends_at: null,
       started_by: null,
       ended_by: null,
       created_at: new Date().toISOString(),
@@ -150,6 +150,7 @@ export function getMockDB(): MockDatabase {
     localStorage.removeItem('metis_mock_database_v4');
     localStorage.removeItem('metis_mock_database_v5');
     localStorage.removeItem('metis_mock_database_v6');
+    localStorage.removeItem('metis_mock_database_v7');
   } catch {}
 
   const saved = localStorage.getItem(STORAGE_KEY);
