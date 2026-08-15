@@ -8,8 +8,8 @@ export const AdminBottomNav: React.FC = () => {
 
   const navItems = [
     { label: 'Overview', path: `${prefix}/dashboard`, icon: Home },
-    { label: 'Market Control', path: `${prefix}/market`, icon: Power },
-    { label: 'Stocks & Prices', path: `${prefix}/stocks`, icon: BarChart3 },
+    { label: 'Market', path: `${prefix}/market`, icon: Power },
+    { label: 'Stocks', path: `${prefix}/stocks`, icon: BarChart3 },
     { label: 'News', path: `${prefix}/news`, icon: Newspaper },
     { label: 'Leaderboard', path: `${prefix}/leaderboard`, icon: Trophy },
   ];

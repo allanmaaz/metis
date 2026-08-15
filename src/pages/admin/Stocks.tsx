@@ -113,19 +113,19 @@ export const AdminStocks: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-5 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <BarChart3 className="w-7 h-7 text-orange-500" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+            <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500" />
             Stock & Valuation Management
           </h1>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20 self-start sm:self-auto"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs sm:text-sm transition-all shadow-sm shadow-orange-500/20 w-full sm:w-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Stock</span>
@@ -144,126 +144,237 @@ export const AdminStocks: React.FC = () => {
         />
       </div>
 
-      {/* Stocks Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="w-full">
-          <table className="w-full text-left text-sm table-fixed">
-            <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
+      {/* 1. Mobile Cards View (Visible on screens < md) */}
+      <div className="block md:hidden space-y-3">
+        {filteredStocks.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 text-sm font-medium border border-slate-200/80">
+            No stocks found matching your search.
+          </div>
+        ) : (
+          filteredStocks.map((stock) => {
+            const priceDiff = stock.current_price - stock.opening_price;
+            const isUp = priceDiff >= 0;
+            const pctChange = stock.opening_price > 0 ? (priceDiff / stock.opening_price) * 100 : 0;
+            const glide = activeGlides.find((g) => g.stockId === stock.id);
+
+            return (
+              <div
+                key={stock.id}
+                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3"
+              >
+                {/* Top Row: Asset + Current Price */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center border border-orange-200/60 shadow-xs shrink-0 font-mono">
+                      {stock.symbol.slice(0, 3)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-base text-slate-900 font-mono">
+                          {stock.symbol}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 truncate">
+                          {stock.sector}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-medium truncate block">
+                        {stock.company_name}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="text-lg font-black text-slate-900 font-mono">
+                      {formatCurrency(stock.current_price)}
+                    </span>
+                    <div
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono mt-0.5 ${
+                        isUp
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-600 border border-rose-200'
+                      }`}
+                    >
+                      {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      <span>
+                        {isUp ? '+' : ''}
+                        {formatPercent(pctChange)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gliding Status Indicator */}
+                {glide && (
+                  <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[11px] text-orange-600 font-bold font-mono flex items-center gap-1.5 animate-pulse">
+                    <span>🌊 Gliding to {formatCurrency(glide.targetPrice)}</span>
+                  </div>
+                )}
+
+                {/* Middle Row: Session Metrics Grid */}
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-center font-mono">
+                  <div>
+                    <span className="text-[9px] font-bold uppercase text-slate-400 block">Open</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      {formatCurrency(stock.opening_price)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold uppercase text-emerald-600 block">High</span>
+                    <span className="text-xs font-bold text-emerald-600">
+                      {formatCurrency(stock.high_price)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold uppercase text-rose-600 block">Low</span>
+                    <span className="text-xs font-bold text-rose-600">
+                      {formatCurrency(stock.low_price)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Actions */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => setActivePriceStock(stock)}
+                    className="flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98"
+                  >
+                    <DollarSign className="w-4 h-4 text-orange-500" />
+                    <span>Adjust Price</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteStock(stock)}
+                    title="Remove Stock"
+                    className="w-10 h-10 rounded-xl bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 2. Desktop Table View (Visible on screens >= md) */}
+      <div className="hidden md:block bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <table className="w-full text-left text-sm table-fixed">
+          <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
+            <tr>
+              <th className="py-3.5 px-4 w-[38%]">Asset & Sector</th>
+              <th className="py-3.5 px-4 text-right w-[20%]">Price & 24h Trend</th>
+              <th className="py-3.5 px-4 text-right w-[20%]">Session Range</th>
+              <th className="py-3.5 px-4 text-right w-[22%]">Quick Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 font-mono">
+            {filteredStocks.length === 0 ? (
               <tr>
-                <th className="py-3.5 px-4 w-[38%]">Asset & Sector</th>
-                <th className="py-3.5 px-4 text-right w-[20%]">Price & 24h Trend</th>
-                <th className="py-3.5 px-4 text-right w-[20%]">Session Range</th>
-                <th className="py-3.5 px-4 text-right w-[22%]">Quick Actions</th>
+                <td colSpan={4} className="py-16 text-center text-slate-400 text-sm font-sans font-medium">
+                  No stocks found matching your search.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-mono">
-              {filteredStocks.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-16 text-center text-slate-400 text-sm font-sans font-medium">
-                    No stocks found matching your search.
-                  </td>
-                </tr>
-              ) : (
-                filteredStocks.map((stock) => {
-                  const priceDiff = stock.current_price - stock.opening_price;
-                  const isUp = priceDiff >= 0;
-                  const pctChange = stock.opening_price > 0 ? (priceDiff / stock.opening_price) * 100 : 0;
+            ) : (
+              filteredStocks.map((stock) => {
+                const priceDiff = stock.current_price - stock.opening_price;
+                const isUp = priceDiff >= 0;
+                const pctChange = stock.opening_price > 0 ? (priceDiff / stock.opening_price) * 100 : 0;
+                const glide = activeGlides.find((g) => g.stockId === stock.id);
 
-                  return (
-                    <tr key={stock.id} className="hover:bg-slate-50/80 transition-colors">
-                      {/* Asset & Sector */}
-                      <td className="py-3.5 px-4 align-middle">
-                        <div className="flex items-center gap-2.5 font-sans min-w-0">
-                          <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center border border-orange-200/60 shadow-xs shrink-0 font-mono">
-                            {stock.symbol.slice(0, 3)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-extrabold text-sm text-slate-900 font-mono">
-                                {stock.symbol}
-                              </span>
-                              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 truncate">
-                                {stock.sector}
-                              </span>
-                            </div>
-                            <span className="text-xs text-slate-400 font-medium truncate block">
-                              {stock.company_name}
+                return (
+                  <tr key={stock.id} className="hover:bg-slate-50/80 transition-colors">
+                    {/* Asset & Sector */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <div className="flex items-center gap-2.5 font-sans min-w-0">
+                        <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center border border-orange-200/60 shadow-xs shrink-0 font-mono">
+                          {stock.symbol.slice(0, 3)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-extrabold text-sm text-slate-900 font-mono">
+                              {stock.symbol}
+                            </span>
+                            <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 truncate">
+                              {stock.sector}
                             </span>
                           </div>
-                        </div>
-                      </td>
-
-                      {/* Current Price & 24h Trend */}
-                      <td className="py-3.5 px-4 align-middle text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="text-base font-black text-slate-900 font-mono">
-                            {formatCurrency(stock.current_price)}
+                          <span className="text-xs text-slate-400 font-medium truncate block">
+                            {stock.company_name}
                           </span>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <div
-                              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono ${
-                                isUp
-                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                  : 'bg-rose-50 text-rose-600 border border-rose-200'
-                              }`}
-                            >
-                              {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                              <span>
-                                {isUp ? '+' : ''}
-                                {formatPercent(pctChange)}
-                              </span>
-                            </div>
-                          </div>
-                          {activeGlides.find((g) => g.stockId === stock.id) && (
-                            <span className="text-[9.5px] text-orange-500 font-bold font-mono animate-pulse mt-0.5">
-                              🌊 Gliding ➔ {formatCurrency(activeGlides.find((g) => g.stockId === stock.id)!.targetPrice)}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Current Price & 24h Trend */}
+                    <td className="py-3.5 px-4 align-middle text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="text-base font-black text-slate-900 font-mono">
+                          {formatCurrency(stock.current_price)}
+                        </span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div
+                            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono ${
+                              isUp
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-600 border border-rose-200'
+                            }`}
+                          >
+                            {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            <span>
+                              {isUp ? '+' : ''}
+                              {formatPercent(pctChange)}
                             </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Session Range */}
-                      <td className="py-3.5 px-4 align-middle text-right font-mono">
-                        <div className="flex flex-col items-end space-y-0.5">
-                          <div className="text-emerald-600 font-bold text-xs">
-                            H: {formatCurrency(stock.high_price)}
-                          </div>
-                          <div className="text-rose-600 font-bold text-xs">
-                            L: {formatCurrency(stock.low_price)}
-                          </div>
-                          <div className="text-slate-400 text-[10px]">
-                            Open: {formatCurrency(stock.opening_price)}
                           </div>
                         </div>
-                      </td>
+                        {glide && (
+                          <span className="text-[9.5px] text-orange-500 font-bold font-mono animate-pulse mt-0.5">
+                            🌊 Gliding ➔ {formatCurrency(glide.targetPrice)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
 
-                      {/* Quick Actions */}
-                      <td className="py-3.5 px-4 align-middle text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setActivePriceStock(stock)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200/80 hover:border-orange-300 transition-all flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
-                          >
-                            <DollarSign className="w-3.5 h-3.5 text-orange-500" />
-                            <span>Change Price</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteStock(stock)}
-                            title="Remove Stock"
-                            className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                    {/* Session Range */}
+                    <td className="py-3.5 px-4 align-middle text-right font-mono">
+                      <div className="flex flex-col items-end space-y-0.5">
+                        <div className="text-emerald-600 font-bold text-xs">
+                          H: {formatCurrency(stock.high_price)}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <div className="text-rose-600 font-bold text-xs">
+                          L: {formatCurrency(stock.low_price)}
+                        </div>
+                        <div className="text-slate-400 text-[10px]">
+                          Open: {formatCurrency(stock.opening_price)}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Quick Actions */}
+                    <td className="py-3.5 px-4 align-middle text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setActivePriceStock(stock)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200/80 hover:border-orange-300 transition-all flex items-center gap-1 shadow-xs cursor-pointer shrink-0"
+                        >
+                          <DollarSign className="w-3.5 h-3.5 text-orange-500" />
+                          <span>Change Price</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteStock(stock)}
+                          title="Remove Stock"
+                          className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 flex items-center justify-center transition-all shadow-xs cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Price Change Modal */}
