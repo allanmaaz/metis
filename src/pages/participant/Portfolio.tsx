@@ -72,11 +72,11 @@ export const Portfolio: React.FC = () => {
     return res;
   };
 
-  const totalWealth = summary?.total_wealth || participant?.team.cash_balance || 56242000;
-  const cashBalance = summary ? totalWealth - summary.current_value : (participant?.team.cash_balance || 42000000);
-  const portfolioVal = summary?.current_value || 14200000;
-  const totalPnL = summary?.total_pnl || 0;
-  const pnlPct = summary?.unrealized_pnl_pct || 0;
+  const totalWealth = summary?.total_wealth ?? participant?.team.cash_balance ?? 100000000;
+  const cashBalance = summary ? summary.cash_balance : (participant?.team.cash_balance ?? 100000000);
+  const portfolioVal = summary?.current_value ?? 0;
+  const totalPnL = summary?.today_pnl ?? 0;
+  const pnlPct = summary?.today_pnl_pct ?? 0;
   const isProfitable = totalPnL >= 0;
 
   return (

@@ -120,11 +120,11 @@ export const Dashboard: React.FC = () => {
   };
 
   const isMarketOpen = session?.status === 'OPEN';
-  const totalWealth = summary?.total_wealth || participant?.team.cash_balance || 56242000;
-  const cashBalance = summary ? totalWealth - summary.current_value : (participant?.team.cash_balance || 42000000);
-  const portfolioVal = summary?.current_value || 14200000;
-  const pnlVal = summary?.total_pnl || -43800000;
-  const pnlPct = summary?.unrealized_pnl_pct || -43.8;
+  const totalWealth = summary?.total_wealth ?? participant?.team.cash_balance ?? 100000000;
+  const cashBalance = summary ? summary.cash_balance : (participant?.team.cash_balance ?? 100000000);
+  const portfolioVal = summary?.current_value ?? 0;
+  const pnlVal = summary?.today_pnl ?? 0;
+  const pnlPct = summary?.today_pnl_pct ?? 0;
   const isLoss = pnlVal < 0;
 
   return (
@@ -404,7 +404,7 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-3">
           {stocks.slice(0, 5).map((stock) => {
             const holding = holdings.find((h) => h.stock_id === stock.id);
-            const ownedQty = holding?.quantity || (stock.symbol === 'NOVA' ? 50000 : 0);
+            const ownedQty = holding?.quantity ?? 0;
             const priceDiff = stock.current_price - stock.opening_price;
             const isUp = priceDiff >= 0;
             const pct = (
