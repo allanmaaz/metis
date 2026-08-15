@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Team, TeamMember } from '../../types';
 import { Modal } from '../ui/Modal';
-import { Printer, Copy, Check, FileText, Share2, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Printer, Copy, Check, ShieldCheck, QrCode, ExternalLink, Sparkles } from 'lucide-react';
 import { formatWealth } from '../../lib/formatting';
 
 interface TeamCredentialsModalProps {
@@ -21,21 +21,32 @@ export const TeamCredentialsModal: React.FC<TeamCredentialsModalProps> = ({
 }) => {
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedTeamId, setCopiedTeamId] = useState<string | null>(null);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [copiedPinId, setCopiedPinId] = useState<string | null>(null);
 
   const activeTeams = singleTeam ? [singleTeam] : teams;
   const portalUrl = 'https://metis-bvx.pages.dev';
 
   const formatTeamText = (team: Team) => {
     const pin = team.pin_hash || '4821';
-    return `🏛️ *METIS 2026 — Team Access Credentials*
+    const members = membersMap[team.id] || [];
+    const memberList = members.map(m => m.full_name).join(', ') || 'Team Members';
+
+    return `🏛️ *METIS 2026 — Official Team Access Credentials*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 👥 *Team Name:* ${team.name}
+👤 *Members:* ${memberList}
 🎟️ *Team Code:* \`${team.team_code}\`
-🔑 *Access PIN:* \`${pin}\`
+🔑 *Security PIN:* \`${pin}\`
 💰 *Starting Capital:* ${formatWealth(team.cash_balance)}
-🌐 *Participant Portal:* ${portalUrl}
+🌐 *Trading Portal:* ${portalUrl}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-_Keep your credentials confidential. Log in at the portal to trade._`;
+📌 *Login Instructions:*
+1. Visit ${portalUrl}
+2. Enter your Team Code and Security PIN
+3. Start trading live as soon as market opens!
+
+_Keep your PIN confidential. Authorized participant use only._`;
   };
 
   const handleCopySingle = (team: Team) => {
@@ -44,18 +55,34 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
     setTimeout(() => setCopiedTeamId(null), 2000);
   };
 
-  const handleCopyAll = () => {
-    const allText = activeTeams.map((team, idx) => {
-      const pin = team.pin_hash || '4821';
-      return `[Team ${idx + 1}] ${team.name}
-Code: ${team.team_code} | PIN: ${pin} | Capital: ${formatWealth(team.cash_balance)}`;
-    }).join('\n' + '─'.repeat(40) + '\n');
+  const handleCopyCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => setCopiedCodeId(null), 2000);
+  };
 
-    const fullSummary = `🏛️ METIS 2026 — ALL REGISTERED TEAM CREDENTIALS (${activeTeams.length} Teams)
+  const handleCopyPin = (pin: string, id: string) => {
+    navigator.clipboard.writeText(pin);
+    setCopiedPinId(id);
+    setTimeout(() => setCopiedPinId(null), 2000);
+  };
+
+  const handleCopyAll = () => {
+    const allText = activeTeams
+      .map((team, idx) => {
+        const pin = team.pin_hash || '4821';
+        const members = (membersMap[team.id] || []).map(m => m.full_name).join(', ') || 'N/A';
+        return `[#${idx + 1}] ${team.name}
+Members: ${members}
+Team Code: ${team.team_code} | PIN: ${pin} | Capital: ${formatWealth(team.cash_balance)}`;
+      })
+      .join('\n' + '─'.repeat(45) + '\n');
+
+    const fullSummary = `🏛️ METIS 2026 — OFFICIAL TEAM CREDENTIALS ROSTER (${activeTeams.length} Teams)
 Portal: ${portalUrl}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${allText}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Generated on ${new Date().toLocaleString()}`;
 
     navigator.clipboard.writeText(fullSummary);
@@ -70,266 +97,529 @@ Generated on ${new Date().toLocaleString()}`;
       return;
     }
 
-    const cardsHtml = activeTeams.map((team, idx) => {
-      const pin = team.pin_hash || '4821';
-      const members = membersMap[team.id] || [];
-      const memberNames = members.map(m => m.full_name).join(', ') || 'Registered Team Member';
+    const isSingle = activeTeams.length === 1;
 
-      return `
-        <div class="pass-card">
-          <div class="pass-header">
-            <div class="brand-badge">METIS 2026</div>
-            <div class="event-title">OFFICIAL PARTICIPANT ACCESS PASS</div>
-          </div>
-          
-          <div class="pass-body">
-            <div class="team-hero">
-              <div class="team-avatar">${team.name.charAt(0)}</div>
-              <div>
-                <div class="team-label">COMPETING TEAM</div>
-                <div class="team-name">${team.name}</div>
-                <div class="team-members">Members: ${memberNames}</div>
+    const cardsHtml = activeTeams
+      .map((team, idx) => {
+        const pin = team.pin_hash || '4821';
+        const members = membersMap[team.id] || [];
+        const memberNames = members.map(m => m.full_name).join(', ') || 'Registered Participant';
+
+        if (isSingle) {
+          // Large, full-page executive pass design for single team print
+          return `
+          <div class="executive-pass">
+            <div class="pass-header-strip">
+              <div class="brand-left">
+                <span class="metis-logo">🏛️ METIS 2026</span>
+                <span class="sub-logo">MOCK STOCK TRADING ARENA</span>
+              </div>
+              <div class="badge-right">
+                <span class="official-tag">OFFICIAL ACCESS PASS</span>
+                <span class="serial-tag">AUTH #${team.team_code}</span>
               </div>
             </div>
 
-            <div class="credentials-grid">
-              <div class="cred-box highlight">
-                <span class="cred-label">TEAM ACCESS CODE</span>
-                <span class="cred-value">${team.team_code}</span>
+            <div class="pass-content">
+              <div class="team-spotlight">
+                <div class="team-avatar-lg">${team.name.charAt(0)}</div>
+                <div class="team-info-lg">
+                  <div class="status-pill">ROUND 2 COMPETITOR · VERIFIED</div>
+                  <h1 class="team-title-lg">${team.name}</h1>
+                  <p class="members-lg"><strong>Team Members:</strong> ${memberNames}</p>
+                </div>
               </div>
-              <div class="cred-box">
-                <span class="cred-label">SECURITY PIN</span>
-                <span class="cred-value">${pin}</span>
+
+              <div class="key-credentials-box">
+                <div class="cred-cell primary">
+                  <span class="cell-label">OFFICIAL TEAM ACCESS CODE</span>
+                  <div class="cell-value-code">${team.team_code}</div>
+                  <span class="cell-sub">Enter this code on the participant login screen</span>
+                </div>
+                <div class="cred-cell secondary">
+                  <span class="cell-label">CONFIDENTIAL SECURITY PIN</span>
+                  <div class="cell-value-pin">${pin}</div>
+                  <span class="cell-sub">4-Digit authorized trading authentication</span>
+                </div>
+              </div>
+
+              <div class="trading-parameters-grid">
+                <div class="param-card">
+                  <span class="param-label">ALLOCATED STARTING CAPITAL</span>
+                  <span class="param-value">${formatWealth(team.cash_balance)}</span>
+                </div>
+                <div class="param-card">
+                  <span class="param-label">PARTICIPANT TRADING PORTAL</span>
+                  <span class="param-value link">${portalUrl}</span>
+                </div>
+                <div class="param-card">
+                  <span class="param-label">COMPETITION VENUE</span>
+                  <span class="param-value">Main Trading Floor</span>
+                </div>
+              </div>
+
+              <div class="login-guide-card">
+                <h3>🚀 Step-by-Step Login Instructions:</h3>
+                <ol>
+                  <li>Connect to the event network and visit <strong>${portalUrl}</strong> on your device.</li>
+                  <li>Select <strong>"Team Login"</strong> and input your Team Code: <strong>${team.team_code}</strong>.</li>
+                  <li>Provide your 4-digit Security PIN: <strong>${pin}</strong> to unlock your terminal.</li>
+                  <li>When the market opens, execute live buys & sells to maximize portfolio valuation.</li>
+                </ol>
+              </div>
+
+              <div class="pass-seal-row">
+                <div class="rules-note">
+                  <strong>⚠️ Security Notice:</strong> This pass is strictly non-transferable. All trades executed under this team ID are final and binding on the competition leaderboard.
+                </div>
+                <div class="signature-box">
+                  <div class="sig-line"></div>
+                  <span>Authorized Metis Official Seal</span>
+                </div>
               </div>
             </div>
 
-            <div class="meta-row">
-              <div>
-                <span class="meta-label">STARTING CAPITAL</span>
-                <span class="meta-value">${formatWealth(team.cash_balance)}</span>
-              </div>
-              <div>
-                <span class="meta-label">TRADING PORTAL</span>
-                <span class="meta-value link">${portalUrl}</span>
-              </div>
+            <div class="pass-footer-strip">
+              <span>METIS Simulated Market Engine v3.0 · Built for Ultra-Low-Latency Realtime Trading</span>
+              <span>Generated on ${new Date().toLocaleString()}</span>
             </div>
           </div>
+        `;
+        }
 
-          <div class="pass-footer">
-            <span>⚠️ Keep this pass confidential. Authorized participant use only.</span>
-            <span>Pass #${idx + 1}</span>
+        // Multi-card layout for bulk team printing (2 cards per page with cut lines)
+        return `
+          <div class="multi-card">
+            <div class="multi-header">
+              <div class="multi-brand">🏛️ METIS 2026 · PARTICIPANT ACCESS PASS</div>
+              <div class="multi-serial">PASS #${idx + 1}</div>
+            </div>
+
+            <div class="multi-body">
+              <div class="multi-team-row">
+                <div class="multi-avatar">${team.name.charAt(0)}</div>
+                <div>
+                  <div class="multi-team-name">${team.name}</div>
+                  <div class="multi-members">${memberNames}</div>
+                </div>
+              </div>
+
+              <div class="multi-creds-row">
+                <div class="multi-cred-box highlight">
+                  <span class="lbl">TEAM CODE</span>
+                  <span class="val">${team.team_code}</span>
+                </div>
+                <div class="multi-cred-box">
+                  <span class="lbl">SECURITY PIN</span>
+                  <span class="val">${pin}</span>
+                </div>
+              </div>
+
+              <div class="multi-meta-row">
+                <div><strong>Capital:</strong> ${formatWealth(team.cash_balance)}</div>
+                <div><strong>Portal:</strong> ${portalUrl.replace('https://', '')}</div>
+              </div>
+            </div>
+
+            <div class="multi-footer">
+              <span>Authorized for official Metis 2026 trading simulation</span>
+              <span>✂️ CUT HERE</span>
+            </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      })
+      .join('');
 
     const htmlContent = `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>METIS 2026 — Team Credentials Pass</title>
+          <title>METIS 2026 — Official Team Credentials Pass</title>
           <meta charset="utf-8" />
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
             
             * { box-sizing: border-box; margin: 0; padding: 0; }
+            @page {
+              size: A4 portrait;
+              margin: ${isSingle ? '10mm' : '8mm'};
+            }
             body {
               font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-              background-color: #f8fafc;
+              background-color: #ffffff;
               color: #0f172a;
-              padding: 24px;
+              padding: ${isSingle ? '0' : '10px'};
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
 
-            .header-banner {
-              text-align: center;
-              margin-bottom: 24px;
-              padding-bottom: 16px;
-              border-bottom: 2px solid #e2e8f0;
-            }
-            .header-banner h1 {
-              font-size: 22px;
-              font-weight: 800;
-              color: #0f172a;
-              letter-spacing: -0.5px;
-            }
-            .header-banner p {
-              font-size: 12px;
-              color: #64748b;
-              margin-top: 4px;
-            }
-
-            .passes-container {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 20px;
-            }
-
-            .pass-card {
-              background: #ffffff;
-              border: 2px solid #e2e8f0;
-              border-radius: 18px;
+            /* Single Team Executive Pass */
+            .executive-pass {
+              width: 100%;
+              min-height: 270mm;
+              border: 3px solid #0f172a;
+              border-radius: 24px;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
               overflow: hidden;
-              page-break-inside: avoid;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-              position: relative;
+              background: #ffffff;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             }
 
-            .pass-header {
+            .pass-header-strip {
               background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
               color: #ffffff;
-              padding: 12px 18px;
+              padding: 20px 28px;
               display: flex;
               align-items: center;
               justify-content: space-between;
+              border-bottom: 4px solid #f97316;
             }
-            .brand-badge {
-              font-family: 'JetBrains Mono', monospace;
-              font-weight: 800;
-              font-size: 12px;
+            .metis-logo {
+              font-size: 24px;
+              font-weight: 900;
+              letter-spacing: -0.5px;
+              display: block;
+            }
+            .sub-logo {
+              font-size: 11px;
+              font-weight: 700;
+              color: #fdba74;
+              letter-spacing: 1.5px;
+              text-transform: uppercase;
+              margin-top: 2px;
+              display: block;
+            }
+            .badge-right {
+              text-align: right;
+            }
+            .official-tag {
+              display: inline-block;
               background: #f97316;
               color: #ffffff;
-              padding: 3px 10px;
+              font-size: 11px;
+              font-weight: 800;
+              padding: 4px 12px;
               border-radius: 8px;
               letter-spacing: 0.5px;
             }
-            .event-title {
-              font-size: 10px;
-              font-weight: 700;
+            .serial-tag {
+              display: block;
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 11px;
               color: #94a3b8;
-              letter-spacing: 0.5px;
+              font-weight: 700;
+              margin-top: 4px;
             }
 
-            .pass-body {
-              padding: 18px;
+            .pass-content {
+              padding: 28px 32px;
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
             }
 
-            .team-hero {
+            .team-spotlight {
               display: flex;
               align-items: center;
-              gap: 12px;
-              margin-bottom: 16px;
+              gap: 20px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #f1f5f9;
             }
-            .team-avatar {
-              width: 44px;
-              height: 44px;
-              border-radius: 14px;
+            .team-avatar-lg {
+              width: 72px;
+              height: 72px;
+              border-radius: 20px;
               background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
               color: #ffffff;
-              font-size: 20px;
-              font-weight: 800;
+              font-size: 36px;
+              font-weight: 900;
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+              box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
             }
-            .team-label {
-              font-size: 9px;
+            .status-pill {
+              display: inline-block;
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 10px;
               font-weight: 800;
-              color: #94a3b8;
-              letter-spacing: 0.5px;
+              color: #059669;
+              background: #ecfdf5;
+              border: 1px solid #a7f3d0;
+              padding: 2px 10px;
+              border-radius: 6px;
+              margin-bottom: 6px;
             }
-            .team-name {
-              font-size: 17px;
-              font-weight: 800;
+            .team-title-lg {
+              font-size: 30px;
+              font-weight: 900;
               color: #0f172a;
-              line-height: 1.2;
+              letter-spacing: -0.5px;
             }
-            .team-members {
-              font-size: 11px;
-              color: #64748b;
-              margin-top: 2px;
+            .members-lg {
+              font-size: 13px;
+              color: #475569;
+              margin-top: 4px;
             }
 
-            .credentials-grid {
+            .key-credentials-box {
               display: grid;
-              grid-template-columns: 1.2fr 0.8fr;
-              gap: 10px;
-              margin-bottom: 14px;
+              grid-template-columns: 1.3fr 0.9fr;
+              gap: 16px;
             }
-            .cred-box {
-              background: #f8fafc;
-              border: 1.5px solid #e2e8f0;
-              border-radius: 12px;
-              padding: 10px 14px;
+            .cred-cell {
+              border-radius: 18px;
+              padding: 16px 20px;
+              border: 2px solid #e2e8f0;
             }
-            .cred-box.highlight {
+            .cred-cell.primary {
               background: #fff7ed;
-              border-color: #fdba74;
+              border-color: #f97316;
             }
-            .cred-label {
+            .cred-cell.secondary {
+              background: #f8fafc;
+              border-color: #cbd5e1;
+            }
+            .cell-label {
               font-family: 'JetBrains Mono', monospace;
+              font-size: 10px;
+              font-weight: 800;
+              letter-spacing: 0.5px;
+              display: block;
+              margin-bottom: 6px;
+            }
+            .cred-cell.primary .cell-label { color: #c2410c; }
+            .cred-cell.secondary .cell-label { color: #475569; }
+            .cell-value-code {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 32px;
+              font-weight: 900;
+              color: #ea580c;
+              letter-spacing: 2px;
+            }
+            .cell-value-pin {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 32px;
+              font-weight: 900;
+              color: #0f172a;
+              letter-spacing: 4px;
+            }
+            .cell-sub {
+              font-size: 11px;
+              color: #64748b;
+              margin-top: 4px;
+              display: block;
+            }
+
+            .trading-parameters-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 12px;
+            }
+            .param-card {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 14px;
+              padding: 12px 16px;
+            }
+            .param-label {
               font-size: 9px;
               font-weight: 800;
               color: #64748b;
+              letter-spacing: 0.5px;
               display: block;
               margin-bottom: 4px;
             }
-            .cred-box.highlight .cred-label {
-              color: #c2410c;
-            }
-            .cred-value {
+            .param-value {
               font-family: 'JetBrains Mono', monospace;
-              font-size: 17px;
+              font-size: 14px;
               font-weight: 800;
               color: #0f172a;
+            }
+            .param-value.link {
+              color: #2563eb;
+              font-size: 12px;
+            }
+
+            .login-guide-card {
+              background: #f0fdf4;
+              border: 1.5px solid #86efac;
+              border-radius: 16px;
+              padding: 16px 20px;
+            }
+            .login-guide-card h3 {
+              font-size: 13px;
+              font-weight: 800;
+              color: #15803d;
+              margin-bottom: 8px;
+            }
+            .login-guide-card ol {
+              padding-left: 20px;
+              font-size: 12px;
+              color: #166534;
+              line-height: 1.6;
+            }
+
+            .pass-seal-row {
+              display: flex;
+              align-items: flex-end;
+              justify-content: space-between;
+              gap: 20px;
+              padding-top: 12px;
+              border-top: 1.5px dashed #cbd5e1;
+            }
+            .rules-note {
+              font-size: 11px;
+              color: #64748b;
+              max-width: 65%;
+              line-height: 1.4;
+            }
+            .signature-box {
+              text-align: center;
+              min-width: 170px;
+            }
+            .sig-line {
+              width: 100%;
+              border-bottom: 2px solid #94a3b8;
+              margin-bottom: 6px;
+              height: 30px;
+            }
+            .signature-box span {
+              font-size: 10px;
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
               letter-spacing: 0.5px;
             }
-            .cred-box.highlight .cred-value {
-              color: #ea580c;
-            }
 
-            .meta-row {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding-top: 10px;
-              border-top: 1px dashed #cbd5e1;
-            }
-            .meta-label {
-              font-size: 9px;
-              font-weight: 700;
-              color: #94a3b8;
-              display: block;
-            }
-            .meta-value {
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 12px;
-              font-weight: 800;
-              color: #0f172a;
-            }
-            .meta-value.link {
-              color: #2563eb;
-            }
-
-            .pass-footer {
+            .pass-footer-strip {
               background: #f8fafc;
-              border-top: 1px solid #e2e8f0;
-              padding: 8px 18px;
+              border-top: 2px solid #e2e8f0;
+              padding: 12px 28px;
               display: flex;
               align-items: center;
               justify-content: space-between;
-              font-size: 9px;
+              font-size: 10px;
               color: #94a3b8;
               font-weight: 600;
             }
 
+            /* Multi-pass Grid Layout */
+            .multi-grid {
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 24px;
+            }
+            .multi-card {
+              border: 2px dashed #94a3b8;
+              border-radius: 18px;
+              overflow: hidden;
+              background: #ffffff;
+              page-break-inside: avoid;
+              margin-bottom: 16px;
+            }
+            .multi-header {
+              background: #0f172a;
+              color: #ffffff;
+              padding: 10px 16px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-size: 11px;
+              font-weight: 800;
+            }
+            .multi-body {
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+            .multi-team-row {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            }
+            .multi-avatar {
+              width: 42px;
+              height: 42px;
+              border-radius: 12px;
+              background: #f97316;
+              color: #ffffff;
+              font-weight: 900;
+              font-size: 18px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .multi-team-name {
+              font-size: 18px;
+              font-weight: 900;
+              color: #0f172a;
+            }
+            .multi-members {
+              font-size: 11px;
+              color: #64748b;
+            }
+            .multi-creds-row {
+              display: grid;
+              grid-template-columns: 1.2fr 0.8fr;
+              gap: 10px;
+            }
+            .multi-cred-box {
+              padding: 10px 14px;
+              border-radius: 12px;
+              border: 1.5px solid #e2e8f0;
+              background: #f8fafc;
+            }
+            .multi-cred-box.highlight {
+              background: #fff7ed;
+              border-color: #f97316;
+            }
+            .multi-cred-box .lbl {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 9px;
+              font-weight: 800;
+              display: block;
+              color: #64748b;
+            }
+            .multi-cred-box.highlight .lbl { color: #c2410c; }
+            .multi-cred-box .val {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 20px;
+              font-weight: 900;
+              color: #0f172a;
+            }
+            .multi-cred-box.highlight .val { color: #ea580c; }
+            .multi-meta-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 11px;
+              color: #475569;
+              padding-top: 8px;
+              border-top: 1px dashed #e2e8f0;
+            }
+            .multi-footer {
+              background: #f8fafc;
+              padding: 8px 16px;
+              border-top: 1px solid #e2e8f0;
+              display: flex;
+              justify-content: space-between;
+              font-size: 9px;
+              color: #94a3b8;
+              font-weight: 700;
+            }
+
             @media print {
               body { background: white; padding: 0; }
-              .header-banner { margin-bottom: 16px; }
-              .pass-card { box-shadow: none; border-color: #cbd5e1; }
+              .executive-pass { box-shadow: none; }
             }
           </style>
         </head>
         <body>
-          <div class="header-banner">
-            <h1>🏛️ METIS 2026 — Official Team Access Credentials</h1>
-            <p>Generated on ${new Date().toLocaleString()} · Participant Trading Portal: <strong>${portalUrl}</strong></p>
-          </div>
-
-          <div class="passes-container">
-            ${cardsHtml}
-          </div>
-
+          ${isSingle ? cardsHtml : `<div class="multi-grid">${cardsHtml}</div>`}
           <script>
             window.onload = function() {
               window.print();
@@ -348,38 +638,43 @@ Generated on ${new Date().toLocaleString()}`;
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      maxWidth={singleTeam ? '2xl' : '3xl'}
       title={singleTeam ? `${singleTeam.name} — Access Credentials` : 'Team Access Credentials & Passes'}
-      subtitle={singleTeam ? 'Ready-to-share credentials pass for this team' : `Export or print credential passes for ${activeTeams.length} registered teams`}
+      subtitle={
+        singleTeam
+          ? 'Official credentials pass with quick copy and print export'
+          : `Export, print, or copy credentials for ${activeTeams.length} registered teams`
+      }
     >
-      <div className="space-y-5 pt-2 font-sans">
+      <div className="space-y-4 pt-1 font-sans">
         {/* Action Header Banner */}
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-          <div className="space-y-0.5">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-white/10 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono font-extrabold text-[10px] uppercase">
-                Official Passes
+              <span className="px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono font-extrabold text-[10px] uppercase tracking-wide">
+                OFFICIAL PASS
               </span>
               <span className="font-extrabold text-sm text-slate-100">
-                {singleTeam ? singleTeam.name : `${activeTeams.length} Registered Teams`}
+                {singleTeam ? singleTeam.name : `${activeTeams.length} Teams`}
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Print high-graphic PDF passes or copy formatted text for WhatsApp/email.
+              Print official passes or copy formatted text for WhatsApp/Email.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <button
               onClick={handleCopyAll}
-              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedAll ? 'Copied All!' : 'Copy Summary'}</span>
+              <span>{copiedAll ? 'Copied All!' : 'Copy Invite Text'}</span>
             </button>
 
             <button
               onClick={handlePrintPDF}
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-orange-500/20"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-orange-500/25"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save PDF</span>
@@ -387,88 +682,202 @@ Generated on ${new Date().toLocaleString()}`;
           </div>
         </div>
 
-        {/* Passes Grid Preview */}
-        <div className="max-h-[50vh] overflow-y-auto space-y-3 pr-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {activeTeams.map((team) => {
-              const pin = team.pin_hash || '4821';
-              const members = membersMap[team.id] || [];
-              const isCopied = copiedTeamId === team.id;
-
-              return (
-                <div
-                  key={team.id}
-                  className="bg-white rounded-2xl border border-slate-200/90 p-4 space-y-3.5 shadow-2xs hover:border-orange-200 transition-all group relative overflow-hidden"
-                >
-                  {/* Top Team Profile */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black text-base shadow-xs shadow-orange-500/20 shrink-0">
-                        {team.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <span className="font-extrabold text-sm text-slate-900 truncate block">
-                          {team.name}
-                        </span>
-                        <span className="text-[11px] text-slate-400 block font-medium">
-                          {members.length === 1 ? '1 Member' : `${members.length} Members`}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => handleCopySingle(team)}
-                      className={`p-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                        isCopied
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                          : 'bg-slate-50 hover:bg-orange-50 text-slate-600 hover:text-orange-600 border-slate-200 hover:border-orange-200'
-                      }`}
-                      title="Copy WhatsApp Message"
-                    >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span className="text-[11px]">{isCopied ? 'Copied' : 'Copy'}</span>
-                    </button>
+        {/* Passes Preview Box */}
+        <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+          {singleTeam ? (
+            // Single Team High-Visibility Card
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-5 space-y-4 shadow-sm text-slate-900">
+              {/* Header */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center font-black text-xl shadow-sm shadow-orange-500/30 shrink-0">
+                    {singleTeam.name.charAt(0)}
                   </div>
-
-                  {/* Credentials Boxes */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-orange-50/80 border border-orange-200/80">
-                      <span className="text-[9px] uppercase font-extrabold text-orange-600 tracking-wider block font-mono">
-                        Team Code
-                      </span>
-                      <span className="font-mono font-black text-sm text-orange-700 mt-0.5 block truncate">
-                        {team.team_code}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-lg text-slate-900 tracking-tight">
+                        {singleTeam.name}
+                      </h3>
+                      <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-mono">
+                        {singleTeam.status}
                       </span>
                     </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                      <span className="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider block font-mono">
-                        Security PIN
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Members:{' '}
+                      <span className="font-semibold text-slate-700">
+                        {(membersMap[singleTeam.id] || []).map(m => m.full_name).join(', ') || '1 Registered Member'}
                       </span>
-                      <span className="font-mono font-black text-sm text-slate-900 mt-0.5 block">
-                        {pin}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Footer Meta */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-                    <div>
-                      <span className="text-slate-400">Capital: </span>
-                      <span className="font-bold text-slate-800">{formatWealth(team.cash_balance)}</span>
-                    </div>
-                    <div className="text-slate-400 truncate max-w-[150px]">
-                      {portalUrl.replace('https://', '')}
-                    </div>
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <button
+                  onClick={() => handleCopySingle(singleTeam)}
+                  className={`px-3.5 py-2 rounded-xl border text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    copiedTeamId === singleTeam.id
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+                  }`}
+                >
+                  {copiedTeamId === singleTeam.id ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-orange-600" />
+                  )}
+                  <span>{copiedTeamId === singleTeam.id ? 'Copied!' : 'Copy Full Pass'}</span>
+                </button>
+              </div>
+
+              {/* Big Credentials Block */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Team Code */}
+                <div className="p-3.5 rounded-2xl bg-orange-50/80 border-2 border-orange-200/90 relative group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-extrabold text-orange-700 tracking-wider font-mono">
+                      TEAM ACCESS CODE
+                    </span>
+                    <button
+                      onClick={() => handleCopyCode(singleTeam.team_code, singleTeam.id)}
+                      className="text-orange-600 hover:text-orange-800 p-1 cursor-pointer"
+                      title="Copy Team Code"
+                    >
+                      {copiedCodeId === singleTeam.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="font-mono font-black text-2xl text-orange-600 tracking-wide mt-1">
+                    {singleTeam.team_code}
+                  </div>
+                  <span className="text-[10px] text-orange-600/80 mt-0.5 block">
+                    Use to log in at the participant portal
+                  </span>
+                </div>
+
+                {/* Security PIN */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border-2 border-slate-200/90 relative group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider font-mono">
+                      SECURITY PIN
+                    </span>
+                    <button
+                      onClick={() => handleCopyPin(singleTeam.pin_hash || '4821', singleTeam.id)}
+                      className="text-slate-500 hover:text-slate-800 p-1 cursor-pointer"
+                      title="Copy PIN"
+                    >
+                      {copiedPinId === singleTeam.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <div className="font-mono font-black text-2xl text-slate-900 tracking-wider mt-1">
+                    {singleTeam.pin_hash || '4821'}
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    4-digit private authentication PIN
+                  </span>
+                </div>
+              </div>
+
+              {/* Meta Parameters */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 gap-3 text-xs font-mono">
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold block">Allocated Capital</span>
+                  <span className="font-black text-slate-900 text-sm">{formatWealth(singleTeam.cash_balance)}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold block">Trading Portal</span>
+                  <a
+                    href={portalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-orange-600 hover:underline flex items-center gap-1 mt-0.5"
+                  >
+                    <span>{portalUrl.replace('https://', '')}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Multiple Teams Grid
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {activeTeams.map((team) => {
+                const pin = team.pin_hash || '4821';
+                const members = membersMap[team.id] || [];
+                const isCopied = copiedTeamId === team.id;
+
+                return (
+                  <div
+                    key={team.id}
+                    className="bg-white rounded-2xl border border-slate-200/90 p-4 space-y-3 shadow-2xs hover:border-orange-200 transition-all text-slate-900"
+                  >
+                    {/* Top Team Profile */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black text-sm shadow-xs shadow-orange-500/20 shrink-0">
+                          {team.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-sm text-slate-900 truncate block">
+                            {team.name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block font-medium">
+                            {members.length === 1 ? '1 Member' : `${members.length} Members`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopySingle(team)}
+                        className={`p-1.5 px-2.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          isCopied
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : 'bg-slate-50 hover:bg-orange-50 text-slate-600 hover:text-orange-600 border-slate-200'
+                        }`}
+                        title="Copy text"
+                      >
+                        {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        <span className="text-[10px]">{isCopied ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+
+                    {/* Credentials Boxes */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2.5 rounded-xl bg-orange-50/80 border border-orange-200/80">
+                        <span className="text-[9px] uppercase font-extrabold text-orange-600 tracking-wider block font-mono">
+                          Team Code
+                        </span>
+                        <span className="font-mono font-black text-sm text-orange-700 mt-0.5 block">
+                          {team.team_code}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <span className="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider block font-mono">
+                          Security PIN
+                        </span>
+                        <span className="font-mono font-black text-sm text-slate-900 mt-0.5 block">
+                          {pin}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Footer Meta */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                      <div>
+                        <span className="text-slate-400">Capital: </span>
+                        <span className="font-bold text-slate-800">{formatWealth(team.cash_balance)}</span>
+                      </div>
+                      <div className="text-slate-400">
+                        {portalUrl.replace('https://', '')}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Footer info & Done */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+        {/* Modal Footer */}
+        <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Ready for distribution to event participants</span>
@@ -486,4 +895,5 @@ Generated on ${new Date().toLocaleString()}`;
     </Modal>
   );
 };
+
 export default TeamCredentialsModal;
