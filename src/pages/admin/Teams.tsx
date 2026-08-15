@@ -268,7 +268,7 @@ export const AdminTeams: React.FC = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3.5 px-6">Team & Code</th>
+                <th className="py-3.5 px-6">Team Name</th>
                 <th className="py-3.5 px-6">Access Credentials</th>
                 <th className="py-3.5 px-6">Registered Members</th>
                 <th className="py-3.5 px-6 text-right">Available Cash</th>
@@ -298,25 +298,17 @@ export const AdminTeams: React.FC = () => {
                         isEliminated ? 'opacity-50 bg-slate-50/40' : ''
                       }`}
                     >
-                      {/* 1. Team & Code */}
+                      {/* 1. Team Name */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3.5">
                           <div
-                            className={`w-11 h-11 rounded-2xl flex items-center justify-center border shrink-0 ${badgeBg}`}
+                            className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${badgeBg}`}
                           >
                             {badgeIcon}
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-extrabold text-base text-slate-900 tracking-tight">
-                              {team.name}
-                            </span>
-                            <span className="text-[11px] font-mono text-slate-400 font-bold">
-                              {team.team_code}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              Joined: 10 May 2026
-                            </span>
-                          </div>
+                          <span className="font-extrabold text-base text-slate-900 tracking-tight">
+                            {team.name}
+                          </span>
                         </div>
                       </td>
 
