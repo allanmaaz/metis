@@ -356,12 +356,6 @@ export const ParticipantHeader: React.FC = () => {
                   </span>
                 </button>
               </div>
-
-              {/* 6. Live Engine Status */}
-              <div className="flex items-center justify-center gap-1.5 py-1 text-[10px] font-mono text-slate-400">
-                <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
-                <span>Realtime Engine Connected</span>
-              </div>
             </div>
 
             {/* Bottom Actions: Leave Team Session */}
