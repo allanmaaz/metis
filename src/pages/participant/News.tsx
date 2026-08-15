@@ -15,19 +15,31 @@ export const News: React.FC = () => {
   const [selectedSector, setSelectedSector] = useState<string>('ALL');
 
   const loadNews = useCallback(async () => {
-    if (!participant) return;
     try {
-      const items = await getPublishedNews(participant.event.id);
+      const eventId = participant?.event?.id;
+      const items = await getPublishedNews(eventId);
       setNews(items);
     } catch (err) {
       console.error('Error fetching news:', err);
     }
-  }, [participant]);
+  }, [participant?.event?.id]);
 
   useEffect(() => {
     loadNews();
-    const interval = setInterval(loadNews, 4000);
-    return () => clearInterval(interval);
+    const interval = setInterval(loadNews, 2000);
+
+    const handleNewsUpdate = () => {
+      loadNews();
+    };
+
+    window.addEventListener('metis_news_updated', handleNewsUpdate);
+    window.addEventListener('storage', handleNewsUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('metis_news_updated', handleNewsUpdate);
+      window.removeEventListener('storage', handleNewsUpdate);
+    };
   }, [loadNews]);
 
   const sectors = ['ALL', ...Array.from(new Set(news.map((n) => n.sector).filter(Boolean) as string[]))];

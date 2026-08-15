@@ -128,3 +128,17 @@ FOR SELECT USING (is_admin());
 
 CREATE POLICY "System can insert audit logs" ON audit_logs
 FOR INSERT WITH CHECK (true);
+
+-- 16. NEWS POLICIES
+CREATE POLICY "Public can view published news" ON news
+FOR SELECT USING (true);
+
+CREATE POLICY "Anyone can insert published news" ON news
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Anyone can update news" ON news
+FOR UPDATE USING (true);
+
+CREATE POLICY "Anyone can delete news" ON news
+FOR DELETE USING (true);
+

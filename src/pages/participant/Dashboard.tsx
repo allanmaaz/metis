@@ -72,8 +72,20 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 3000);
-    return () => clearInterval(interval);
+    const interval = setInterval(loadDashboardData, 2500);
+
+    const handleNewsUpdate = () => {
+      loadDashboardData();
+    };
+
+    window.addEventListener('metis_news_updated', handleNewsUpdate);
+    window.addEventListener('storage', handleNewsUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('metis_news_updated', handleNewsUpdate);
+      window.removeEventListener('storage', handleNewsUpdate);
+    };
   }, [loadDashboardData]);
 
   const handleBuy = (stock: Stock) => {
