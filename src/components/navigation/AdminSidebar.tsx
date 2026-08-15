@@ -93,49 +93,8 @@ export const AdminSidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* Bottom Section: Event Status Card + Profile Card + Sign Out */}
-      <div className="space-y-3 pt-3 border-t border-slate-100 mt-2">
-        {/* Mini Event Status Card */}
-        <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-              Event Status
-            </span>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-mono">
-              ● MARKET OPEN
-            </span>
-          </div>
-
-          <div className="space-y-0.5">
-            <span className="text-[10px] text-slate-400 font-medium block">
-              Session ends in
-            </span>
-            <div className="flex items-baseline gap-2 font-mono">
-              <span className="text-base font-black text-slate-900">
-                12 : 14 : 32
-              </span>
-              <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex gap-2">
-                <span>HRS</span>
-                <span>MIN</span>
-                <span>SEC</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mini Sparkline */}
-          <div className="h-6 w-full pt-1">
-            <svg className="w-full h-full" viewBox="0 0 100 25" preserveAspectRatio="none">
-              <path
-                d="M0,20 Q15,12 30,18 T60,8 T85,12 T100,3"
-                fill="none"
-                stroke="#FF6B00"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-        </div>
-
+      {/* Bottom Section: Profile Card + Sign Out */}
+      <div className="space-y-3 pt-3 border-t border-slate-100 mt-auto">
         {/* Profile Card */}
         <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/70 hover:bg-slate-100/70 transition-colors cursor-pointer">
           <div className="flex items-center gap-2.5">
