@@ -106,7 +106,7 @@ export const Market: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-md mx-auto">
+    <div className="space-y-5 w-full max-w-5xl mx-auto pb-8">
       {/* Header */}
       <div>
         <h1 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -149,17 +149,17 @@ export const Market: React.FC = () => {
       </div>
 
       {/* Sector Filter Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         {sectors.map((sector) => (
           <button
             key={sector}
             onClick={() => setSelectedSector(sector)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
               selectedSector === sector
                 ? 'bg-orange-500 text-white shadow-xs'
                 : isDark
-                ? 'bg-[#131B2E] text-slate-400 border border-white/5 hover:bg-[#1E293B]'
-                : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
+                ? 'bg-[#131B2E] text-slate-400 border border-white/5 hover:bg-[#1E293B] hover:text-white'
+                : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
             {sector}
@@ -168,7 +168,7 @@ export const Market: React.FC = () => {
       </div>
 
       {/* Stock Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredStocks.length === 0 ? (
           <div
             className={`rounded-3xl p-12 text-center text-xs font-medium border ${
