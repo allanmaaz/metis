@@ -638,13 +638,6 @@ _Keep your credentials confidential. Log in at the portal to trade._`;
                           >
                             {isPinVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                           </button>
-                          <button
-                            onClick={() => handleRegeneratePin(team.id)}
-                            className="text-slate-400 hover:text-orange-500 cursor-pointer"
-                            title="Regenerate PIN"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                          </button>
                         </div>
                       </div>
                     </td>
