@@ -12,11 +12,17 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { isAdminDomain } from '../../App';
 
-export const AdminSidebar: React.FC = () => {
+interface AdminSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
   const { admin, logoutAdmin } = useAuth();
   const prefix = isAdminDomain ? '' : '/control';
 
@@ -32,26 +38,38 @@ export const AdminSidebar: React.FC = () => {
     { label: 'Event Settings', path: `${prefix}/settings`, icon: Settings },
   ];
 
-  return (
-    <aside className="w-72 h-screen sticky top-0 flex flex-col justify-between bg-white/95 border-r border-slate-200/80 p-5 select-none shrink-0 shadow-sm backdrop-blur-md overflow-y-auto">
+  const sidebarContent = (
+    <div className="flex flex-col justify-between h-full p-5 select-none overflow-y-auto">
       {/* Brand & Logo */}
       <div className="space-y-5">
-        <div className="flex items-center gap-3 px-1">
-          {/* Flame Icon Logo */}
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20 shrink-0">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="currentColor"/>
-            </svg>
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-3">
+            {/* Flame Icon Logo */}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20 shrink-0">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="currentColor"/>
+              </svg>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="text-lg font-black font-display text-slate-900 tracking-tight leading-none">
+                METIS
+              </span>
+              <span className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mt-1">
+                CONTROL CENTER
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col">
-            <span className="text-lg font-black font-display text-slate-900 tracking-tight leading-none">
-              METIS
-            </span>
-            <span className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mt-1">
-              CONTROL CENTER
-            </span>
-          </div>
+          {/* Close button on mobile */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-xl"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Items */}
@@ -62,6 +80,7 @@ export const AdminSidebar: React.FC = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={onClose}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 ${
                     isActive
@@ -122,7 +141,32 @@ export const AdminSidebar: React.FC = () => {
           <span>Sign Out</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden lg:flex w-72 h-screen sticky top-0 flex-col bg-white/95 border-r border-slate-200/80 shrink-0 shadow-sm backdrop-blur-md">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div
+            onClick={onClose}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-72 max-w-[85vw] bg-white h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
