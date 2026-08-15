@@ -113,9 +113,9 @@ export const AdminSettings: React.FC = () => {
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-          <Settings className="w-7 h-7 text-orange-500" />
-          Event Lifecycle & Settings
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+          <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500 shrink-0" />
+          <span>Event Lifecycle & Settings</span>
         </h1>
       </div>
 

@@ -53,9 +53,9 @@ export const AdminNews: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Newspaper className="w-7 h-7 text-orange-500" />
-            Market News Broadcast Wire
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+            <Newspaper className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500 shrink-0" />
+            <span>Market News Broadcast Wire</span>
           </h1>
         </div>
 

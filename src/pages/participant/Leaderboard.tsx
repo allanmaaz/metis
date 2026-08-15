@@ -42,9 +42,9 @@ export const Leaderboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <Trophy className="w-6 h-6 text-amber-500" />
-            Live Standings
+          <h2 className={`text-xl sm:text-2xl font-black font-display tracking-tight flex items-center gap-2 whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
+            <span>Live Standings</span>
           </h2>
         </div>
 

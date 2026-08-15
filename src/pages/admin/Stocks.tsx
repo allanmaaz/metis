@@ -119,9 +119,9 @@ export const AdminStocks: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500" />
-            Stock & Valuation Management
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+            <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500 shrink-0" />
+            <span>Stock & Valuation Management</span>
           </h1>
         </div>
 

@@ -43,9 +43,9 @@ export const AdminTrades: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Receipt className="w-7 h-7 text-orange-500" />
-            Trade Flow Monitor
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+            <Receipt className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500 shrink-0" />
+            <span>Trade Flow Monitor</span>
           </h1>
         </div>
       </div>

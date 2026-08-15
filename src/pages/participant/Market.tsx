@@ -109,9 +109,9 @@ export const Market: React.FC = () => {
     <div className="space-y-5 w-full max-w-5xl mx-auto pb-8">
       {/* Header */}
       <div>
-        <h1 className={`text-2xl font-black font-display tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-          <BarChart2 className="w-6 h-6 text-orange-500" />
-          Market Board
+        <h1 className={`text-xl sm:text-2xl font-black font-display tracking-tight flex items-center gap-2 whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 shrink-0" />
+          <span>Market Board</span>
         </h1>
       </div>
 
