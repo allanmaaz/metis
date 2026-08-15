@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { getTeamMembers } from '../../services/admin';
 import { TeamMember } from '../../types';
 import { TradingRulesModal } from '../participant/TradingRulesModal';
+import { TradeHistoryModal } from '../participant/TradeHistoryModal';
 import {
   Menu,
   Bell,
@@ -22,6 +23,8 @@ import {
   Radio,
   CheckCircle2,
   Share2,
+  History,
+  Receipt,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -30,6 +33,7 @@ export const ParticipantHeader: React.FC = () => {
   const { theme, toggleTheme, setTheme } = useTheme();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [isPinVisible, setIsPinVisible] = useState(false);
@@ -310,8 +314,24 @@ export const ParticipantHeader: React.FC = () => {
                 </div>
               </div>
 
-              {/* 5. Trading Rules & Preferences */}
+              {/* 5. Trading Rules & History */}
               <div className="space-y-1.5">
+                {/* Trade & Order History Modal Trigger */}
+                <button
+                  onClick={() => setIsHistoryModalOpen(true)}
+                  className={`w-full p-3 rounded-2xl text-xs font-bold flex items-center justify-between border transition-all ${
+                    isDark
+                      ? 'bg-[#1E293B] border-white/5 hover:bg-[#28354D] text-slate-200'
+                      : 'bg-slate-50 border-slate-200/70 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-orange-500" />
+                    <span>Trade & Order History</span>
+                  </div>
+                  <span className="text-slate-400 text-xs">›</span>
+                </button>
+
                 {/* Competition Guidelines Modal Trigger */}
                 <button
                   onClick={() => setIsRulesModalOpen(true)}
@@ -384,6 +404,14 @@ export const ParticipantHeader: React.FC = () => {
         isOpen={isRulesModalOpen}
         onClose={() => setIsRulesModalOpen(false)}
         qualificationCount={participant?.event.qualification_count || 5}
+      />
+
+      {/* Trade History Modal */}
+      <TradeHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        teamId={participant?.team.id}
+        teamName={participant?.team.name}
       />
     </>
   );
