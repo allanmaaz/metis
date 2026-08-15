@@ -5,6 +5,7 @@ import { getPublishedNews } from '../../services/news';
 import { NewsItem } from '../../types';
 import { formatClockTime } from '../../lib/formatting';
 import { Radio, FileText } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const News: React.FC = () => {
   const { participant } = useAuth();
@@ -26,21 +27,10 @@ export const News: React.FC = () => {
 
   useEffect(() => {
     loadNews();
-    const interval = setInterval(loadNews, 2000);
-
-    const handleNewsUpdate = () => {
-      loadNews();
-    };
-
-    window.addEventListener('metis_news_updated', handleNewsUpdate);
-    window.addEventListener('storage', handleNewsUpdate);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('metis_news_updated', handleNewsUpdate);
-      window.removeEventListener('storage', handleNewsUpdate);
-    };
   }, [loadNews]);
+
+  // Universal Real-Time Sync
+  useRealtimeSubscription(['NEWS_UPDATED'], loadNews, 1500);
 
   const sectors = ['ALL', ...Array.from(new Set(news.map((n) => n.sector).filter(Boolean) as string[]))];
 

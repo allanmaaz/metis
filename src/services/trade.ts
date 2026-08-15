@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Trade } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function buyStock(
   teamId: string,
@@ -12,6 +13,7 @@ export async function buyStock(
     return { success: false, error: 'Quantity must be greater than zero.' };
   }
 
+  // 1. Supabase RPC if configured
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.rpc('execute_buy', {
@@ -21,26 +23,23 @@ export async function buyStock(
         p_member_id: memberId || null,
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!error && data && data.success) {
+        broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'BUY', quantity });
+        broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+        broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+        return { success: true, data };
       }
-
-      if (data && !data.success) {
-        return { success: false, error: data.error || 'Failed to execute buy order' };
-      }
-
-      return { success: true, data };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Execution error' };
+      console.warn('Supabase buyStock warning (falling back to mock):', err);
     }
   }
 
-  // Fallback Mock execution
+  // 2. Fallback Mock execution
   const db = getMockDB();
   const team = db.teams.find((t) => t.id === teamId);
   const stock = db.stocks.find((s) => s.id === stockId);
   const session = db.marketSessions
-    .filter((s) => s.event_id === team?.event_id)
+    .filter((s) => s.event_id === team?.event_id || team?.event_id === 'e1')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
   if (!team) return { success: false, error: 'Team not found.' };
@@ -61,16 +60,15 @@ export async function buyStock(
   team.cash_balance -= totalCost;
   team.updated_at = new Date().toISOString();
 
-  // Update Holdings
-  let holding = db.holdings.find((h) => h.team_id === teamId && h.stock_id === stockId);
-  if (holding) {
-    const newQty = holding.quantity + quantity;
-    const newAvg = (holding.quantity * holding.average_cost + quantity * stock.current_price) / newQty;
-    holding.quantity = newQty;
-    holding.average_cost = newAvg;
-    holding.updated_at = new Date().toISOString();
+  // Update or create holding
+  const existingHolding = db.holdings.find((h) => h.team_id === teamId && h.stock_id === stockId);
+  if (existingHolding) {
+    const totalExistingCost = existingHolding.quantity * existingHolding.average_cost;
+    existingHolding.quantity += quantity;
+    existingHolding.average_cost = (totalExistingCost + totalCost) / existingHolding.quantity;
+    existingHolding.updated_at = new Date().toISOString();
   } else {
-    holding = {
+    db.holdings.push({
       id: `h_${Date.now()}`,
       team_id: teamId,
       stock_id: stockId,
@@ -78,8 +76,7 @@ export async function buyStock(
       average_cost: stock.current_price,
       realized_pnl: 0,
       updated_at: new Date().toISOString(),
-    };
-    db.holdings.push(holding);
+    });
   }
 
   // Record trade
@@ -114,6 +111,12 @@ export async function buyStock(
   });
 
   saveMockDB(db);
+
+  // Broadcast realtime events across all clients
+  broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'BUY', quantity });
+  broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+
   return {
     success: true,
     data: {
@@ -145,17 +148,14 @@ export async function sellStock(
         p_member_id: memberId || null,
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!error && data && data.success) {
+        broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'SELL', quantity });
+        broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+        broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+        return { success: true, data };
       }
-
-      if (data && !data.success) {
-        return { success: false, error: data.error || 'Failed to execute sell order' };
-      }
-
-      return { success: true, data };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Execution error' };
+      console.warn('Supabase sellStock warning (falling back to mock):', err);
     }
   }
 
@@ -164,7 +164,7 @@ export async function sellStock(
   const team = db.teams.find((t) => t.id === teamId);
   const stock = db.stocks.find((s) => s.id === stockId);
   const session = db.marketSessions
-    .filter((s) => s.event_id === team?.event_id)
+    .filter((s) => s.event_id === team?.event_id || team?.event_id === 'e1')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
   if (!team) return { success: false, error: 'Team not found.' };
@@ -221,6 +221,12 @@ export async function sellStock(
   });
 
   saveMockDB(db);
+
+  // Broadcast realtime events across all clients
+  broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'SELL', quantity });
+  broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+
   return {
     success: true,
     data: {
@@ -247,7 +253,7 @@ export async function getTeamTrades(teamId: string): Promise<Trade[]> {
         .eq('team_id', teamId)
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as Trade[];
       }
     } catch (err) {
@@ -258,11 +264,15 @@ export async function getTeamTrades(teamId: string): Promise<Trade[]> {
   const db = getMockDB();
   return db.trades
     .filter((t) => t.team_id === teamId)
-    .map((t) => ({
-      ...t,
-      stock: db.stocks.find((s) => s.id === t.stock_id),
-      team_member: db.teamMembers.find((m) => m.id === t.team_member_id),
-    }))
+    .map((t) => {
+      const stock = db.stocks.find((s) => s.id === t.stock_id);
+      const member = db.teamMembers.find((m) => m.id === t.team_member_id);
+      return {
+        ...t,
+        stock,
+        team_member: member,
+      };
+    })
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
@@ -273,14 +283,14 @@ export async function getAllTrades(eventId: string): Promise<Trade[]> {
         .from('trades')
         .select(`
           *,
-          stock:stocks(*),
           team:teams(*),
+          stock:stocks(*),
           team_member:team_members(*)
         `)
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as Trade[];
       }
     } catch (err) {
@@ -290,12 +300,16 @@ export async function getAllTrades(eventId: string): Promise<Trade[]> {
 
   const db = getMockDB();
   return db.trades
-    .filter((t) => t.event_id === eventId)
-    .map((t) => ({
-      ...t,
-      stock: db.stocks.find((s) => s.id === t.stock_id),
-      team: db.teams.find((tm) => tm.id === t.team_id),
-      team_member: db.teamMembers.find((m) => m.id === t.team_member_id),
-    }))
+    .map((t) => {
+      const team = db.teams.find((tm) => tm.id === t.team_id);
+      const stock = db.stocks.find((s) => s.id === t.stock_id);
+      const member = db.teamMembers.find((m) => m.id === t.team_member_id);
+      return {
+        ...t,
+        team,
+        stock,
+        team_member: member,
+      };
+    })
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }

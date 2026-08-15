@@ -11,6 +11,7 @@ import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
 import { formatWealth, formatCurrency, formatPercent, formatClockTime } from '../../lib/formatting';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import {
   Wallet,
   Clock,
@@ -72,21 +73,21 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 2500);
-
-    const handleNewsUpdate = () => {
-      loadDashboardData();
-    };
-
-    window.addEventListener('metis_news_updated', handleNewsUpdate);
-    window.addEventListener('storage', handleNewsUpdate);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('metis_news_updated', handleNewsUpdate);
-      window.removeEventListener('storage', handleNewsUpdate);
-    };
   }, [loadDashboardData]);
+
+  // Universal Real-Time Sync (WebSocket + BroadcastChannel + Polling)
+  useRealtimeSubscription(
+    [
+      'MARKET_SESSION_CHANGED',
+      'STOCK_PRICE_UPDATED',
+      'NEWS_UPDATED',
+      'TRADE_EXECUTED',
+      'PORTFOLIO_CHANGED',
+      'LEADERBOARD_UPDATED',
+    ],
+    loadDashboardData,
+    1500
+  );
 
   const handleBuy = (stock: Stock) => {
     setActiveBuyStock(stock);

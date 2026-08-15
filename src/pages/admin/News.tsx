@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getActiveEvent } from '../../services/event';
-import { getPublishedNews, publishNews } from '../../services/news';
+import { getPublishedNews, publishNews, deleteNews } from '../../services/news';
 import { Event, NewsItem } from '../../types';
 import { NewsPublisherModal } from '../../components/admin/NewsPublisherModal';
-import { Newspaper, Plus, Radio, Clock } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
+import { Newspaper, Plus, Radio, Clock, Trash2, ShieldAlert } from 'lucide-react';
 import { formatClockTime } from '../../lib/formatting';
 
 export const AdminNews: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [isPublisherOpen, setIsPublisherOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadNews = useCallback(async () => {
     try {
@@ -24,9 +26,10 @@ export const AdminNews: React.FC = () => {
 
   useEffect(() => {
     loadNews();
-    const interval = setInterval(loadNews, 3000);
-    return () => clearInterval(interval);
   }, [loadNews]);
+
+  // Realtime subscription: updates on news publish or delete instantly
+  useRealtimeSubscription(['NEWS_UPDATED'], loadNews, 1500);
 
   const handlePublish = async (data: any) => {
     const res = await publishNews(data);
@@ -34,6 +37,15 @@ export const AdminNews: React.FC = () => {
       loadNews();
     }
     return res;
+  };
+
+  const handleDelete = async (newsId: string) => {
+    if (confirm('Are you sure you want to delete this broadcasted news wire? It will be removed from all participant feeds immediately.')) {
+      setDeletingId(newsId);
+      await deleteNews(newsId);
+      setDeletingId(null);
+      loadNews();
+    }
   };
 
   return (
@@ -61,11 +73,14 @@ export const AdminNews: React.FC = () => {
 
       {/* Published News List */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-orange-500 animate-pulse" />
-          <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
-            Broadcasted Wires ({newsList.length})
-          </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-orange-500 animate-pulse" />
+            <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+              Broadcasted Wires ({newsList.length})
+            </h3>
+          </div>
+          <span className="text-xs text-slate-400 font-medium">Real-time synchronized</span>
         </div>
 
         {newsList.length === 0 ? (
@@ -76,10 +91,12 @@ export const AdminNews: React.FC = () => {
           <div className="space-y-4">
             {newsList.map((item, idx) => {
               const isBreaking = idx === 0;
+              const isDeleting = deletingId === item.id;
+
               return (
                 <div
                   key={item.id}
-                  className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 hover:shadow-md transition-all relative overflow-hidden"
+                  className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 hover:shadow-md transition-all relative overflow-hidden group"
                 >
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
@@ -100,9 +117,21 @@ export const AdminNews: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-slate-400 font-mono font-medium">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{formatClockTime(item.published_at)}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-xs text-slate-400 font-mono font-medium">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{formatClockTime(item.published_at)}</span>
+                      </div>
+
+                      {/* Delete News Button */}
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={isDeleting}
+                        title="Delete this wire broadcast"
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 

@@ -16,6 +16,7 @@ import {
   Coins,
   ShieldCheck,
 } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const Portfolio: React.FC = () => {
   const { participant } = useAuth();
@@ -54,9 +55,14 @@ export const Portfolio: React.FC = () => {
 
   useEffect(() => {
     loadPortfolio();
-    const interval = setInterval(loadPortfolio, 3000);
-    return () => clearInterval(interval);
   }, [loadPortfolio]);
+
+  // Universal Real-Time Sync
+  useRealtimeSubscription(
+    ['TRADE_EXECUTED', 'PORTFOLIO_CHANGED', 'STOCK_PRICE_UPDATED', 'TEAM_UPDATED', 'MARKET_SESSION_CHANGED'],
+    loadPortfolio,
+    1500
+  );
 
   const handleConfirmSell = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };

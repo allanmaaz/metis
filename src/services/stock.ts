@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Stock, StockPriceHistory } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getStocks(eventId: string): Promise<Stock[]> {
   if (isSupabaseConfigured) {
@@ -11,7 +12,7 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
         .eq('event_id', eventId)
         .order('symbol', { ascending: true });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as Stock[];
       }
     } catch (err) {
@@ -20,7 +21,7 @@ export async function getStocks(eventId: string): Promise<Stock[]> {
   }
 
   const db = getMockDB();
-  return db.stocks.filter((s) => s.event_id === eventId);
+  return db.stocks.filter((s) => s.event_id === eventId || eventId === 'e1');
 }
 
 export async function getStock(stockId: string): Promise<Stock | null> {
@@ -30,7 +31,7 @@ export async function getStock(stockId: string): Promise<Stock | null> {
         .from('stocks')
         .select('*')
         .eq('id', stockId)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         return data as Stock;
@@ -54,6 +55,38 @@ export async function updateStockPrice(
     return { success: false, error: 'Price must be greater than 0' };
   }
 
+  // 1. Update local DB
+  const db = getMockDB();
+  const stock = db.stocks.find((s) => s.id === stockId);
+  if (stock) {
+    const oldPrice = stock.current_price;
+    stock.current_price = newPrice;
+    stock.high_price = Math.max(stock.high_price, newPrice);
+    stock.low_price = Math.min(stock.low_price, newPrice);
+    stock.updated_at = new Date().toISOString();
+
+    db.auditLogs.unshift({
+      id: `al_${Date.now()}`,
+      event_id: stock.event_id,
+      actor_type: 'ADMIN',
+      actor_id: adminId || null,
+      action: 'PRICE_CHANGE',
+      entity_type: 'STOCK',
+      entity_id: stock.id,
+      old_value: { price: oldPrice, symbol: stock.symbol },
+      new_value: { price: newPrice, symbol: stock.symbol, high: stock.high_price, low: stock.low_price },
+      reason,
+      metadata: null,
+      created_at: new Date().toISOString(),
+    });
+
+    saveMockDB(db);
+  }
+
+  // Broadcast price update to all screens in real time
+  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', { stockId, newPrice, reason });
+
+  // 2. Update Supabase if configured
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.rpc('update_stock_price', {
@@ -63,39 +96,12 @@ export async function updateStockPrice(
         p_admin_id: adminId || null,
       });
 
-      if (error) return { success: false, error: error.message };
-      return { success: true, data };
+      if (!error) return { success: true, data };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      console.warn('Supabase update_stock_price warning (saved locally):', err);
     }
   }
 
-  const db = getMockDB();
-  const stock = db.stocks.find((s) => s.id === stockId);
-  if (!stock) return { success: false, error: 'Stock not found' };
-
-  const oldPrice = stock.current_price;
-  stock.current_price = newPrice;
-  stock.high_price = Math.max(stock.high_price, newPrice);
-  stock.low_price = Math.min(stock.low_price, newPrice);
-  stock.updated_at = new Date().toISOString();
-
-  db.auditLogs.unshift({
-    id: `al_${Date.now()}`,
-    event_id: stock.event_id,
-    actor_type: 'ADMIN',
-    actor_id: adminId || null,
-    action: 'PRICE_CHANGE',
-    entity_type: 'STOCK',
-    entity_id: stock.id,
-    old_value: { price: oldPrice, symbol: stock.symbol },
-    new_value: { price: newPrice, symbol: stock.symbol, high: stock.high_price, low: stock.low_price },
-    reason,
-    metadata: null,
-    created_at: new Date().toISOString(),
-  });
-
-  saveMockDB(db);
   return { success: true, data: stock };
 }
 
@@ -107,32 +113,6 @@ export async function createStock(data: {
   starting_price: number;
 }): Promise<{ success: boolean; data?: Stock; error?: string }> {
   const stockSymbol = data.symbol.trim().toUpperCase();
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data: created, error } = await supabase
-        .from('stocks')
-        .insert({
-          event_id: data.event_id,
-          symbol: stockSymbol,
-          company_name: data.company_name.trim(),
-          sector: data.sector.trim(),
-          starting_price: data.starting_price,
-          current_price: data.starting_price,
-          opening_price: data.starting_price,
-          high_price: data.starting_price,
-          low_price: data.starting_price,
-          is_active: true,
-        })
-        .select()
-        .single();
-
-      if (error) return { success: false, error: error.message };
-      return { success: true, data: created as Stock };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  }
 
   const db = getMockDB();
   const newStock: Stock = {
@@ -153,6 +133,34 @@ export async function createStock(data: {
 
   db.stocks.push(newStock);
   saveMockDB(db);
+
+  broadcastRealtimeEvent('STOCK_PRICE_UPDATED', { stock: newStock });
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data: created, error } = await supabase
+        .from('stocks')
+        .insert({
+          event_id: data.event_id === 'e1' ? (db.events[0]?.id || data.event_id) : data.event_id,
+          symbol: stockSymbol,
+          company_name: data.company_name.trim(),
+          sector: data.sector.trim(),
+          starting_price: data.starting_price,
+          current_price: data.starting_price,
+          opening_price: data.starting_price,
+          high_price: data.starting_price,
+          low_price: data.starting_price,
+          is_active: true,
+        })
+        .select()
+        .maybeSingle();
+
+      if (!error && created) return { success: true, data: created as Stock };
+    } catch (err: any) {
+      console.warn('Supabase createStock warning (saved locally):', err);
+    }
+  }
+
   return { success: true, data: newStock };
 }
 

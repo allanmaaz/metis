@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { NewsItem } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
   if (isSupabaseConfigured) {
@@ -12,7 +13,6 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
         .order('published_at', { ascending: false });
 
       if (eventId && eventId !== 'e1') {
-        // If specific UUID event is provided
         query = query.or(`event_id.eq.${eventId},event_id.eq.e1`);
       }
 
@@ -70,8 +70,8 @@ export async function publishNews(data: {
   });
   saveMockDB(db);
 
-  // Trigger browser storage and custom sync events
-  window.dispatchEvent(new CustomEvent('metis_news_updated', { detail: newItem }));
+  // Instant Realtime Bus broadcast
+  broadcastRealtimeEvent('NEWS_UPDATED', newItem);
 
   // 2. Also insert into remote Supabase database if configured
   if (isSupabaseConfigured) {
@@ -102,11 +102,29 @@ export async function publishNews(data: {
 }
 
 export async function deleteNews(newsId: string): Promise<{ success: boolean; error?: string }> {
+  // 1. Remove from local DB
   const db = getMockDB();
   db.news = db.news.filter((n) => n.id !== newsId);
+  db.auditLogs.unshift({
+    id: `al_${Date.now()}`,
+    event_id: db.events[0]?.id || 'e1',
+    actor_type: 'ADMIN',
+    actor_id: null,
+    action: 'NEWS_DELETED',
+    entity_type: 'NEWS',
+    entity_id: newsId,
+    old_value: null,
+    new_value: null,
+    reason: 'Deleted news broadcast',
+    metadata: null,
+    created_at: new Date().toISOString(),
+  });
   saveMockDB(db);
-  window.dispatchEvent(new CustomEvent('metis_news_updated'));
 
+  // Instant Realtime Bus broadcast
+  broadcastRealtimeEvent('NEWS_UPDATED', { deletedId: newsId });
+
+  // 2. Remove from Supabase
   if (isSupabaseConfigured) {
     try {
       await supabase.from('news').delete().eq('id', newsId);

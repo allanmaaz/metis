@@ -14,6 +14,7 @@ import {
   Snowflake,
   AlertTriangle,
 } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const AdminMarketControl: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -39,9 +40,9 @@ export const AdminMarketControl: React.FC = () => {
 
   useEffect(() => {
     loadSession();
-    const interval = setInterval(loadSession, 3000);
-    return () => clearInterval(interval);
   }, [loadSession]);
+
+  useRealtimeSubscription(['MARKET_SESSION_CHANGED'], loadSession, 1500);
 
   const handleSetState = async (status: MarketStatus, duration?: number) => {
     if (!event) return;

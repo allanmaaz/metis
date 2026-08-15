@@ -5,6 +5,7 @@ import { getLeaderboard } from '../../services/leaderboard';
 import { LeaderboardEntry } from '../../types';
 import { Trophy, Crown, Radio, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatCurrency, formatWealth, formatPercent } from '../../lib/formatting';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const Leaderboard: React.FC = () => {
   const { participant } = useAuth();
@@ -25,9 +26,14 @@ export const Leaderboard: React.FC = () => {
 
   useEffect(() => {
     loadLeaderboard();
-    const interval = setInterval(loadLeaderboard, 3000);
-    return () => clearInterval(interval);
   }, [loadLeaderboard]);
+
+  // Universal Real-Time Sync
+  useRealtimeSubscription(
+    ['TRADE_EXECUTED', 'PORTFOLIO_CHANGED', 'LEADERBOARD_UPDATED', 'TEAM_UPDATED', 'STOCK_PRICE_UPDATED'],
+    loadLeaderboard,
+    1500
+  );
 
   const qualificationCutoff = participant?.event.qualification_count || 5;
 

@@ -10,6 +10,7 @@ import { StockCard } from '../../components/market/StockCard';
 import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
 import { Search, BarChart2, ShieldCheck } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const Market: React.FC = () => {
   const { participant } = useAuth();
@@ -52,9 +53,14 @@ export const Market: React.FC = () => {
 
   useEffect(() => {
     loadMarket();
-    const interval = setInterval(loadMarket, 3000);
-    return () => clearInterval(interval);
   }, [loadMarket]);
+
+  // Universal Real-Time Sync
+  useRealtimeSubscription(
+    ['MARKET_SESSION_CHANGED', 'STOCK_PRICE_UPDATED', 'TRADE_EXECUTED', 'PORTFOLIO_CHANGED'],
+    loadMarket,
+    1500
+  );
 
   const sectors = ['ALL', ...Array.from(new Set(stocks.map((s) => s.sector)))];
 

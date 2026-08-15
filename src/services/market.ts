@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { MarketSession, MarketStatus } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getCurrentMarketSession(eventId: string): Promise<MarketSession> {
   if (isSupabaseConfigured) {
@@ -11,7 +12,7 @@ export async function getCurrentMarketSession(eventId: string): Promise<MarketSe
         .eq('event_id', eventId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         return data as MarketSession;
@@ -26,16 +27,18 @@ export async function getCurrentMarketSession(eventId: string): Promise<MarketSe
     .filter((s) => s.event_id === eventId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
-  return session || {
-    id: 'ms_default',
-    event_id: eventId,
-    status: 'OPEN',
-    started_at: new Date().toISOString(),
-    ends_at: new Date(Date.now() + 30 * 60000).toISOString(),
-    started_by: null,
-    ended_by: null,
-    created_at: new Date().toISOString(),
-  };
+  return (
+    session || {
+      id: 'ms_default',
+      event_id: eventId,
+      status: 'OPEN',
+      started_at: new Date().toISOString(),
+      ends_at: new Date(Date.now() + 30 * 60000).toISOString(),
+      started_by: null,
+      ended_by: null,
+      created_at: new Date().toISOString(),
+    }
+  );
 }
 
 export async function setMarketStatus(
@@ -45,28 +48,13 @@ export async function setMarketStatus(
   reason?: string,
   adminId?: string
 ): Promise<{ success: boolean; data?: any; error?: string }> {
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.rpc('set_market_status', {
-        p_event_id: eventId,
-        p_status: status,
-        p_duration_minutes: durationMinutes || null,
-        p_admin_id: adminId || null,
-        p_reason: reason || `Admin set status to ${status}`,
-      });
+  const ends_at =
+    durationMinutes && durationMinutes > 0
+      ? new Date(Date.now() + durationMinutes * 60000).toISOString()
+      : null;
 
-      if (error) return { success: false, error: error.message };
-      return { success: true, data };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
-  }
-
+  // 1. Always update local mock DB and broadcast immediately
   const db = getMockDB();
-  const ends_at = durationMinutes && durationMinutes > 0
-    ? new Date(Date.now() + durationMinutes * 60000).toISOString()
-    : null;
-
   const newSession: MarketSession = {
     id: `ms_${Date.now()}`,
     event_id: eventId,
@@ -80,7 +68,6 @@ export async function setMarketStatus(
 
   db.marketSessions.push(newSession);
 
-  // If opening market, snapshot starting wealth
   if (status === 'OPEN') {
     db.teams.forEach((t) => {
       const teamHoldings = db.holdings.filter((h) => h.team_id === t.id);
@@ -108,5 +95,28 @@ export async function setMarketStatus(
   });
 
   saveMockDB(db);
+
+  // Broadcast to all participant tabs and windows immediately
+  broadcastRealtimeEvent('MARKET_SESSION_CHANGED', { status, ends_at });
+
+  // 2. Also execute on remote Supabase if configured
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('set_market_status', {
+        p_event_id: eventId === 'e1' ? (db.events[0]?.id || eventId) : eventId,
+        p_status: status,
+        p_duration_minutes: durationMinutes || null,
+        p_admin_id: adminId || null,
+        p_reason: reason || `Admin set status to ${status}`,
+      });
+
+      if (!error) {
+        return { success: true, data };
+      }
+    } catch (err: any) {
+      console.warn('Supabase set_market_status warning (saved locally):', err);
+    }
+  }
+
   return { success: true, data: newSession };
 }
