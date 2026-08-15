@@ -219,12 +219,12 @@ export const AdminTeams: React.FC = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase text-slate-400 tracking-wider font-mono">
               <tr>
-                <th className="py-3.5 px-6">Team Name</th>
-                <th className="py-3.5 px-6">Access Credentials</th>
-                <th className="py-3.5 px-6">Registered Members</th>
-                <th className="py-3.5 px-6 text-right">Available Cash</th>
-                <th className="py-3.5 px-6 text-center">Status</th>
-                <th className="py-3.5 px-6 text-center">Actions</th>
+                <th className="py-3.5 px-6 whitespace-nowrap min-w-[150px]">Team Name</th>
+                <th className="py-3.5 px-6 whitespace-nowrap min-w-[220px]">Access Credentials</th>
+                <th className="py-3.5 px-6 whitespace-nowrap min-w-[160px]">Registered Members</th>
+                <th className="py-3.5 px-6 text-right whitespace-nowrap min-w-[150px]">Available Cash</th>
+                <th className="py-3.5 px-6 text-center whitespace-nowrap min-w-[120px]">Status</th>
+                <th className="py-3.5 px-6 text-center whitespace-nowrap min-w-[160px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -270,21 +270,21 @@ export const AdminTeams: React.FC = () => {
                       }`}
                     >
                       {/* 1. Team Name */}
-                      <td className="py-4 px-6">
-                        <span className="font-extrabold text-base text-slate-900 tracking-tight">
+                      <td className="py-4 px-6 align-middle whitespace-nowrap">
+                        <span className="font-extrabold text-base text-slate-900 tracking-tight block">
                           {team.name}
                         </span>
                       </td>
 
                       {/* 2. Access Credentials */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 align-middle whitespace-nowrap">
                         <div className="space-y-1.5">
-                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block font-mono">
                             Team Code
                           </span>
                           {/* Code Pill with Copy */}
-                          <div className="inline-flex items-center justify-between gap-3 px-3 py-1 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs">
-                            <span>{team.team_code}</span>
+                          <div className="inline-flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl bg-orange-50/80 border border-orange-200/80 text-orange-600 font-mono font-black text-xs min-w-[150px]">
+                            <span className="whitespace-nowrap font-mono">{team.team_code}</span>
                             <button
                               onClick={() => copyToClipboard(team.team_code, team.id)}
                               className="text-slate-400 hover:text-orange-600 transition-colors"
@@ -326,7 +326,7 @@ export const AdminTeams: React.FC = () => {
                       </td>
 
                       {/* 3. Registered Members */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 align-middle whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 text-slate-800 font-extrabold text-xs font-mono border border-slate-200/80">
                           <Users2 className="w-3.5 h-3.5 text-slate-500" />
                           <span>{members.length === 1 ? '1 Member' : `${members.length} Members`}</span>
@@ -334,7 +334,7 @@ export const AdminTeams: React.FC = () => {
                       </td>
 
                       {/* 4. Available Cash */}
-                      <td className="py-4 px-6 text-right font-mono">
+                      <td className="py-4 px-6 align-middle text-right font-mono whitespace-nowrap">
                         <div className="font-black text-base text-slate-900">
                           {formatCurrency(team.cash_balance)}
                         </div>
@@ -344,7 +344,7 @@ export const AdminTeams: React.FC = () => {
                       </td>
 
                       {/* 5. Status */}
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-4 px-6 align-middle text-center whitespace-nowrap">
                         <div className="inline-flex flex-col items-center gap-0.5">
                           <span
                             className={`text-[10px] font-black uppercase px-3 py-1 rounded-full font-mono border ${
@@ -364,7 +364,7 @@ export const AdminTeams: React.FC = () => {
                       </td>
 
                       {/* 6. Actions */}
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-4 px-6 align-middle text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2 relative">
                           <div className="flex flex-col gap-1.5">
                             {/* Adjust Cash Button */}
