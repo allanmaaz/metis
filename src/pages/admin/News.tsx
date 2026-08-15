@@ -57,9 +57,6 @@ export const AdminNews: React.FC = () => {
             <Newspaper className="w-7 h-7 text-orange-500" />
             Market News Broadcast Wire
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Publish market-moving information, industry developments, and policy changes to drive participant strategies.
-          </p>
         </div>
 
         <button

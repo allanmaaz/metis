@@ -173,9 +173,6 @@ export const AdminTeams: React.FC = () => {
             <Users2 className="w-7 h-7 text-orange-500" />
             Team & Participant Management
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Manage rosters, generate team codes & PINs, grant manual cash credits, and enforce eliminations.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">

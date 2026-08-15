@@ -121,9 +121,6 @@ export const AdminStocks: React.FC = () => {
             <BarChart3 className="w-7 h-7 text-orange-500" />
             Stock & Valuation Management
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Pick from real-world companies or custom assets, control simulated market prices, and manage sectors.
-          </p>
         </div>
 
         <button

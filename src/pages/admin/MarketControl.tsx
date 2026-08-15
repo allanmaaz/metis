@@ -76,9 +76,6 @@ export const AdminMarketControl: React.FC = () => {
           <Power className="w-7 h-7 text-orange-500" />
           Master Market Control
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-          Manual master switches for trading sessions, timers, pause, and emergency freezes.
-        </p>
       </div>
 
       {/* Feedback Toast */}

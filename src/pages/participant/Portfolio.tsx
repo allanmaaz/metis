@@ -96,9 +96,6 @@ export const Portfolio: React.FC = () => {
           <h1 className={`text-2xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Portfolio Valuation
           </h1>
-          <p className="text-xs text-slate-400 font-medium">
-            Live equity holdings, cost-basis valuations, and completed trade execution history.
-          </p>
         </div>
 
         {tradeMessage && (

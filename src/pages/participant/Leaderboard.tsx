@@ -46,9 +46,6 @@ export const Leaderboard: React.FC = () => {
             <Trophy className="w-6 h-6 text-amber-500" />
             Live Standings
           </h2>
-          <p className="text-xs text-slate-400 font-medium">
-            Ranked strictly by Total Wealth (Cash + Live Portfolio Valuation)
-          </p>
         </div>
 
         <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">

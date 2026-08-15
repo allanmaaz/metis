@@ -47,9 +47,6 @@ export const AdminTrades: React.FC = () => {
             <Receipt className="w-7 h-7 text-orange-500" />
             Trade Flow Monitor
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Immutable log of all executed participant transactions with execution prices & timestamps.
-          </p>
         </div>
       </div>
 

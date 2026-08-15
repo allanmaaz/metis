@@ -48,9 +48,6 @@ export const News: React.FC = () => {
             <FileText className="w-6 h-6 text-orange-500" />
             Market News & Wires
           </h2>
-          <p className="text-xs text-slate-400 font-medium">
-            Live administrative dispatches, regulatory changes, and corporate earnings wires.
-          </p>
         </div>
       </div>
 

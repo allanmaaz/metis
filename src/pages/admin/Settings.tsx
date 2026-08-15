@@ -47,9 +47,6 @@ export const AdminSettings: React.FC = () => {
           <Settings className="w-7 h-7 text-orange-500" />
           Event Lifecycle & Settings
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-          Configure event rules, qualification parameters, and finalize competition rounds.
-        </p>
       </div>
 
       {message && (

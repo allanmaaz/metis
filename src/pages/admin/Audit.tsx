@@ -41,9 +41,6 @@ export const AdminAudit: React.FC = () => {
           <History className="w-7 h-7 text-orange-500" />
           Immutable Audit Trail
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-          Append-only administrative log of every trade, price revision, cash adjustment, and market state toggle.
-        </p>
       </div>
 
       {/* Search */}

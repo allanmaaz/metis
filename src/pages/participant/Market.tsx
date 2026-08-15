@@ -113,9 +113,6 @@ export const Market: React.FC = () => {
           <BarChart2 className="w-6 h-6 text-orange-500" />
           Market Board
         </h1>
-        <p className="text-xs text-slate-400 font-medium">
-          Browse listed equities, track live prices, and execute buy/sell orders.
-        </p>
       </div>
 
       {/* Trade Feedback */}

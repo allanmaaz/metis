@@ -36,9 +36,6 @@ export const AdminLeaderboard: React.FC = () => {
           <Trophy className="w-7 h-7 text-amber-500" />
           Official Event Leaderboard
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-          Computed rankings across all teams. Top {cutoff} teams qualify for the next competition stage.
-        </p>
       </div>
 
       {/* Leaderboard Table Card */}
