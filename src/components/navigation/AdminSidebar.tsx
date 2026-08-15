@@ -15,20 +15,22 @@ import {
   Shield,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { isAdminDomain } from '../../App';
 
 export const AdminSidebar: React.FC = () => {
   const { admin, logoutAdmin } = useAuth();
+  const prefix = isAdminDomain ? '' : '/control';
 
   const navItems = [
-    { label: 'Overview', path: '/control/dashboard', icon: LayoutDashboard },
-    { label: 'Market Control', path: '/control/market', icon: Power, badge: 'Live' },
-    { label: 'Stocks & Prices', path: '/control/stocks', icon: BarChart3 },
-    { label: 'Teams & Members', path: '/control/teams', icon: Users2 },
-    { label: 'Trade Monitor', path: '/control/trades', icon: Receipt },
-    { label: 'News Publisher', path: '/control/news', icon: Newspaper },
-    { label: 'Leaderboard', path: '/control/leaderboard', icon: Trophy },
-    { label: 'Audit Log', path: '/control/audit', icon: History },
-    { label: 'Event Settings', path: '/control/settings', icon: Settings },
+    { label: 'Overview', path: `${prefix}/dashboard`, icon: LayoutDashboard },
+    { label: 'Market Control', path: `${prefix}/market`, icon: Power, badge: 'Live' },
+    { label: 'Stocks & Prices', path: `${prefix}/stocks`, icon: BarChart3 },
+    { label: 'Teams & Members', path: `${prefix}/teams`, icon: Users2 },
+    { label: 'Trade Monitor', path: `${prefix}/trades`, icon: Receipt },
+    { label: 'News Publisher', path: `${prefix}/news`, icon: Newspaper },
+    { label: 'Leaderboard', path: `${prefix}/leaderboard`, icon: Trophy },
+    { label: 'Audit Log', path: `${prefix}/audit`, icon: History },
+    { label: 'Event Settings', path: `${prefix}/settings`, icon: Settings },
   ];
 
   return (
@@ -89,7 +91,7 @@ export const AdminSidebar: React.FC = () => {
               {admin?.full_name || 'Admin'}
             </span>
             <span className="text-[10px] text-slate-400 truncate">
-              {admin?.email || 'admin@metis.internal'}
+              {admin?.email || 'admin@metis.com'}
             </span>
           </div>
         </div>
@@ -98,8 +100,8 @@ export const AdminSidebar: React.FC = () => {
           onClick={logoutAdmin}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-xl transition-all"
         >
-          <LogOut className="w-3.5 h-3.5" />
-          Sign Out of Control
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>

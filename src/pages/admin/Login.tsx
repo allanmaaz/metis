@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { adminSignIn } from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
 import { Shield, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
+import { isAdminDomain } from '../../App';
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export const AdminLogin: React.FC = () => {
 
     if (result.success && result.profile) {
       setAdminSession(result.profile);
-      navigate('/control/dashboard');
+      navigate(isAdminDomain ? '/dashboard' : '/control/dashboard');
     } else {
       setError(result.error || 'Access denied. Invalid credentials.');
     }
@@ -41,13 +42,15 @@ export const AdminLogin: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col justify-between px-4 py-8 max-w-lg mx-auto">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
-        <Link
-          to="/"
-          className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Arena
-        </Link>
+      <div className={`flex items-center ${isAdminDomain ? 'justify-center' : 'justify-between'}`}>
+        {!isAdminDomain && (
+          <Link
+            to="/"
+            className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Arena
+          </Link>
+        )}
         <MetisLogo size="sm" />
       </div>
 

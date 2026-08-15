@@ -38,34 +38,20 @@ const queryClient = new QueryClient({
   },
 });
 
-// Check if user is accessing through an admin subdomain (e.g. admin.metis.pages.dev or admin.localhost)
-const isAdminSubdomain =
+// Check if user is accessing through an admin subdomain (e.g. metis-admin.pages.dev, admin.metis.pages.dev, admin.localhost)
+export const isAdminDomain =
   typeof window !== 'undefined' &&
   (window.location.hostname.startsWith('admin.') ||
     window.location.hostname.includes('-admin.') ||
     window.location.hostname.startsWith('metis-admin.'));
 
-// Root Redirection Handler based on Subdomain
+// Root Screen based on Subdomain and Auth State
 const DynamicRoot: React.FC = () => {
   const { isAdminAuthenticated } = useAuth();
-  if (isAdminSubdomain) {
-    return isAdminAuthenticated ? (
-      <Navigate to="/control/dashboard" replace />
-    ) : (
-      <Navigate to="/control/login" replace />
-    );
+  if (isAdminDomain) {
+    return isAdminAuthenticated ? <AdminRoute /> : <AdminLogin />;
   }
   return <Landing />;
-};
-
-// Admin Root Redirection Handler
-const AdminRootRedirect: React.FC = () => {
-  const { isAdminAuthenticated } = useAuth();
-  return isAdminAuthenticated ? (
-    <Navigate to="/control/dashboard" replace />
-  ) : (
-    <Navigate to="/control/login" replace />
-  );
 };
 
 export function App() {
@@ -74,39 +60,76 @@ export function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Dynamic Root based on Subdomain */}
-            <Route path="/" element={<DynamicRoot />} />
+            {/* If on admin subdomain, root "/" renders Admin directly */}
+            {isAdminDomain ? (
+              <>
+                <Route
+                  path="/"
+                  element={
+                    <DynamicRootWrapper />
+                  }
+                />
+                <Route element={<AdminRoute />}>
+                  <Route path="/dashboard" element={<AdminDashboard />} />
+                  <Route path="/market" element={<AdminMarketControl />} />
+                  <Route path="/stocks" element={<AdminStocks />} />
+                  <Route path="/teams" element={<AdminTeams />} />
+                  <Route path="/trades" element={<AdminTrades />} />
+                  <Route path="/news" element={<AdminNews />} />
+                  <Route path="/leaderboard" element={<AdminLeaderboard />} />
+                  <Route path="/audit" element={<AdminAudit />} />
+                  <Route path="/settings" element={<AdminSettings />} />
 
-            {/* Public Participant Routes */}
-            <Route path="/join" element={<Join />} />
-            <Route path="/verify" element={<Verify />} />
+                  {/* Backwards compatibility for /control routes */}
+                  <Route path="/control/dashboard" element={<AdminDashboard />} />
+                  <Route path="/control/market" element={<AdminMarketControl />} />
+                  <Route path="/control/stocks" element={<AdminStocks />} />
+                  <Route path="/control/teams" element={<AdminTeams />} />
+                  <Route path="/control/trades" element={<AdminTrades />} />
+                  <Route path="/control/news" element={<AdminNews />} />
+                  <Route path="/control/leaderboard" element={<AdminLeaderboard />} />
+                  <Route path="/control/audit" element={<AdminAudit />} />
+                  <Route path="/control/settings" element={<AdminSettings />} />
+                </Route>
+                <Route path="/control/login" element={<Navigate to="/" replace />} />
+                <Route path="/control" element={<Navigate to="/" replace />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+              </>
+            ) : (
+              <>
+                {/* Public Participant Routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/join" element={<Join />} />
+                <Route path="/verify" element={<Verify />} />
 
-            {/* Participant Protected Routes */}
-            <Route element={<ParticipantRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/market" element={<Market />} />
-              <Route path="/portfolio" element={<Portfolio />} />
-              <Route path="/news" element={<News />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-            </Route>
+                {/* Participant Protected Routes */}
+                <Route element={<ParticipantRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/market" element={<Market />} />
+                  <Route path="/portfolio" element={<Portfolio />} />
+                  <Route path="/news" element={<News />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                </Route>
 
-            {/* Admin Control Routes (Supports /control, /login, or direct subdomain) */}
-            <Route path="/login" element={<AdminLogin />} />
-            <Route path="/control" element={<AdminRootRedirect />} />
-            <Route path="/control/login" element={<AdminLogin />} />
+                {/* Admin Control Routes (Path Based on Main Domain) */}
+                <Route path="/login" element={<AdminLogin />} />
+                <Route path="/control/login" element={<AdminLogin />} />
+                <Route path="/control" element={<AdminRedirectHandler />} />
 
-            {/* Admin Protected Routes */}
-            <Route element={<AdminRoute />}>
-              <Route path="/control/dashboard" element={<AdminDashboard />} />
-              <Route path="/control/market" element={<AdminMarketControl />} />
-              <Route path="/control/stocks" element={<AdminStocks />} />
-              <Route path="/control/teams" element={<AdminTeams />} />
-              <Route path="/control/trades" element={<AdminTrades />} />
-              <Route path="/control/news" element={<AdminNews />} />
-              <Route path="/control/leaderboard" element={<AdminLeaderboard />} />
-              <Route path="/control/audit" element={<AdminAudit />} />
-              <Route path="/control/settings" element={<AdminSettings />} />
-            </Route>
+                {/* Admin Protected Routes */}
+                <Route element={<AdminRoute />}>
+                  <Route path="/control/dashboard" element={<AdminDashboard />} />
+                  <Route path="/control/market" element={<AdminMarketControl />} />
+                  <Route path="/control/stocks" element={<AdminStocks />} />
+                  <Route path="/control/teams" element={<AdminTeams />} />
+                  <Route path="/control/trades" element={<AdminTrades />} />
+                  <Route path="/control/news" element={<AdminNews />} />
+                  <Route path="/control/leaderboard" element={<AdminLeaderboard />} />
+                  <Route path="/control/audit" element={<AdminAudit />} />
+                  <Route path="/control/settings" element={<AdminSettings />} />
+                </Route>
+              </>
+            )}
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -116,5 +139,25 @@ export function App() {
     </QueryClientProvider>
   );
 }
+
+// Wrapper to render Admin Login or Admin Dashboard on root
+const DynamicRootWrapper: React.FC = () => {
+  const { isAdminAuthenticated } = useAuth();
+  return isAdminAuthenticated ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <AdminLogin />
+  );
+};
+
+// Admin Redirect Handler for main domain
+const AdminRedirectHandler: React.FC = () => {
+  const { isAdminAuthenticated } = useAuth();
+  return isAdminAuthenticated ? (
+    <Navigate to="/control/dashboard" replace />
+  ) : (
+    <Navigate to="/control/login" replace />
+  );
+};
 
 export default App;
