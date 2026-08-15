@@ -44,9 +44,17 @@ if (isSupabaseConfigured) {
       })
       .on('postgres_changes', { event: '*', schema: 'public' }, (payload: any) => {
         if (typeof window !== 'undefined') {
-          const changeType = payload?.table === 'stocks' ? 'STOCK_PRICE_UPDATED' : 'LEADERBOARD_UPDATED';
-          window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: { type: changeType, payload } }));
-          window.dispatchEvent(new CustomEvent(`metis_${changeType.toLowerCase()}`, { detail: payload }));
+          let changeType: RealtimeEventType = 'LEADERBOARD_UPDATED';
+          if (payload?.table === 'stocks') changeType = 'STOCK_PRICE_UPDATED';
+          else if (payload?.table === 'market_sessions') changeType = 'MARKET_SESSION_CHANGED';
+          else if (payload?.table === 'news') changeType = 'NEWS_UPDATED';
+          else if (payload?.table === 'trades') changeType = 'TRADE_EXECUTED';
+          else if (payload?.table === 'holdings') changeType = 'PORTFOLIO_CHANGED';
+          else if (payload?.table === 'teams') changeType = 'TEAM_UPDATED';
+
+          const msgPayload = payload.new || payload;
+          window.dispatchEvent(new CustomEvent('metis_realtime_event', { detail: { type: changeType, payload: msgPayload } }));
+          window.dispatchEvent(new CustomEvent(`metis_${changeType.toLowerCase()}`, { detail: msgPayload }));
         }
       })
       .subscribe((status) => {

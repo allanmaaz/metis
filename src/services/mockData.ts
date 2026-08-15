@@ -12,7 +12,34 @@ export interface MockDatabase {
   auditLogs: AuditLog[];
 }
 
-const STORAGE_KEY = 'metis_mock_database_v9';
+const STORAGE_KEY = 'metis_mock_database_v10';
+
+export function getMockDB(): MockDatabase {
+  // Clean up legacy keys if present
+  try {
+    for (let i = 1; i <= 9; i++) {
+      localStorage.removeItem(`metis_mock_database_v${i}`);
+    }
+  } catch {}
+
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved) as MockDatabase;
+      // Auto-heal: If legacy mock stocks like CYBER or FINTECH are in storage, reset stocks to canonical list
+      const hasLegacyStocks = parsed.stocks?.some((s) => s.symbol === 'CYBER' || s.symbol === 'FINTECH' || s.symbol === 'AERO');
+      if (hasLegacyStocks || !parsed.stocks || parsed.stocks.length === 0) {
+        parsed.stocks = INITIAL_MOCK_DATA.stocks;
+        saveMockDB(parsed);
+      }
+      return parsed;
+    } catch {
+      // ignore
+    }
+  }
+  saveMockDB(INITIAL_MOCK_DATA);
+  return INITIAL_MOCK_DATA;
+}
 
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
@@ -156,31 +183,7 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
   ]
 };
 
-export function getMockDB(): MockDatabase {
-  // Clean up legacy keys if present
-  try {
-    localStorage.removeItem('metis_mock_database_v1');
-    localStorage.removeItem('metis_mock_database_v2');
-    localStorage.removeItem('metis_mock_database_v3');
-    localStorage.removeItem('metis_mock_database_v4');
-    localStorage.removeItem('metis_mock_database_v5');
-    localStorage.removeItem('metis_mock_database_v6');
-    localStorage.removeItem('metis_mock_database_v7');
-    localStorage.removeItem('metis_mock_database_v8');
-  } catch {}
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved) as MockDatabase;
-      return parsed;
-    } catch {
-      // ignore
-    }
-  }
-  saveMockDB(INITIAL_MOCK_DATA);
-  return INITIAL_MOCK_DATA;
-}
 
 export function saveMockDB(db: MockDatabase): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));

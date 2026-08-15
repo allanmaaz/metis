@@ -62,6 +62,33 @@ export const Market: React.FC = () => {
     1500
   );
 
+  // Instant 0ms reactive listener for market session changes
+  useEffect(() => {
+    const handleMarketChange = (e: any) => {
+      const payload = e.detail;
+      if (payload?.status) {
+        setSession((prev) =>
+          prev
+            ? { ...prev, status: payload.status, ends_at: payload.ends_at ?? prev.ends_at }
+            : {
+                id: `ms_${Date.now()}`,
+                event_id: participant?.event.id || 'e1',
+                status: payload.status,
+                started_at: new Date().toISOString(),
+                ends_at: payload.ends_at || null,
+                started_by: null,
+                ended_by: null,
+                created_at: new Date().toISOString(),
+              }
+        );
+      }
+      loadMarket();
+    };
+
+    window.addEventListener('metis_market_session_changed', handleMarketChange);
+    return () => window.removeEventListener('metis_market_session_changed', handleMarketChange);
+  }, [loadMarket, participant]);
+
   const sectors = ['ALL', ...Array.from(new Set(stocks.map((s) => s.sector)))];
 
   const filteredStocks = stocks.filter((stock) => {
