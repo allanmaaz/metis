@@ -8,6 +8,8 @@ import {
   regenerateTeamPin,
   adjustTeamCash,
   setTeamStatus,
+  deleteTeam,
+  clearAllTeams,
 } from '../../services/admin';
 import { Event, Team, TeamMember } from '../../types';
 import { CreateTeamModal } from '../../components/admin/CreateTeamModal';
@@ -31,6 +33,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDot,
+  Trash2,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
@@ -103,6 +106,21 @@ export const AdminTeams: React.FC = () => {
     await setTeamStatus(team.id, nextStatus, reason);
     setActiveMenuTeamId(null);
     loadTeams();
+  };
+
+  const handleDeleteTeam = async (team: Team) => {
+    if (window.confirm(`Are you sure you want to permanently delete Team "${team.name}"?`)) {
+      await deleteTeam(team.id);
+      setActiveMenuTeamId(null);
+      loadTeams();
+    }
+  };
+
+  const handleClearAllTeams = async () => {
+    if (window.confirm('Are you sure you want to remove ALL teams and start with an empty roster?')) {
+      await clearAllTeams(event?.id);
+      loadTeams();
+    }
   };
 
   const handleCreateTeam = async (data: any) => {
@@ -196,13 +214,25 @@ export const AdminTeams: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Register New Team</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          {teams.length > 0 && (
+            <button
+              onClick={handleClearAllTeams}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold transition-all shadow-xs"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Clear All Teams</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-sm shadow-orange-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Register New Team</span>
+          </button>
+        </div>
       </div>
 
       {/* Search Filter */}
@@ -434,6 +464,13 @@ export const AdminTeams: React.FC = () => {
                                       <span>Eliminate Team</span>
                                     </>
                                   )}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTeam(team)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Delete Team</span>
                                 </button>
                               </div>
                             )}

@@ -316,3 +316,63 @@ export async function setTeamStatus(
 
   return { success: true, data: { team_name: team.name, old_status: oldStatus, new_status: status } };
 }
+
+export async function deleteTeam(teamId: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured) {
+    try {
+      await supabase.from('team_members').delete().eq('team_id', teamId);
+      await supabase.from('holdings').delete().eq('team_id', teamId);
+      await supabase.from('trades').delete().eq('team_id', teamId);
+      const { error } = await supabase.from('teams').delete().eq('id', teamId);
+      if (error) console.warn('Supabase delete error:', error);
+    } catch (err: any) {
+      console.warn('Supabase deleteTeam error:', err);
+    }
+  }
+
+  const db = getMockDB();
+  db.teams = db.teams.filter((t) => t.id !== teamId);
+  db.teamMembers = db.teamMembers.filter((m) => m.team_id !== teamId);
+  db.holdings = db.holdings.filter((h) => h.team_id !== teamId);
+  db.trades = db.trades.filter((tr) => tr.team_id !== teamId);
+  saveMockDB(db);
+
+  broadcastRealtimeEvent('TEAM_UPDATED', { teamId });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+  return { success: true };
+}
+
+export async function clearAllTeams(eventId?: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured) {
+    try {
+      if (eventId && eventId !== 'e1') {
+        const { data: teamRows } = await supabase.from('teams').select('id').eq('event_id', eventId);
+        const teamIds = (teamRows || []).map((t) => t.id);
+        if (teamIds.length > 0) {
+          await supabase.from('team_members').delete().in('team_id', teamIds);
+          await supabase.from('holdings').delete().in('team_id', teamIds);
+          await supabase.from('trades').delete().in('team_id', teamIds);
+          await supabase.from('teams').delete().in('id', teamIds);
+        }
+      } else {
+        await supabase.from('team_members').delete().neq('id', '0');
+        await supabase.from('holdings').delete().neq('id', '0');
+        await supabase.from('trades').delete().neq('id', '0');
+        await supabase.from('teams').delete().neq('id', '0');
+      }
+    } catch (err: any) {
+      console.warn('Supabase clearAllTeams error:', err);
+    }
+  }
+
+  const db = getMockDB();
+  db.teams = [];
+  db.teamMembers = [];
+  db.holdings = [];
+  db.trades = [];
+  saveMockDB(db);
+
+  broadcastRealtimeEvent('TEAM_UPDATED', {});
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', {});
+  return { success: true };
+}
