@@ -357,12 +357,14 @@ export const Dashboard: React.FC = () => {
               <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-orange-500 text-white font-mono">
                 LATEST WIRE
               </span>
-              <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
-                {latestNews?.sector || 'EV & Auto'}
-              </span>
+              {latestNews && (
+                <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
+                  {latestNews.sector}
+                </span>
+              )}
             </div>
             <p className={`text-xs font-extrabold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {latestNews?.headline || 'Government Announces ₹25,000 Cr Incentive...'}
+              {latestNews ? latestNews.headline : 'No breaking news published yet. Check back soon!'}
             </p>
           </div>
         </div>

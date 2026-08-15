@@ -420,15 +420,17 @@ export const AdminDashboard: React.FC = () => {
               <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-md bg-orange-500 text-white font-mono">
                 LATEST WIRE
               </span>
-              <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-orange-200/60 text-orange-800 font-mono">
-                {latestNews?.sector || 'EV & Auto'}
-              </span>
+              {latestNews && (
+                <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-md bg-orange-200/60 text-orange-800 font-mono">
+                  {latestNews.sector}
+                </span>
+              )}
             </div>
             <p className="text-xs font-extrabold text-slate-900 truncate">
-              {latestNews?.headline || 'Government Announces ₹25,000 Cr Incentive...'}
+              {latestNews ? latestNews.headline : 'No news broadcasted yet. Click to publish a breaking wire ›'}
             </p>
             <span className="text-[9.5px] text-slate-400 font-mono block">
-              {latestNews?.published_at ? formatClockTime(latestNews.published_at) : '2m ago'}
+              {latestNews?.published_at ? formatClockTime(latestNews.published_at) : 'News console ready'}
             </span>
           </div>
         </div>
