@@ -165,12 +165,12 @@ export async function createTeam(data: {
         if (data.members.length > 0) {
           const memberRows = data.members
             .filter((m) => m.trim().length > 0)
-            .map((m) => ({
+            .map((m, idx) => ({
               team_id: team.id,
               full_name: m.trim(),
               normalized_name: normalizeName(m),
               is_active: true,
-              is_trader: true,
+              is_trader: idx === 0,
             }));
 
           if (memberRows.length > 0) {
