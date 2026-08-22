@@ -194,12 +194,8 @@ export const Dashboard: React.FC = () => {
       : `Team ${participant.team.name}`
     : 'Team Alpha';
 
-  const totalWealth = (summary?.total_wealth !== undefined && summary.total_wealth > 0)
-    ? summary.total_wealth
-    : (participant?.team?.cash_balance ?? 100000000);
-  const cashBalance = (summary?.cash_balance !== undefined && summary.cash_balance > 0)
-    ? summary.cash_balance
-    : (participant?.team?.cash_balance ?? 100000000);
+  const totalWealth = summary?.total_wealth ?? (participant?.team?.cash_balance ?? 100000000);
+  const cashBalance = summary?.cash_balance ?? (participant?.team?.cash_balance ?? 100000000);
   const portfolioVal = summary?.current_value ?? 0;
   const pnlVal = summary?.today_pnl ?? 0;
   const pnlPct = summary?.today_pnl_pct ?? 0;
@@ -399,7 +395,7 @@ export const Dashboard: React.FC = () => {
               <span>Portfolio Value</span>
             </div>
             <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••' : formatWealth(portfolioVal)}
+              {isWealthMasked ? '••••' : formatCurrency(portfolioVal)}
             </div>
           </div>
         </div>
