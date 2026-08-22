@@ -90,7 +90,7 @@ export const BuyModal: React.FC<BuyModalProps> = ({
               <Wallet className="w-3 h-3 text-orange-400" /> Available Cash
             </span>
             <div className="text-lg font-bold font-display text-orange-400 mt-0.5">
-              {formatCurrency(availableCash, true)}
+              {formatCurrency(availableCash)}
             </div>
           </div>
         </div>
@@ -101,60 +101,61 @@ export const BuyModal: React.FC<BuyModalProps> = ({
             label="Order Quantity (Shares)"
             type="number"
             min="1"
-            max={maxAffordableShares}
+            max={maxAffordableShares.toString()}
             value={quantity}
             onChange={(e) => {
               setQuantity(e.target.value);
               setError(null);
             }}
             placeholder="Enter number of shares"
-            autoFocus
+            required
+            className="text-lg font-mono font-bold"
           />
 
-          {/* Quick Presets */}
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {[1000, 5000, 10000, 50000].map((preset) => (
+          {/* Quick Quantity Select Pills */}
+          <div className="flex items-center gap-2 mt-2">
+            {[1000, 5000, 10000, 50000].map((qty) => (
               <button
-                key={preset}
+                key={qty}
                 type="button"
-                onClick={() => handleQuickSelect(preset)}
+                onClick={() => handleQuickSelect(qty)}
                 className={`text-xs px-2.5 py-1 rounded-lg border font-mono transition-colors ${
-                  numQty === preset
-                    ? 'bg-orange-500/20 border-orange-500 text-orange-300 font-bold'
-                    : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  numQty === qty
+                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+                    : 'bg-slate-850 text-slate-400 border-slate-700 hover:border-slate-600'
                 }`}
               >
-                +{formatQuantity(preset)}
+                +{formatQuantity(qty)}
               </button>
             ))}
             <button
               type="button"
               onClick={handleMax}
-              className="text-xs px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold hover:bg-amber-500/25 transition-colors ml-auto"
+              className="text-xs px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 font-bold ml-auto hover:bg-orange-500/20"
             >
               MAX ({formatQuantity(maxAffordableShares)})
             </button>
           </div>
         </div>
 
-        {/* Cost Summary Box */}
-        <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+        {/* Order Preview & Financials */}
+        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs">
+          <div className="flex justify-between text-slate-400">
             <span>Estimated Total Cost</span>
-            <span className="font-mono text-slate-300">
+            <span className="font-mono">
               {formatQuantity(numQty)} × {formatCurrency(stock.current_price)}
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-200">Total Amount</span>
-            <span className="text-xl font-extrabold font-display text-emerald-400">
+          <div className="flex justify-between font-bold text-sm text-slate-100 pt-1 border-t border-slate-800">
+            <span>Total Amount</span>
+            <span className="font-mono text-emerald-400 text-base">
               {formatCurrency(estimatedCost)}
             </span>
           </div>
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-500/10 text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-500 pt-1">
             <span>Remaining Cash After Trade</span>
-            <span className={estimatedCost > availableCash ? 'text-rose-400 font-bold' : 'text-slate-300 font-mono'}>
-              {formatCurrency(availableCash - estimatedCost, true)}
+            <span className="font-mono">
+              {formatCurrency(availableCash - estimatedCost)}
             </span>
           </div>
         </div>
