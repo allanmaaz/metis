@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getStocks } from '../../services/stock';
-import { getCurrentMarketSession } from '../../services/market';
+import { getCurrentMarketSession, isSessionOpen } from '../../services/market';
 import { getTeamPortfolioSummary, getTeamHoldings } from '../../services/portfolio';
 import { getPublishedNews } from '../../services/news';
 import { buyStock, sellStock } from '../../services/trade';
@@ -235,7 +235,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex items-center gap-2">
           <span
             className={`w-2.5 h-2.5 rounded-full ${
-              session?.status === 'OPEN'
+              isSessionOpen(session)
                 ? 'bg-emerald-500 animate-pulse'
                 : session?.status === 'PAUSED'
                 ? 'bg-amber-500 animate-pulse'
@@ -246,7 +246,7 @@ export const Dashboard: React.FC = () => {
           />
           <span
             className={`text-xs font-black uppercase tracking-wide font-mono ${
-              session?.status === 'OPEN'
+              isSessionOpen(session)
                 ? 'text-emerald-500'
                 : session?.status === 'PAUSED'
                 ? 'text-amber-500'
@@ -255,7 +255,7 @@ export const Dashboard: React.FC = () => {
                 : 'text-rose-500'
             }`}
           >
-            MARKET {session?.status || 'CLOSED'}
+            MARKET {isSessionOpen(session) ? 'OPEN' : (session?.status === 'PAUSED' ? 'PAUSED' : (session?.status === 'FROZEN' ? 'FROZEN' : 'CLOSED'))}
           </span>
         </div>
 
@@ -266,16 +266,12 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="flex flex-col text-right">
             <span className="text-[9px] text-slate-400 font-medium">
-              {session?.status === 'OPEN' ? 'Session closes in' : 'Session Status'}
+              {isSessionOpen(session) ? (session?.ends_at ? 'Round closes in' : 'Round type') : 'Session Status'}
             </span>
-            <span className="text-xs font-black font-mono text-orange-500">
-              {session?.ends_at
-                ? timer.isExpired
-                  ? 'Expired'
-                  : timer.formatted
-                : session?.status === 'OPEN'
-                ? 'No limit'
-                : session?.status || 'Closed'}
+            <span className={`text-xs font-black font-mono ${isSessionOpen(session) ? 'text-orange-500' : 'text-slate-400'}`}>
+              {isSessionOpen(session)
+                ? (session?.ends_at ? timer.formatted : 'No limit (∞)')
+                : (session?.status === 'PAUSED' ? 'Paused' : (session?.status === 'FROZEN' ? 'Frozen' : 'Closed'))}
             </span>
           </div>
         </div>

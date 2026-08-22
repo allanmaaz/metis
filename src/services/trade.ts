@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Trade } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
+import { isSessionOpen } from './market';
 
 export async function buyStock(
   teamId: string,
@@ -83,7 +84,7 @@ export async function buyStock(
   if (!stock || !stock.is_active) return { success: false, error: 'Stock is inactive.' };
   if (team.status === 'ELIMINATED') return { success: false, error: 'Team has been eliminated.' };
   if (team.status !== 'ACTIVE') return { success: false, error: 'Team trading is disabled.' };
-  if (!session || session.status !== 'OPEN') return { success: false, error: `Market is currently ${session?.status || 'CLOSED'}.` };
+  if (!isSessionOpen(session)) return { success: false, error: `Market is currently ${session?.status || 'CLOSED'}.` };
 
   const totalCost = quantity * stock.current_price;
   if (team.cash_balance < totalCost) {
@@ -245,7 +246,7 @@ export async function sellStock(
   if (!stock || !stock.is_active) return { success: false, error: 'Stock is inactive.' };
   if (team.status === 'ELIMINATED') return { success: false, error: 'Team has been eliminated.' };
   if (team.status !== 'ACTIVE') return { success: false, error: 'Team trading is disabled.' };
-  if (!session || session.status !== 'OPEN') return { success: false, error: `Market is currently ${session?.status || 'CLOSED'}.` };
+  if (!isSessionOpen(session)) return { success: false, error: `Market is currently ${session?.status || 'CLOSED'}.` };
 
   const holding = db.holdings.find((h) => h.team_id === teamId && h.stock_id === stockId);
   if (!holding || holding.quantity < quantity) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getActiveEvent } from '../../services/event';
-import { getCurrentMarketSession, setMarketStatus } from '../../services/market';
+import { getCurrentMarketSession, setMarketStatus, isSessionOpen } from '../../services/market';
 import { Event, MarketSession, MarketStatus } from '../../types';
 import { FreezeConfirmModal } from '../../components/admin/FreezeConfirmModal';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Snowflake,
   AlertTriangle,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
@@ -25,8 +26,6 @@ export const AdminMarketControl: React.FC = () => {
   const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const timer = useMarketTimer(session?.ends_at);
-
   const loadSession = useCallback(async () => {
     try {
       const activeEvent = await getActiveEvent();
@@ -38,19 +37,30 @@ export const AdminMarketControl: React.FC = () => {
     }
   }, []);
 
+  const handleTimerExpire = useCallback(async () => {
+    if (event && session?.status === 'OPEN') {
+      console.log('⏰ Market session timer expired. Automatically closing market across all clients.');
+      await setMarketStatus(event.id, 'CLOSED', undefined, 'Session timer expired');
+      loadSession();
+    }
+  }, [event, session?.status, loadSession]);
+
+  const timer = useMarketTimer(session?.ends_at, handleTimerExpire);
+
   useEffect(() => {
     loadSession();
   }, [loadSession]);
 
-  useRealtimeSubscription(['MARKET_SESSION_CHANGED'], loadSession, 1500);
+  useRealtimeSubscription(['MARKET_SESSION_CHANGED'], loadSession, 1000);
 
   const handleSetState = async (status: MarketStatus, duration?: number) => {
     if (!event) return;
     setIsLoading(true);
-    const res = await setMarketStatus(event.id, status, duration, reason || undefined);
+    const parsedDuration = duration !== undefined ? duration : (durationMinutes === '0' || !durationMinutes ? undefined : parseInt(durationMinutes, 10));
+    const res = await setMarketStatus(event.id, status, parsedDuration, reason || undefined);
     setIsLoading(false);
     if (res.success) {
-      setFeedback(`Market successfully set to ${status}.`);
+      setFeedback(`Market successfully set to ${status}${parsedDuration ? ` (${parsedDuration} mins)` : ' (No Limit)'}.`);
       setTimeout(() => setFeedback(null), 3000);
       loadSession();
     }
@@ -63,9 +73,9 @@ export const AdminMarketControl: React.FC = () => {
     return res;
   };
 
-  const isMarketOpen = session?.status === 'OPEN';
+  const isMarketOpen = isSessionOpen(session);
   const isMarketPaused = session?.status === 'PAUSED';
-  const isMarketClosed = session?.status === 'CLOSED';
+  const isMarketClosed = !isMarketOpen && session?.status !== 'PAUSED' && session?.status !== 'FROZEN';
   const isMarketFrozen = session?.status === 'FROZEN';
 
   return (
@@ -122,8 +132,15 @@ export const AdminMarketControl: React.FC = () => {
             <Clock className="w-4 h-4 text-orange-500" />
             <span>Time Remaining in Round:</span>
             <span className="font-mono font-bold text-orange-500 text-sm">
-              {timer.formatted === '00:00' ? '14:32' : timer.formatted}
+              {timer.formatted}
             </span>
+          </div>
+        )}
+
+        {!session?.ends_at && isMarketOpen && (
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs font-semibold text-emerald-600">
+            <InfinityIcon className="w-4 h-4 text-emerald-500" />
+            <span>Indefinite Round (No Timer Limit) — Live Market Active</span>
           </div>
         )}
       </div>
@@ -152,43 +169,64 @@ export const AdminMarketControl: React.FC = () => {
               <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 DURATION (MINUTES) — OPTIONAL
               </label>
-              <div className="grid grid-cols-4 gap-2">
-                {['15', '30', '45', '60'].map((mins) => (
+              <div className="grid grid-cols-5 gap-1.5">
+                {[
+                  { label: '15m', val: '15' },
+                  { label: '30m', val: '30' },
+                  { label: '45m', val: '45' },
+                  { label: '60m', val: '60' },
+                  { label: '∞ No Limit', val: '0' },
+                ].map((item) => (
                   <button
-                    key={mins}
+                    key={item.val}
                     type="button"
-                    onClick={() => setDurationMinutes(mins)}
-                    className={`py-2 rounded-2xl text-xs font-extrabold transition-all ${
-                      durationMinutes === mins
+                    onClick={() => setDurationMinutes(item.val)}
+                    className={`py-2 px-1 rounded-2xl text-[11px] font-extrabold transition-all text-center ${
+                      durationMinutes === item.val
                         ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20'
                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/70'
                     }`}
                   >
-                    {mins} mins
+                    {item.label}
                   </button>
                 ))}
               </div>
 
-              <input
-                type="number"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(e.target.value)}
-                className="w-full bg-slate-50 text-slate-900 border border-slate-200/80 rounded-2xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-orange-500 mt-2 font-bold"
-              />
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Minutes (0 for No Limit)"
+                  value={durationMinutes === '0' ? '' : durationMinutes}
+                  onChange={(e) => setDurationMinutes(e.target.value === '' ? '0' : e.target.value)}
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200/80 rounded-2xl px-4 py-2 text-sm font-mono focus:outline-none focus:border-orange-500 font-bold"
+                />
+                <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
+                  {durationMinutes === '0' || !durationMinutes ? 'No Limit' : 'Mins'}
+                </span>
+              </div>
+
+              <div className="text-[11px] text-slate-400 font-medium">
+                {durationMinutes === '0' || !durationMinutes ? (
+                  <span className="text-emerald-600 font-semibold">∞ Market will stay OPEN indefinitely until manually closed.</span>
+                ) : (
+                  <span>⏱️ Market will automatically close across all participants when timer expires.</span>
+                )}
+              </div>
             </div>
           </div>
 
           <button
-            onClick={() => handleSetState('OPEN', parseInt(durationMinutes) || undefined)}
+            onClick={() => handleSetState('OPEN')}
             disabled={isLoading}
-            className={`w-full py-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all ${
-              isMarketOpen
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm shadow-emerald-500/20'
-            }`}
+            className="w-full py-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm shadow-emerald-500/20 active:scale-[0.99] cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-current" />
-            <span>{isMarketOpen ? 'Market is Already Open' : 'Open Market Now'}</span>
+            {isMarketOpen ? <Clock className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+            <span>
+              {isMarketOpen
+                ? `Update Market Timer (${durationMinutes === '0' || !durationMinutes ? 'No Limit' : durationMinutes + ' mins'})`
+                : `Open Market Now (${durationMinutes === '0' || !durationMinutes ? 'No Limit' : durationMinutes + ' mins'})`}
+            </span>
           </button>
         </div>
 

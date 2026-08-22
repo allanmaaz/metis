@@ -3,6 +3,18 @@ import { MarketSession, MarketStatus } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
+export function isSessionOpen(session: MarketSession | null | undefined): boolean {
+  if (!session) return false;
+  if (session.status !== 'OPEN') return false;
+  if (session.ends_at) {
+    const endTime = new Date(session.ends_at).getTime();
+    if (!isNaN(endTime) && Date.now() >= endTime) {
+      return false; // Automatically closed because timer expired
+    }
+  }
+  return true;
+}
+
 export async function getCurrentMarketSession(eventId?: string): Promise<MarketSession> {
   const db = getMockDB();
 

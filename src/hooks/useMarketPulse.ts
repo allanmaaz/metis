@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Stock, MarketSession } from '../types';
+import { isSessionOpen } from '../services/market';
 
 /**
  * useMarketPulse provides smooth, realistic 4-second micro-fluctuations (0.01% to 0.02%)
@@ -7,9 +8,22 @@ import { Stock, MarketSession } from '../types';
  * When the market is CLOSED or FROZEN, prices immediately stay locked to their base price.
  */
 export function useMarketPulse(stocks: Stock[], session: MarketSession | null) {
-  const isMarketOpen = session?.status === 'OPEN';
+  const [isLiveOpen, setIsLiveOpen] = useState(() => isSessionOpen(session));
   const [pulseDeltas, setPulseDeltas] = useState<Record<string, number>>({});
   const [flashStates, setFlashStates] = useState<Record<string, 'up' | 'down' | null>>({});
+
+  // Sub-second temporal checker for immediate market close upon timer expiry
+  useEffect(() => {
+    const check = () => {
+      const open = isSessionOpen(session);
+      setIsLiveOpen(open);
+    };
+    check();
+    const interval = setInterval(check, 500);
+    return () => clearInterval(interval);
+  }, [session]);
+
+  const isMarketOpen = isLiveOpen;
 
   const stocksRef = useRef(stocks);
   useEffect(() => {
