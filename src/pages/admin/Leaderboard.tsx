@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getActiveEvent } from '../../services/event';
+import { getActiveEvent, setLeaderboardVisibility } from '../../services/event';
 import { getLeaderboard } from '../../services/leaderboard';
 import { Event, LeaderboardEntry } from '../../types';
 import { formatCurrency, formatWealth, formatPercent } from '../../lib/formatting';
-import { Trophy, Crown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Trophy, Crown, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
 
 export const AdminLeaderboard: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [isToggling, setIsToggling] = useState(false);
 
   const loadLeaderboard = useCallback(async () => {
     try {
@@ -26,16 +27,66 @@ export const AdminLeaderboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadLeaderboard]);
 
+  const isVisibleForParticipants = event?.is_leaderboard_visible !== false;
+
+  const handleToggleVisibility = async () => {
+    if (!event || isToggling) return;
+    setIsToggling(true);
+    try {
+      const newVisibility = !isVisibleForParticipants;
+      await setLeaderboardVisibility(event.id, newVisibility);
+      setEvent((prev) => prev ? { ...prev, is_leaderboard_visible: newVisibility } : prev);
+    } catch (err) {
+      console.error('Error toggling leaderboard visibility:', err);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   const cutoff = event?.qualification_count || 5;
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
-          <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-500 shrink-0" />
-          <span>Official Event Leaderboard</span>
-        </h1>
+      {/* Header with Participant Visibility Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+            <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-500 shrink-0" />
+            <span>Official Event Leaderboard</span>
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Real-time standings across all competing teams in {event?.name || 'METIS'}.
+          </p>
+        </div>
+
+        {/* Visibility Toggle Control Button */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleToggleVisibility}
+            disabled={isToggling}
+            className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-2 border transition-all shadow-xs cursor-pointer ${
+              isVisibleForParticipants
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100/80'
+                : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100/80'
+            }`}
+          >
+            {isVisibleForParticipants ? (
+              <>
+                <Eye className="w-4 h-4 text-emerald-600" />
+                <span>Participants: LEADERBOARD VISIBLE</span>
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-4 h-4 text-rose-600" />
+                <span>Participants: HIDDEN (Trade History Mode)</span>
+              </>
+            )}
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-lg bg-white/80 border border-current shadow-xs">
+              {isVisibleForParticipants ? 'Click to Hide' : 'Click to Show'}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* 1. Mobile Cards View (Visible on screens < md) */}

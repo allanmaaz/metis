@@ -1,8 +1,11 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Event } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getActiveEvent(): Promise<Event> {
+  let event: Event | null = null;
+
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
@@ -13,15 +16,69 @@ export async function getActiveEvent(): Promise<Event> {
         .maybeSingle();
 
       if (!error && data) {
-        return data as Event;
+        event = data as Event;
       }
     } catch (err) {
       console.error('Error fetching active event:', err);
     }
   }
 
+  if (!event) {
+    const db = getMockDB();
+    event = db.events[0];
+  }
+
+  // Parse leaderboard visibility if stored in description
+  if (event && event.description) {
+    try {
+      if (event.description.startsWith('{') && event.description.endsWith('}')) {
+        const parsed = JSON.parse(event.description);
+        event.is_leaderboard_visible = parsed.leaderboard_visible !== false;
+        event.description = parsed.text || parsed.description || event.description;
+      }
+    } catch {
+      // Plain text description, default to visible
+      event.is_leaderboard_visible = true;
+    }
+  } else if (event) {
+    event.is_leaderboard_visible = true;
+  }
+
+  return event;
+}
+
+export async function setLeaderboardVisibility(
+  eventId: string,
+  visible: boolean
+): Promise<{ success: boolean; is_leaderboard_visible: boolean; error?: string }> {
   const db = getMockDB();
-  return db.events[0];
+  const event = db.events.find((e) => e.id === eventId || eventId === 'e1') || db.events[0];
+  if (event) {
+    event.is_leaderboard_visible = visible;
+    saveMockDB(db);
+  }
+
+  if (isSupabaseConfigured) {
+    try {
+      const currentDesc = event?.description || 'The Strategic Market Challenge — Live Virtual Stock Trading Arena';
+      const meta = JSON.stringify({
+        text: currentDesc.startsWith('{') ? (JSON.parse(currentDesc).text || currentDesc) : currentDesc,
+        leaderboard_visible: visible,
+      });
+
+      await supabase
+        .from('events')
+        .update({ description: meta })
+        .eq('id', eventId);
+    } catch (err: any) {
+      console.warn('Error setting leaderboard visibility on Supabase:', err);
+    }
+  }
+
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', { is_leaderboard_visible: visible });
+  broadcastRealtimeEvent('MARKET_SESSION_CHANGED', { is_leaderboard_visible: visible });
+
+  return { success: true, is_leaderboard_visible: visible };
 }
 
 export async function closeEvent(eventId: string): Promise<{ success: boolean; error?: string }> {

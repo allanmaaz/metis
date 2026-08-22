@@ -29,6 +29,7 @@ import {
 import { Link, NavLink } from 'react-router-dom';
 
 import { getPublishedNews } from '../../services/news';
+import { getActiveEvent } from '../../services/event';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import { useLocation } from 'react-router-dom';
 
@@ -45,6 +46,20 @@ export const ParticipantHeader: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
+  const [isLeaderboardVisible, setIsLeaderboardVisible] = useState<boolean>(true);
+
+  const checkEventVisibility = async () => {
+    try {
+      const activeEvent = await getActiveEvent();
+      setIsLeaderboardVisible(activeEvent.is_leaderboard_visible !== false);
+    } catch {}
+  };
+
+  useEffect(() => {
+    checkEventVisibility();
+  }, []);
+
+  useRealtimeSubscription(['LEADERBOARD_UPDATED', 'MARKET_SESSION_CHANGED'], checkEventVisibility, 2000);
 
   const isDark = theme === 'dark';
 
@@ -134,7 +149,7 @@ export const ParticipantHeader: React.FC = () => {
               { path: '/market', label: 'Market' },
               { path: '/portfolio', label: 'Portfolio' },
               { path: '/news', label: 'News' },
-              { path: '/leaderboard', label: 'Leaderboard' },
+              { path: '/leaderboard', label: isLeaderboardVisible ? 'Leaderboard' : 'Trade History' },
             ].map((link) => (
               <NavLink
                 key={link.path}

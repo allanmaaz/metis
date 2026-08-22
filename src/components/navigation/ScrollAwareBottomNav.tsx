@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, BarChart2, Briefcase, FileText, Trophy } from 'lucide-react';
+import { Home, BarChart2, Briefcase, FileText, Trophy, History } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getPublishedNews } from '../../services/news';
+import { getActiveEvent } from '../../services/event';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const ScrollAwareBottomNav: React.FC = () => {
@@ -10,6 +11,7 @@ export const ScrollAwareBottomNav: React.FC = () => {
   const location = useLocation();
   const isDark = theme === 'dark';
   const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
+  const [isLeaderboardVisible, setIsLeaderboardVisible] = useState<boolean>(true);
 
   const checkUnreadNews = useCallback(async () => {
     try {
@@ -27,18 +29,31 @@ export const ScrollAwareBottomNav: React.FC = () => {
     } catch {}
   }, [location.pathname]);
 
+  const checkEventVisibility = useCallback(async () => {
+    try {
+      const activeEvent = await getActiveEvent();
+      setIsLeaderboardVisible(activeEvent.is_leaderboard_visible !== false);
+    } catch {}
+  }, []);
+
   useEffect(() => {
     checkUnreadNews();
-  }, [checkUnreadNews]);
+    checkEventVisibility();
+  }, [checkUnreadNews, checkEventVisibility]);
 
   useRealtimeSubscription(['NEWS_UPDATED'], checkUnreadNews, 1000);
+  useRealtimeSubscription(['LEADERBOARD_UPDATED', 'MARKET_SESSION_CHANGED'], checkEventVisibility, 2000);
 
   const navItems = [
     { label: 'Home', path: '/dashboard', icon: Home },
     { label: 'Market', path: '/market', icon: BarChart2 },
     { label: 'Portfolio', path: '/portfolio', icon: Briefcase },
     { label: 'News', path: '/news', icon: FileText, badge: unreadNewsCount },
-    { label: 'Ranks', path: '/leaderboard', icon: Trophy },
+    {
+      label: isLeaderboardVisible ? 'Ranks' : 'History',
+      path: '/leaderboard',
+      icon: isLeaderboardVisible ? Trophy : History,
+    },
   ];
 
   return (

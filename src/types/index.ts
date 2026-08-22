@@ -25,6 +25,7 @@ export interface Event {
   status: EventStatus;
   starting_capital: number;
   qualification_count: number;
+  is_leaderboard_visible?: boolean;
   created_at: string;
   started_at: string | null;
   ended_at: string | null;
