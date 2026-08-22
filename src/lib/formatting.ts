@@ -68,11 +68,11 @@ export function formatQuantity(value: number | string | null | undefined): strin
  */
 export function formatPercent(value: number | string | null | undefined): string {
   if (value === null || value === undefined || isNaN(Number(value))) {
-    return '0.0%';
+    return '0.00%';
   }
   const num = Number(value);
   const sign = num > 0 ? '+' : '';
-  return `${sign}${num.toFixed(1)}%`;
+  return `${sign}${num.toFixed(2)}%`;
 }
 
 /**
