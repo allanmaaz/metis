@@ -6,41 +6,93 @@ import { getMockDB, saveMockDB } from './mockData';
 const PARTICIPANT_STORAGE_KEY = 'metis_participant_session_v1';
 const ADMIN_STORAGE_KEY = 'metis_admin_session_v1';
 
+function getCharSubstitutions(str: string): string[] {
+  let results = [''];
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    const next: string[] = [];
+    for (const r of results) {
+      if (char === 'I' || char === '1') {
+        next.push(r + 'I');
+        next.push(r + '1');
+      } else if (char === 'O' || char === '0') {
+        next.push(r + 'O');
+        next.push(r + '0');
+      } else {
+        next.push(r + char);
+      }
+    }
+    results = next;
+  }
+  return results;
+}
+
+export function normalizeCodeVariants(code: string): string[] {
+  const clean = code.trim().toUpperCase();
+  if (!clean) return [];
+  const variants = new Set<string>();
+  variants.add(clean);
+
+  const parts = clean.split('-');
+  const prefix = parts[0];
+  const suffix = parts.slice(1).join('-');
+
+  const subs = getCharSubstitutions(suffix || clean);
+  for (const s of subs) {
+    if (suffix) {
+      variants.add(`${prefix}-${s}`);
+      variants.add(`${prefix}${s}`);
+    } else {
+      variants.add(s);
+    }
+  }
+  return Array.from(variants);
+}
+
 export async function getTeamMembersByCode(
   teamCode: string
 ): Promise<{ team: Team | null; members: TeamMember[] }> {
   const cleanCode = teamCode.trim().toUpperCase();
   if (!cleanCode) return { team: null, members: [] };
 
+  const variants = normalizeCodeVariants(cleanCode);
+
   if (isSupabaseConfigured) {
     try {
-      const { data: teamData } = await supabase
-        .from('teams')
-        .select('*')
-        .ilike('team_code', cleanCode)
-        .maybeSingle();
-
-      if (teamData) {
-        const team = teamData as Team;
-        const { data: members } = await supabase
-          .from('team_members')
+      for (const v of variants) {
+        const { data: teamData } = await supabase
+          .from('teams')
           .select('*')
-          .eq('team_id', team.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: true });
+          .ilike('team_code', v)
+          .maybeSingle();
 
-        return { team, members: (members as TeamMember[]) || [] };
+        if (teamData) {
+          const team = teamData as Team;
+          const { data: members } = await supabase
+            .from('team_members')
+            .select('*')
+            .eq('team_id', team.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true });
+
+          return { team, members: (members as TeamMember[]) || [] };
+        }
       }
     } catch (err) {
       console.error('Error fetching team members by code from Supabase:', err);
     }
   }
 
-  // Fallback to local DB (exact match only)
+  // Fallback to local DB (exact & variant match)
   const db = getMockDB();
-  const team = db.teams.find(
-    (t) => t.team_code.trim().toUpperCase() === cleanCode
-  ) || null;
+  let team: Team | null = null;
+  for (const v of variants) {
+    const found = db.teams.find((t) => t.team_code.trim().toUpperCase() === v);
+    if (found) {
+      team = found;
+      break;
+    }
+  }
 
   if (team) {
     const members = db.teamMembers.filter((m) => m.team_id === team.id && m.is_active);
@@ -69,15 +121,25 @@ export async function verifyParticipant(
     return { success: false, error: 'Participant name is required.' };
   }
 
+  const variants = normalizeCodeVariants(cleanCode);
+
   // 1. If Supabase is connected, query live database first
   if (isSupabaseConfigured) {
     try {
-      // Fetch team by exact code
-      const { data: teamData } = await supabase
-        .from('teams')
-        .select('*')
-        .ilike('team_code', cleanCode)
-        .maybeSingle();
+      // Fetch team by code (or common mistyped variant)
+      let teamData: any = null;
+      for (const v of variants) {
+        const { data } = await supabase
+          .from('teams')
+          .select('*')
+          .ilike('team_code', v)
+          .maybeSingle();
+
+        if (data) {
+          teamData = data;
+          break;
+        }
+      }
 
       if (teamData) {
         const team = teamData as Team;
@@ -167,11 +229,16 @@ export async function verifyParticipant(
     }
   }
 
-  // 2. Local / Mock DB Verification (Exact code match)
+  // 2. Local / Mock DB Verification (Exact & variant match)
   const db = getMockDB();
-  const team = db.teams.find(
-    (t) => t.team_code.trim().toUpperCase() === cleanCode
-  );
+  let team: Team | null = null;
+  for (const v of variants) {
+    const found = db.teams.find((t) => t.team_code.trim().toUpperCase() === v);
+    if (found) {
+      team = found;
+      break;
+    }
+  }
 
   // If team does NOT exist in the database, reject immediately!
   if (!team) {

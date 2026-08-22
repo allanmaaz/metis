@@ -124,7 +124,12 @@ export async function createTeam(data: {
   const teamName = data.name.trim();
   const capital = data.starting_capital || 100000000;
   const prefix = teamName.toUpperCase().slice(0, 4).replace(/[^A-Z]/g, 'TEAM');
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // Avoid confusing characters: 0, O, 1, I, L
+  const chars = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  let randomSuffix = '';
+  for (let i = 0; i < 4; i++) {
+    randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   const teamCode = `${prefix}-${randomSuffix}`;
   const pin = Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -231,7 +236,11 @@ export async function createTeam(data: {
 }
 
 export async function regenerateTeamCode(teamId: string): Promise<{ success: boolean; newCode?: string; error?: string }> {
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const chars = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  let randomSuffix = '';
+  for (let i = 0; i < 4; i++) {
+    randomSuffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   const newCode = `METIS-${randomSuffix}`;
 
   if (isSupabaseConfigured && isValidUuid(teamId)) {
