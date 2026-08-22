@@ -23,14 +23,21 @@ export async function buyStock(
         p_member_id: memberId && isValidUuid(memberId) ? memberId : null,
       });
 
-      if (!error && data && data.success) {
-        broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'BUY', quantity });
-        broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
-        broadcastRealtimeEvent('LEADERBOARD_UPDATED');
-        return { success: true, data };
+      if (!error && data) {
+        if (data.success) {
+          broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'BUY', quantity });
+          broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+          broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+          return { success: true, data };
+        } else {
+          return { success: false, error: data.error || 'Buy order failed.' };
+        }
+      }
+      if (error) {
+        return { success: false, error: error.message };
       }
     } catch (err: any) {
-      // Fallback to local database
+      console.warn('Supabase execute_buy exception:', err);
     }
   }
 
@@ -148,14 +155,21 @@ export async function sellStock(
         p_member_id: memberId && isValidUuid(memberId) ? memberId : null,
       });
 
-      if (!error && data && data.success) {
-        broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'SELL', quantity });
-        broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
-        broadcastRealtimeEvent('LEADERBOARD_UPDATED');
-        return { success: true, data };
+      if (!error && data) {
+        if (data.success) {
+          broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'SELL', quantity });
+          broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
+          broadcastRealtimeEvent('LEADERBOARD_UPDATED');
+          return { success: true, data };
+        } else {
+          return { success: false, error: data.error || 'Sell order failed.' };
+        }
+      }
+      if (error) {
+        return { success: false, error: error.message };
       }
     } catch (err: any) {
-      // Fallback to local database
+      console.warn('Supabase execute_sell exception:', err);
     }
   }
 

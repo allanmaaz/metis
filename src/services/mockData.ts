@@ -44,7 +44,7 @@ export function getMockDB(): MockDatabase {
 export const INITIAL_MOCK_DATA: MockDatabase = {
   events: [
     {
-      id: 'e1111111-1111-1111-1111-111111111111',
+      id: 'dfac5ade-6fe0-458d-8714-542a12b6e360',
       name: 'METIS 2026',
       description: 'The Strategic Market Challenge — Live Virtual Stock Trading Arena',
       round_name: 'Round 2 — Virtual Market',
@@ -152,9 +152,9 @@ export const INITIAL_MOCK_DATA: MockDatabase = {
   ],
   marketSessions: [
     {
-      id: 'ms111111-1111-1111-1111-111111111111',
-      event_id: 'e1111111-1111-1111-1111-111111111111',
-      status: 'CLOSED',
+      id: 'ms_initial_metis',
+      event_id: 'dfac5ade-6fe0-458d-8714-542a12b6e360',
+      status: 'OPEN',
       started_at: new Date().toISOString(),
       ends_at: null,
       started_by: null,

@@ -4,29 +4,56 @@ import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 export async function getCurrentMarketSession(eventId?: string): Promise<MarketSession> {
+  const db = getMockDB();
+
   if (isSupabaseConfigured) {
     try {
-      let query = supabase
-        .from('market_sessions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      let sessionData: any = null;
 
       if (eventId && isValidUuid(eventId)) {
-        query = query.eq('event_id', eventId);
+        const { data, error } = await supabase
+          .from('market_sessions')
+          .select('*')
+          .eq('event_id', eventId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!error && data) {
+          sessionData = data;
+        }
       }
 
-      const { data, error } = await query.maybeSingle();
+      if (!sessionData) {
+        const { data: latestData, error: latestErr } = await supabase
+          .from('market_sessions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (!error && data) {
-        return data as MarketSession;
+        if (!latestErr && latestData) {
+          sessionData = latestData;
+        }
+      }
+
+      if (sessionData) {
+        const remoteSession = sessionData as MarketSession;
+        // Sync into local DB
+        const existingIdx = db.marketSessions.findIndex((s) => s.id === remoteSession.id);
+        if (existingIdx >= 0) {
+          db.marketSessions[existingIdx] = remoteSession;
+        } else {
+          db.marketSessions.push(remoteSession);
+        }
+        saveMockDB(db);
+        return remoteSession;
       }
     } catch (err) {
       // Fallback to local database
     }
   }
 
-  const db = getMockDB();
   const sortedSessions = [...db.marketSessions].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
