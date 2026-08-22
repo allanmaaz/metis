@@ -8,6 +8,7 @@ interface StockCardProps {
   stock: Stock;
   ownedQuantity?: number;
   marketOpen?: boolean;
+  isTrader?: boolean;
   onBuy: (stock: Stock) => void;
   onSell: (stock: Stock) => void;
 }
@@ -16,6 +17,7 @@ export const StockCard: React.FC<StockCardProps> = ({
   stock,
   ownedQuantity = 0,
   marketOpen = true,
+  isTrader = true,
   onBuy,
   onSell,
 }) => {
@@ -169,19 +171,21 @@ export const StockCard: React.FC<StockCardProps> = ({
       <div className="grid grid-cols-2 gap-2.5 pt-2">
         <button
           onClick={() => onBuy(stock)}
-          disabled={!marketOpen}
-          className="w-full py-2.5 rounded-2xl text-xs font-black bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-1.5"
+          disabled={!marketOpen || !isTrader}
+          title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+          className="w-full py-2.5 rounded-2xl text-xs font-black bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           <ArrowUpRight className="w-3.5 h-3.5" />
-          <span>BUY</span>
+          <span>{isTrader ? 'BUY' : 'BUY (VIEW)'}</span>
         </button>
         <button
           onClick={() => onSell(stock)}
-          disabled={!marketOpen || ownedQuantity === 0}
-          className="w-full py-2.5 rounded-2xl text-xs font-black bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-1.5"
+          disabled={!marketOpen || !isTrader || ownedQuantity === 0}
+          title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+          className="w-full py-2.5 rounded-2xl text-xs font-black bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           <ArrowDownRight className="w-3.5 h-3.5" />
-          <span>SELL</span>
+          <span>{isTrader ? 'SELL' : 'SELL (VIEW)'}</span>
         </button>
       </div>
     </div>

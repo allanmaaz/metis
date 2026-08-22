@@ -314,54 +314,64 @@ export const ParticipantHeader: React.FC = () => {
 
               {/* 4. Active Trader & Registered Team Roster */}
               <div
-                className={`p-3.5 rounded-2xl space-y-2 border ${
+                className={`p-3.5 rounded-2xl space-y-2.5 border ${
                   isDark ? 'bg-[#1E293B] border-white/5' : 'bg-slate-50 border-slate-200/70'
                 }`}
               >
                 <div className="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-400">
                   <div className="flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-orange-500" />
-                    <span>Team Roster ({members.length || 4})</span>
+                    <span>Team Roster & Roles ({members.length || 1})</span>
                   </div>
-                  <span className="text-[9px] text-slate-400">Tap to switch</span>
+                  <span className="text-[9px] text-slate-400 font-mono">1 Trader / Team</span>
                 </div>
 
-                <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                  {(members.length > 0
-                    ? members
-                    : [
-                        { id: '1', full_name: participant?.member.full_name || 'Mohammed Maaz' },
-                        { id: '2', full_name: 'Rahul Kumar' },
-                        { id: '3', full_name: 'Arjun Rao' },
-                        { id: '4', full_name: 'Zaid Ahmed' },
-                      ]
-                  ).map((m: any) => {
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 no-scrollbar">
+                  {members.map((m) => {
                     const isCurrent =
-                      m.full_name.toLowerCase() ===
-                      (participant?.member.full_name || '').toLowerCase();
+                      m.id === participant?.member.id ||
+                      m.full_name.toLowerCase() === (participant?.member.full_name || '').toLowerCase();
 
                     return (
-                      <button
+                      <div
                         key={m.id}
-                        onClick={() => handleSwitchTrader(m)}
-                        className={`w-full p-2 rounded-xl text-left text-xs flex items-center justify-between transition-all ${
+                        className={`w-full p-2.5 rounded-xl text-left text-xs flex items-center justify-between transition-all ${
                           isCurrent
-                            ? 'bg-orange-500/15 text-orange-400 font-extrabold border border-orange-500/30'
+                            ? 'bg-orange-500/15 border border-orange-500/30'
                             : isDark
-                            ? 'hover:bg-white/5 text-slate-300'
-                            : 'hover:bg-slate-100 text-slate-700'
+                            ? 'bg-slate-900/40 border border-white/5'
+                            : 'bg-white border border-slate-200'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <span className="w-4 h-4 rounded-full bg-slate-500/20 text-[9px] font-bold flex items-center justify-center uppercase shrink-0">
+                          <span className="w-5 h-5 rounded-full bg-slate-500/20 text-[10px] font-black flex items-center justify-center uppercase shrink-0">
                             {m.full_name.charAt(0)}
                           </span>
-                          <span className="truncate capitalize">{m.full_name}</span>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-bold text-white capitalize">{m.full_name}</span>
+                              {isCurrent && (
+                                <span className="text-[9px] font-mono px-1 rounded bg-orange-500/20 text-orange-400 font-bold">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              {m.is_trader ? '⭐ Primary Trader' : '👁️ Team Analyst'}
+                            </span>
+                          </div>
                         </div>
-                        {isCurrent && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+
+                        {m.is_trader ? (
+                          <span className="text-[9px] font-black uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                            TRADER
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold uppercase font-mono px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400 shrink-0">
+                            VIEWER
+                          </span>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

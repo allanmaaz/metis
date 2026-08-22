@@ -219,17 +219,31 @@ export const Verify: React.FC = () => {
                       >
                         {members.map((m) => (
                           <option key={m.id} value={m.full_name} className="bg-slate-900 text-white py-2">
-                            👤 {m.full_name} {m.is_trader ? '(Primary Trader)' : ''}
+                            {m.is_trader ? '⭐ ' : '👤 '}
+                            {m.full_name} {m.is_trader ? '— (Designated Trader)' : '— (Team Analyst / Viewer)'}
                           </option>
                         ))}
                         <option value="__CUSTOM__" className="bg-slate-900 text-orange-400">
-                          ✍️ Other / Enter a different name...
+                          ✍️ Other / Add another team member...
                         </option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
                         <ChevronDown className="w-4 h-4" />
                       </div>
                     </div>
+
+                    {/* Role Notice */}
+                    {members.some((m) => m.full_name === name && m.is_trader) ? (
+                      <div className="text-[11px] text-emerald-400/90 font-medium px-1 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                        <span>Authorized for live order execution (Primary Trader)</span>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-amber-300/90 font-medium px-1 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                        <span>Team Viewer / Analyst mode (Live real-time market data)</span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-1.5">
@@ -261,6 +275,11 @@ export const Verify: React.FC = () => {
                       }}
                       autoFocus
                     />
+                    <div className="text-[11px] text-slate-400 px-1">
+                      {members.some((m) => m.is_trader)
+                        ? 'ℹ️ Another member is already Primary Trader. You will join in Team Viewer mode.'
+                        : '⭐ You will be registered as your team\'s Primary Trader.'}
+                    </div>
                   </div>
                 )}
 

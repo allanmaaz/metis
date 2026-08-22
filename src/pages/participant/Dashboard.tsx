@@ -144,16 +144,29 @@ export const Dashboard: React.FC = () => {
     return () => window.removeEventListener('metis_market_session_changed', handleMarketChange);
   }, [loadDashboardData, participant]);
 
+  const isTrader = participant?.member?.is_trader ?? true;
+
   const handleBuy = (stock: Stock) => {
+    if (!isTrader) {
+      setTradeMessage({ type: 'error', text: 'Trading restricted to your team\'s designated primary trader.' });
+      setTimeout(() => setTradeMessage(null), 4000);
+      return;
+    }
     setActiveBuyStock(stock);
   };
 
   const handleSell = (stock: Stock) => {
+    if (!isTrader) {
+      setTradeMessage({ type: 'error', text: 'Trading restricted to your team\'s designated primary trader.' });
+      setTimeout(() => setTradeMessage(null), 4000);
+      return;
+    }
     setActiveSellStock(stock);
   };
 
   const handleConfirmBuy = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
+    if (!isTrader) return { success: false, error: 'Trading restricted to designated primary trader.' };
     const res = await buyStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Successfully bought ${quantity.toLocaleString('en-IN')} shares!` });
@@ -165,6 +178,7 @@ export const Dashboard: React.FC = () => {
 
   const handleConfirmSell = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
+    if (!isTrader) return { success: false, error: 'Trading restricted to designated primary trader.' };
     const res = await sellStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Successfully sold ${quantity.toLocaleString('en-IN')} shares!` });
@@ -561,25 +575,27 @@ export const Dashboard: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
                     onClick={() => handleBuy(stock)}
-                    disabled={!isMarketOpen}
-                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all ${
+                    disabled={!isMarketOpen || !isTrader}
+                    title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
                       isDark
                         ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs shadow-emerald-600/20'
                         : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
                     }`}
                   >
-                    <span>↗ BUY</span>
+                    <span>{isTrader ? '↗ BUY' : '↗ BUY (VIEW)'}</span>
                   </button>
                   <button
                     onClick={() => handleSell(stock)}
-                    disabled={!isMarketOpen || ownedQty === 0}
-                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all ${
+                    disabled={!isMarketOpen || !isTrader || ownedQty === 0}
+                    title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
                       isDark
-                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs shadow-rose-600/20 disabled:opacity-40'
-                        : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 disabled:opacity-40'
+                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs shadow-rose-600/20'
+                        : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
                     }`}
                   >
-                    <span>↘ SELL</span>
+                    <span>{isTrader ? '↘ SELL' : '↘ SELL (VIEW)'}</span>
                   </button>
                 </div>
               </div>

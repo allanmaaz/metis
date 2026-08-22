@@ -13,6 +13,36 @@ export async function buyStock(
     return { success: false, error: 'Quantity must be greater than zero.' };
   }
 
+  // Verify trader authorization: Only the designated trader can buy
+  if (memberId) {
+    if (isSupabaseConfigured && isValidUuid(memberId)) {
+      try {
+        const { data: member } = await supabase
+          .from('team_members')
+          .select('is_trader')
+          .eq('id', memberId)
+          .maybeSingle();
+
+        if (member && member.is_trader === false) {
+          return {
+            success: false,
+            error: 'Trading is restricted to your team\'s designated primary trader.',
+          };
+        }
+      } catch (e) {
+        // continue
+      }
+    }
+
+    const dbMem = getMockDB().teamMembers.find((m) => m.id === memberId);
+    if (dbMem && dbMem.is_trader === false) {
+      return {
+        success: false,
+        error: 'Trading is restricted to your team\'s designated primary trader.',
+      };
+    }
+  }
+
   // 1. Supabase RPC if configured
   if (isSupabaseConfigured && isValidUuid(teamId) && isValidUuid(stockId)) {
     try {
@@ -144,6 +174,36 @@ export async function sellStock(
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   if (quantity <= 0) {
     return { success: false, error: 'Quantity must be greater than zero.' };
+  }
+
+  // Verify trader authorization: Only the designated trader can sell
+  if (memberId) {
+    if (isSupabaseConfigured && isValidUuid(memberId)) {
+      try {
+        const { data: member } = await supabase
+          .from('team_members')
+          .select('is_trader')
+          .eq('id', memberId)
+          .maybeSingle();
+
+        if (member && member.is_trader === false) {
+          return {
+            success: false,
+            error: 'Trading is restricted to your team\'s designated primary trader.',
+          };
+        }
+      } catch (e) {
+        // continue
+      }
+    }
+
+    const dbMem = getMockDB().teamMembers.find((m) => m.id === memberId);
+    if (dbMem && dbMem.is_trader === false) {
+      return {
+        success: false,
+        error: 'Trading is restricted to your team\'s designated primary trader.',
+      };
+    }
   }
 
   if (isSupabaseConfigured && isValidUuid(teamId) && isValidUuid(stockId)) {

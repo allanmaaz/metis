@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { ParticipantAuthData, Profile, Team, TeamMember } from '../types';
 import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
@@ -47,6 +47,31 @@ export function normalizeCodeVariants(code: string): string[] {
     }
   }
   return Array.from(variants);
+}
+
+export async function getAllActiveTeams(eventId?: string): Promise<Team[]> {
+  if (isSupabaseConfigured) {
+    try {
+      let query = supabase
+        .from('teams')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (eventId && isValidUuid(eventId)) {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        return data.filter((t) => t.status !== 'ELIMINATED') as Team[];
+      }
+    } catch (err) {
+      console.error('Error loading active teams from Supabase:', err);
+    }
+  }
+
+  const db = getMockDB();
+  return db.teams.filter((t) => t.status !== 'ELIMINATED');
 }
 
 export async function getTeamMembersByCode(
@@ -172,13 +197,17 @@ export async function verifyParticipant(
         );
 
         if (!matchedMember) {
+          // Exactly one trader per team: If team already has a designated trader, new member is an Analyst (is_trader: false)
+          const hasExistingTrader = (members || []).some((m: TeamMember) => m.is_trader);
+          const shouldBeTrader = !hasExistingTrader;
+
           const { data: newMem } = await supabase
             .from('team_members')
             .insert({
               team_id: team.id,
               full_name: rawName.trim(),
               normalized_name: normName,
-              is_trader: true,
+              is_trader: shouldBeTrader,
               is_active: true,
             })
             .select('*')
@@ -203,7 +232,7 @@ export async function verifyParticipant(
             full_name: rawName.trim(),
             normalized_name: normName,
             is_active: true,
-            is_trader: true,
+            is_trader: !(members || []).some((m: TeamMember) => m.is_trader),
             created_at: new Date().toISOString(),
           },
           sessionToken,
@@ -271,13 +300,14 @@ export async function verifyParticipant(
 
   // If member name isn't registered in team roster, register under this verified team
   if (!matchedMember) {
+    const hasExistingTrader = members.some((m) => m.is_trader);
     const newMember: TeamMember = {
       id: `m_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       team_id: team.id,
       full_name: rawName.trim(),
       normalized_name: normName,
       is_active: true,
-      is_trader: true,
+      is_trader: !hasExistingTrader,
       created_at: new Date().toISOString(),
     };
     db.teamMembers.push(newMember);
@@ -297,6 +327,39 @@ export async function verifyParticipant(
 
   storeParticipantSession(authData);
   return { success: true, data: authData };
+}
+
+export async function transferTraderRole(
+  teamId: string,
+  targetMemberId: string,
+  pin: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanPin = pin.trim();
+  const db = getMockDB();
+  const team = db.teams.find((t) => t.id === teamId);
+
+  if (team && team.pin_hash && team.pin_hash.trim() !== cleanPin) {
+    return { success: false, error: 'Incorrect Team PIN. Verification failed.' };
+  }
+
+  // Update local DB
+  db.teamMembers.forEach((m) => {
+    if (m.team_id === teamId) {
+      m.is_trader = m.id === targetMemberId;
+    }
+  });
+  saveMockDB(db);
+
+  if (isSupabaseConfigured) {
+    try {
+      await supabase.from('team_members').update({ is_trader: false }).eq('team_id', teamId);
+      await supabase.from('team_members').update({ is_trader: true }).eq('id', targetMemberId);
+    } catch (err) {
+      console.error('Error transferring trader role on Supabase:', err);
+    }
+  }
+
+  return { success: true };
 }
 
 export function storeParticipantSession(data: ParticipantAuthData): void {

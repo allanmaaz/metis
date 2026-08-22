@@ -129,16 +129,29 @@ export const Market: React.FC = () => {
 
   const cashBalance = participant?.team.cash_balance || 42000000;
 
+  const isTrader = participant?.member?.is_trader ?? true;
+
   const handleBuy = (stock: Stock) => {
+    if (!isTrader) {
+      setTradeMessage({ type: 'error', text: 'Trading restricted to your team\'s designated primary trader.' });
+      setTimeout(() => setTradeMessage(null), 4000);
+      return;
+    }
     setActiveBuyStock(stock);
   };
 
   const handleSell = (stock: Stock) => {
+    if (!isTrader) {
+      setTradeMessage({ type: 'error', text: 'Trading restricted to your team\'s designated primary trader.' });
+      setTimeout(() => setTradeMessage(null), 4000);
+      return;
+    }
     setActiveSellStock(stock);
   };
 
   const handleConfirmBuy = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
+    if (!isTrader) return { success: false, error: 'Trading restricted to designated primary trader.' };
     const res = await buyStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Order executed! Bought ${quantity.toLocaleString('en-IN')} shares.` });
@@ -150,6 +163,7 @@ export const Market: React.FC = () => {
 
   const handleConfirmSell = async (stockId: string, quantity: number) => {
     if (!participant) return { success: false, error: 'No active session' };
+    if (!isTrader) return { success: false, error: 'Trading restricted to designated primary trader.' };
     const res = await sellStock(participant.team.id, stockId, quantity, participant.member.id);
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Order executed! Sold ${quantity.toLocaleString('en-IN')} shares.` });
@@ -161,13 +175,37 @@ export const Market: React.FC = () => {
 
   return (
     <div className="space-y-5 w-full max-w-5xl mx-auto pb-8">
-      {/* Header */}
-      <div>
+      {/* Header & Role Indicator */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className={`text-xl sm:text-2xl font-black font-display tracking-tight flex items-center gap-2 whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
           <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 shrink-0" />
           <span>Market Board</span>
         </h1>
+
+        <div className="flex items-center gap-2">
+          {isTrader ? (
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              ⭐ Primary Trader (Full Access)
+            </span>
+          ) : (
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              👁️ Team Viewer / Analyst Mode
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* Viewer Mode Guidance Banner */}
+      {!isTrader && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold flex items-center gap-2.5 shadow-xs">
+          <span className="text-base">👁️</span>
+          <span>
+            You are logged in as a <strong>Team Analyst</strong>. You have full live view of real-time market movements, charts, and news. Only your team's designated <strong>Primary Trader</strong> can execute Buy/Sell orders.
+          </span>
+        </div>
+      )}
 
       {/* Trade Feedback */}
       {tradeMessage && (
@@ -239,6 +277,7 @@ export const Market: React.FC = () => {
                 stock={stock}
                 ownedQuantity={holding?.quantity || 0}
                 marketOpen={isMarketOpen}
+                isTrader={isTrader}
                 onBuy={handleBuy}
                 onSell={handleSell}
               />
