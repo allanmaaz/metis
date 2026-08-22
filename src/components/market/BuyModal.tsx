@@ -76,20 +76,20 @@ export const BuyModal: React.FC<BuyModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Market Price & Available Cash Summary */}
-        <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
+        <div className="grid grid-cols-2 gap-2 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               Current Price
             </span>
-            <div className="text-lg font-bold font-display text-white mt-0.5">
+            <div className="text-base sm:text-lg font-black font-display text-white mt-0.5">
               {formatCurrency(stock.current_price)}
             </div>
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+          <div className="text-right">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-end gap-1">
               <Wallet className="w-3 h-3 text-orange-400" /> Available Cash
             </span>
-            <div className="text-lg font-bold font-display text-orange-400 mt-0.5">
+            <div className="text-base sm:text-lg font-black font-display text-orange-400 mt-0.5 truncate">
               {formatCurrency(availableCash)}
             </div>
           </div>
@@ -97,8 +97,16 @@ export const BuyModal: React.FC<BuyModalProps> = ({
 
         {/* Quantity Input */}
         <div>
-          <Input
-            label="Order Quantity (Shares)"
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold text-slate-300">
+              Order Quantity (Shares)
+            </label>
+            <span className="text-[11px] font-mono text-slate-400">
+              Max: {formatQuantity(maxAffordableShares)}
+            </span>
+          </div>
+
+          <input
             type="number"
             min="1"
             max={maxAffordableShares.toString()}
@@ -109,52 +117,52 @@ export const BuyModal: React.FC<BuyModalProps> = ({
             }}
             placeholder="Enter number of shares"
             required
-            className="text-lg font-mono font-bold"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-base sm:text-lg font-mono font-bold focus:outline-none focus:border-orange-500 transition-colors"
           />
 
-          {/* Quick Quantity Select Pills */}
-          <div className="flex items-center gap-2 mt-2">
+          {/* Responsive Quick Quantity Select Pills */}
+          <div className="grid grid-cols-5 gap-1.5 mt-2">
             {[1000, 5000, 10000, 50000].map((qty) => (
               <button
                 key={qty}
                 type="button"
                 onClick={() => handleQuickSelect(qty)}
-                className={`text-xs px-2.5 py-1 rounded-lg border font-mono transition-colors ${
+                className={`text-[11px] sm:text-xs py-1.5 px-0.5 rounded-lg border font-mono text-center transition-colors ${
                   numQty === qty
-                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/50'
-                    : 'bg-slate-850 text-slate-400 border-slate-700 hover:border-slate-600'
+                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 font-bold shadow-xs'
+                    : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-600'
                 }`}
               >
-                +{formatQuantity(qty)}
+                +{qty >= 1000 ? `${qty / 1000}k` : qty}
               </button>
             ))}
             <button
               type="button"
               onClick={handleMax}
-              className="text-xs px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 font-bold ml-auto hover:bg-orange-500/20"
+              className="text-[11px] sm:text-xs py-1.5 px-0.5 rounded-lg bg-orange-500/15 text-orange-400 border border-orange-500/40 font-bold text-center hover:bg-orange-500/25 transition-colors"
             >
-              MAX ({formatQuantity(maxAffordableShares)})
+              MAX
             </button>
           </div>
         </div>
 
         {/* Order Preview & Financials */}
-        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs">
-          <div className="flex justify-between text-slate-400">
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs">
+          <div className="flex justify-between items-center text-slate-400">
             <span>Estimated Total Cost</span>
-            <span className="font-mono">
+            <span className="font-mono text-slate-300">
               {formatQuantity(numQty)} × {formatCurrency(stock.current_price)}
             </span>
           </div>
-          <div className="flex justify-between font-bold text-sm text-slate-100 pt-1 border-t border-slate-800">
+          <div className="flex justify-between items-center font-bold text-sm text-slate-100 pt-1.5 border-t border-slate-800">
             <span>Total Amount</span>
             <span className="font-mono text-emerald-400 text-base">
               {formatCurrency(estimatedCost)}
             </span>
           </div>
-          <div className="flex justify-between text-[11px] text-slate-500 pt-1">
-            <span>Remaining Cash After Trade</span>
-            <span className="font-mono">
+          <div className="flex justify-between items-center text-[11px] text-slate-500 pt-0.5">
+            <span>Remaining Cash</span>
+            <span className="font-mono text-slate-400">
               {formatCurrency(availableCash - estimatedCost)}
             </span>
           </div>

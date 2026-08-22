@@ -76,12 +76,12 @@ export const SellModal: React.FC<SellModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Price & Holdings Summary */}
-        <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
+        <div className="grid grid-cols-2 gap-2 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               Current Price
             </span>
-            <div className="text-lg font-bold font-display text-white mt-0.5">
+            <div className="text-base sm:text-lg font-black font-display text-white mt-0.5">
               {formatCurrency(stock.current_price)}
             </div>
             {averageCost > 0 && (
@@ -90,11 +90,11 @@ export const SellModal: React.FC<SellModalProps> = ({
               </span>
             )}
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="text-right">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               Owned Shares
             </span>
-            <div className="text-lg font-bold font-display text-white mt-0.5">
+            <div className="text-base sm:text-lg font-black font-display text-white mt-0.5">
               {formatQuantity(ownedQuantity)}
             </div>
             <span className="text-[10px] text-slate-400 font-mono">
@@ -105,8 +105,16 @@ export const SellModal: React.FC<SellModalProps> = ({
 
         {/* Quantity Input */}
         <div>
-          <Input
-            label="Quantity to Sell"
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold text-slate-300">
+              Quantity to Sell
+            </label>
+            <span className="text-[11px] font-mono text-slate-400">
+              Owned: {formatQuantity(ownedQuantity)}
+            </span>
+          </div>
+
+          <input
             type="number"
             min="1"
             max={ownedQuantity}
@@ -116,7 +124,7 @@ export const SellModal: React.FC<SellModalProps> = ({
               setError(null);
             }}
             placeholder="Enter shares to sell"
-            autoFocus
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-base sm:text-lg font-mono font-bold focus:outline-none focus:border-rose-500 transition-colors"
           />
 
           {/* Quick % chips */}
@@ -126,7 +134,7 @@ export const SellModal: React.FC<SellModalProps> = ({
                 key={pct}
                 type="button"
                 onClick={() => handlePercentage(pct)}
-                className="text-xs py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 font-mono text-slate-200 font-semibold transition-colors"
+                className="text-[11px] sm:text-xs py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 font-mono text-slate-200 font-bold transition-colors"
               >
                 {pct}%
               </button>
