@@ -130,10 +130,10 @@ export const Leaderboard: React.FC = () => {
                   {/* Wealth & Return */}
                   <div className="text-right shrink-0">
                     <div className={`font-black text-sm font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {formatWealth(entry.total_wealth)}
+                      {formatCurrency(entry.total_wealth)}
                     </div>
                     <div
-                      className={`text-[10px] font-bold font-mono flex items-center justify-end gap-0.5 ${
+                      className={`text-[10px] font-bold font-mono flex items-center justify-end gap-1 ${
                         entry.today_pnl_pct > 0
                           ? 'text-emerald-500'
                           : entry.today_pnl_pct < 0
@@ -148,7 +148,7 @@ export const Leaderboard: React.FC = () => {
                       ) : (
                         <Minus className="w-3 h-3" />
                       )}
-                      <span>{formatPercent(entry.today_pnl_pct)}</span>
+                      <span>{formatPercent(entry.today_pnl_pct)} ({formatWealth(entry.total_wealth)})</span>
                     </div>
                   </div>
                 </div>

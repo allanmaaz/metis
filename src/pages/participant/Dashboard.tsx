@@ -307,13 +307,13 @@ export const Dashboard: React.FC = () => {
         {/* Value + Sparkline */}
         <div className="flex items-center justify-between gap-2 relative">
           <div className="space-y-1.5 z-10">
-            <div className={`text-3xl sm:text-4xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••••••' : formatWealth(totalWealth)}
+            <div className={`text-2xl sm:text-3xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              {isWealthMasked ? '••••••••' : formatCurrency(totalWealth)}
             </div>
 
             {/* P/L Pill */}
             <div
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold font-mono ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono ${
                 isLoss
                   ? isDark
                     ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
@@ -323,12 +323,14 @@ export const Dashboard: React.FC = () => {
                   : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
               }`}
             >
-              {isLoss ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-              <span>{formatWealth(Math.abs(pnlVal))} ({Number(pnlPct).toFixed(1)}%)</span>
+              {isLoss ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
+              <span>
+                {isLoss ? '-' : '+'}{formatCurrency(Math.abs(pnlVal))} ({Number(pnlPct).toFixed(2)}%)
+              </span>
             </div>
 
-            <div className="text-[10px] text-slate-400 font-mono">
-              Exact Value: {formatCurrency(totalWealth)}
+            <div className="text-[11px] text-slate-400 font-mono font-medium">
+              Equivalent: {formatWealth(totalWealth)}
             </div>
           </div>
 

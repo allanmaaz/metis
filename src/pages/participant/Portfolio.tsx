@@ -125,13 +125,16 @@ export const Portfolio: React.FC = () => {
                 Total Team Wealth
               </span>
               <div className={`text-2xl sm:text-3xl font-black font-display mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {formatWealth(totalWealth)}
+                {formatCurrency(totalWealth)}
+              </div>
+              <div className="text-[11px] text-slate-400 font-mono font-medium mt-0.5">
+                Equivalent: {formatWealth(totalWealth)}
               </div>
             </div>
 
             {/* P&L Badge */}
             <div
-              className={`flex items-center gap-1 text-xs font-black px-3 py-1 rounded-xl border ${
+              className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-xl border ${
                 isProfitable
                   ? isDark
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -142,7 +145,7 @@ export const Portfolio: React.FC = () => {
               }`}
             >
               {isProfitable ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-              <span>{formatPercent(pnlPct)}</span>
+              <span>{isProfitable ? '+' : '-'}{formatCurrency(Math.abs(summary?.today_pnl || 0))} ({formatPercent(pnlPct)})</span>
             </div>
           </div>
 
