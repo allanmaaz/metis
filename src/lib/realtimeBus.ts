@@ -155,7 +155,6 @@ export function useRealtimeSubscription(
       broadcastChannel?.addEventListener('message', handleBroadcastMessage);
     }
 
-    // 4. Fallback Polling
     const interval = setInterval(() => {
       memoizedCallback();
     }, pollingIntervalMs);
@@ -168,5 +167,5 @@ export function useRealtimeSubscription(
       }
       clearInterval(interval);
     };
-  }, [memoizedCallback, pollingIntervalMs, types.join(',')]);
+  }, [memoizedCallback, pollingIntervalMs, Array.isArray(eventTypes) ? eventTypes.join(',') : eventTypes]);
 }

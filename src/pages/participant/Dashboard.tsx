@@ -171,7 +171,7 @@ export const Dashboard: React.FC = () => {
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Successfully bought ${quantity.toLocaleString('en-IN')} shares!` });
       setTimeout(() => setTradeMessage(null), 4000);
-      loadDashboardData();
+      await loadDashboardData();
     }
     return res;
   };
@@ -183,7 +183,7 @@ export const Dashboard: React.FC = () => {
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Successfully sold ${quantity.toLocaleString('en-IN')} shares!` });
       setTimeout(() => setTradeMessage(null), 4000);
-      loadDashboardData();
+      await loadDashboardData();
     }
     return res;
   };

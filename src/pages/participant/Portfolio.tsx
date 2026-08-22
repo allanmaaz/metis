@@ -67,7 +67,7 @@ export const Portfolio: React.FC = () => {
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Successfully sold ${quantity.toLocaleString('en-IN')} shares!` });
       setTimeout(() => setTradeMessage(null), 4000);
-      loadData();
+      await loadData();
     }
     return res;
   };

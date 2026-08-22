@@ -159,7 +159,7 @@ export const Market: React.FC = () => {
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Order executed! Bought ${quantity.toLocaleString('en-IN')} shares.` });
       setTimeout(() => setTradeMessage(null), 4000);
-      loadMarket();
+      await loadMarket();
     }
     return res;
   };
@@ -171,7 +171,7 @@ export const Market: React.FC = () => {
     if (res.success) {
       setTradeMessage({ type: 'success', text: `Order executed! Sold ${quantity.toLocaleString('en-IN')} shares.` });
       setTimeout(() => setTradeMessage(null), 4000);
-      loadMarket();
+      await loadMarket();
     }
     return res;
   };

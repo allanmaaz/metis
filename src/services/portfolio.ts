@@ -6,6 +6,16 @@ import { getMockDB, saveMockDB } from './mockData';
 const portfolioSummaryCache = new Map<string, PortfolioSummary>();
 const teamHoldingsCache = new Map<string, Holding[]>();
 
+export function clearPortfolioCache(teamId?: string): void {
+  if (teamId) {
+    portfolioSummaryCache.delete(teamId);
+    teamHoldingsCache.delete(teamId);
+  } else {
+    portfolioSummaryCache.clear();
+    teamHoldingsCache.clear();
+  }
+}
+
 export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
   if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {

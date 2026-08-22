@@ -3,6 +3,7 @@ import { Trade } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 import { isSessionOpen } from './market';
+import { clearPortfolioCache } from './portfolio';
 
 export async function buyStock(
   teamId: string,
@@ -56,6 +57,7 @@ export async function buyStock(
 
       if (!error && data) {
         if (data.success) {
+          clearPortfolioCache(teamId);
           broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'BUY', quantity });
           broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
           broadcastRealtimeEvent('LEADERBOARD_UPDATED');
@@ -218,6 +220,7 @@ export async function sellStock(
 
       if (!error && data) {
         if (data.success) {
+          clearPortfolioCache(teamId);
           broadcastRealtimeEvent('TRADE_EXECUTED', { teamId, stockId, side: 'SELL', quantity });
           broadcastRealtimeEvent('PORTFOLIO_CHANGED', { teamId });
           broadcastRealtimeEvent('LEADERBOARD_UPDATED');
