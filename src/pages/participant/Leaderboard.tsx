@@ -79,21 +79,6 @@ export const Leaderboard: React.FC = () => {
   if (!isLeaderboardVisible) {
     return (
       <div className="space-y-5 max-w-4xl mx-auto pb-12">
-        {/* Admin Freeze Notice Banner */}
-        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 shadow-xs">
-          <div className="p-2 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-sm font-extrabold text-amber-400 font-display">
-              Public Leaderboard Hidden by Host
-            </h3>
-            <p className="text-xs text-amber-300/80 leading-relaxed">
-              Competitive rankings are currently obscured by tournament administration for strategy. Below is your team's live <strong>Order Book & Trade Execution History</strong>.
-            </p>
-          </div>
-        </div>
-
         {/* Header & Stats Strip */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
