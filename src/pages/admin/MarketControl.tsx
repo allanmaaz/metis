@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getActiveEvent } from '../../services/event';
+import { getActiveEvent, setLeaderboardVisibility } from '../../services/event';
 import { getCurrentMarketSession, setMarketStatus, isSessionOpen } from '../../services/market';
 import { Event, MarketSession, MarketStatus } from '../../types';
 import { FreezeConfirmModal } from '../../components/admin/FreezeConfirmModal';
@@ -14,6 +14,9 @@ import {
   Snowflake,
   AlertTriangle,
   Infinity as InfinityIcon,
+  Trophy,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
@@ -73,6 +76,17 @@ export const AdminMarketControl: React.FC = () => {
     return res;
   };
 
+  const isLeaderboardVisible = event?.is_leaderboard_visible !== false;
+
+  const handleToggleLeaderboard = async () => {
+    if (!event) return;
+    const newVis = !isLeaderboardVisible;
+    await setLeaderboardVisibility(event.id, newVis);
+    setEvent((prev) => prev ? { ...prev, is_leaderboard_visible: newVis } : prev);
+    setFeedback(`Participant Leaderboard is now ${newVis ? 'VISIBLE' : 'HIDDEN (Trade History Mode)'}.`);
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
   const isMarketOpen = isSessionOpen(session);
   const isMarketPaused = session?.status === 'PAUSED';
   const isMarketClosed = !isMarketOpen && session?.status !== 'PAUSED' && session?.status !== 'FROZEN';
@@ -81,11 +95,42 @@ export const AdminMarketControl: React.FC = () => {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
-          <Power className="w-7 h-7 text-orange-500" />
-          Master Market Control
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Power className="w-7 h-7 text-orange-500" />
+            Master Market Control
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Global market sessions, emergency controls, and participant visibility settings.
+          </p>
+        </div>
+
+        {/* Quick Leaderboard Visibility Toggle */}
+        <button
+          type="button"
+          onClick={handleToggleLeaderboard}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2.5 border transition-all shadow-xs cursor-pointer self-start sm:self-auto ${
+            isLeaderboardVisible
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100/80'
+              : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100/80'
+          }`}
+        >
+          {isLeaderboardVisible ? (
+            <>
+              <Eye className="w-4 h-4 text-emerald-600" />
+              <span>Participant Leaderboard: ON</span>
+            </>
+          ) : (
+            <>
+              <EyeOff className="w-4 h-4 text-rose-600" />
+              <span>Participant Leaderboard: OFF (History Mode)</span>
+            </>
+          )}
+          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-lg bg-white border border-current shadow-xs">
+            Toggle
+          </span>
+        </button>
       </div>
 
       {/* Feedback Toast */}
