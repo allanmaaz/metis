@@ -127,7 +127,10 @@ export const Market: React.FC = () => {
     return matchesSearch && matchesSector;
   });
 
-  const cashBalance = participant?.team.cash_balance || 42000000;
+  const cashBalance =
+    summary?.cash_balance !== undefined
+      ? summary.cash_balance
+      : (participant?.team.cash_balance ?? 100000000);
 
   const isTrader = participant?.member?.is_trader ?? true;
 

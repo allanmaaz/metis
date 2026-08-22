@@ -380,7 +380,7 @@ export const Dashboard: React.FC = () => {
               <span>Available Cash</span>
             </div>
             <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••' : formatWealth(cashBalance)}
+              {isWealthMasked ? '••••' : formatCurrency(cashBalance)}
             </div>
           </div>
 

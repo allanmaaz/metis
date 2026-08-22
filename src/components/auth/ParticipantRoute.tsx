@@ -1,13 +1,31 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { ScrollAwareBottomNav } from '../navigation/ScrollAwareBottomNav';
 import { ParticipantHeader } from '../navigation/ParticipantHeader';
+import { supabase, isSupabaseConfigured, isValidUuid } from '../../lib/supabase';
 
 export const ParticipantRoute: React.FC = () => {
-  const { isParticipantAuthenticated, participant } = useAuth();
+  const { isParticipantAuthenticated, participant, logoutParticipant } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (participant?.team?.id && isSupabaseConfigured && isValidUuid(participant.team.id)) {
+      supabase
+        .from('teams')
+        .select('id, status')
+        .eq('id', participant.team.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!data || data.status === 'ELIMINATED' || data.status === 'DISABLED') {
+            logoutParticipant();
+            navigate('/join');
+          }
+        });
+    }
+  }, [participant?.team?.id, logoutParticipant, navigate]);
 
   if (!isParticipantAuthenticated || !participant?.team?.team_code || !participant?.sessionToken) {
     return <Navigate to="/join" replace />;

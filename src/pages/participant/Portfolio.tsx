@@ -154,7 +154,7 @@ export const Portfolio: React.FC = () => {
                 <span>Available Cash</span>
               </div>
               <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {formatWealth(cashBalance)}
+                {formatCurrency(cashBalance)}
               </div>
             </div>
 
@@ -164,7 +164,7 @@ export const Portfolio: React.FC = () => {
                 <span>Invested Value</span>
               </div>
               <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {formatWealth(portfolioVal)}
+                {formatCurrency(portfolioVal)}
               </div>
             </div>
           </div>
