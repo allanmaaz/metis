@@ -6,10 +6,10 @@ import { ScrollAwareBottomNav } from '../navigation/ScrollAwareBottomNav';
 import { ParticipantHeader } from '../navigation/ParticipantHeader';
 
 export const ParticipantRoute: React.FC = () => {
-  const { isParticipantAuthenticated } = useAuth();
+  const { isParticipantAuthenticated, participant } = useAuth();
   const { theme } = useTheme();
 
-  if (!isParticipantAuthenticated) {
+  if (!isParticipantAuthenticated || !participant?.team?.team_code || !participant?.sessionToken) {
     return <Navigate to="/join" replace />;
   }
 

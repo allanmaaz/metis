@@ -39,26 +39,28 @@ export async function getTeamPortfolioSummary(
   let startingWealth = 100000000;
   let holdings: Holding[] = [];
 
+  let foundRemote = false;
+
   if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
-      const { data: team } = await supabase
+      const { data: team, error } = await supabase
         .from('teams')
         .select('cash_balance, starting_wealth')
         .eq('id', teamId)
-        .single();
+        .maybeSingle();
 
-      if (team) {
-        cashBalance = Number(team.cash_balance);
-        startingWealth = Number(team.starting_wealth);
+      if (!error && team) {
+        cashBalance = Number(team.cash_balance ?? 100000000);
+        startingWealth = Number(team.starting_wealth ?? 100000000);
+        holdings = await getTeamHoldings(teamId);
+        foundRemote = true;
       }
-
-      holdings = await getTeamHoldings(teamId);
     } catch (err) {
       // Fallback to local database
     }
   }
 
-  if (cashBalance === 0) {
+  if (!foundRemote) {
     const db = getMockDB();
     let team = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
 

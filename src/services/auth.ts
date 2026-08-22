@@ -36,14 +36,10 @@ export async function getTeamMembersByCode(
     }
   }
 
-  // Fallback to local DB
+  // Fallback to local DB (exact match only)
   const db = getMockDB();
   const team = db.teams.find(
-    (t) =>
-      t.team_code.toUpperCase() === cleanCode ||
-      t.name.toUpperCase() === cleanCode ||
-      cleanCode.includes(t.team_code.toUpperCase()) ||
-      t.team_code.toUpperCase().includes(cleanCode)
+    (t) => t.team_code.trim().toUpperCase() === cleanCode
   ) || null;
 
   if (team) {
@@ -63,10 +59,20 @@ export async function verifyParticipant(
   const cleanCode = teamCode.trim().toUpperCase();
   const cleanPin = pin.trim();
 
-  // If Supabase is connected, query live database first
+  if (!cleanCode) {
+    return { success: false, error: 'Team code is required.' };
+  }
+  if (!cleanPin) {
+    return { success: false, error: 'Team PIN is required.' };
+  }
+  if (!rawName.trim()) {
+    return { success: false, error: 'Participant name is required.' };
+  }
+
+  // 1. If Supabase is connected, query live database first
   if (isSupabaseConfigured) {
     try {
-      // 1. Fetch team by code
+      // Fetch team by exact code
       const { data: teamData } = await supabase
         .from('teams')
         .select('*')
@@ -80,12 +86,16 @@ export async function verifyParticipant(
           return { success: false, error: 'This team has been eliminated from the competition.' };
         }
 
-        // 2. Verify PIN (direct match or default demo PIN 4821)
-        if (team.pin_hash && team.pin_hash !== cleanPin && cleanPin !== '4821') {
-          return { success: false, error: 'Incorrect Team PIN. (Default demo PIN is 4821)' };
+        if (team.status === 'DISABLED') {
+          return { success: false, error: 'This team account is disabled.' };
         }
 
-        // 3. Verify / Find Member Name
+        // Strict PIN Verification: must match the team's pin_hash
+        if (!team.pin_hash || team.pin_hash.trim() !== cleanPin) {
+          return { success: false, error: 'Incorrect Team PIN. Please check your credentials.' };
+        }
+
+        // Verify / Find Member Name
         const { data: members } = await supabase
           .from('team_members')
           .select('*')
@@ -96,11 +106,10 @@ export async function verifyParticipant(
           (m: TeamMember) =>
             m.normalized_name === normName ||
             normalizeName(m.full_name) === normName ||
-            m.full_name.toLowerCase().includes(rawName.toLowerCase())
+            m.full_name.toLowerCase().trim() === rawName.toLowerCase().trim()
         );
 
         if (!matchedMember) {
-          // If member is not found in database, insert them dynamically so student is never blocked
           const { data: newMem } = await supabase
             .from('team_members')
             .insert({
@@ -111,11 +120,11 @@ export async function verifyParticipant(
               is_active: true,
             })
             .select('*')
-            .single();
+            .maybeSingle();
           matchedMember = newMem;
         }
 
-        // 4. Fetch Event
+        // Fetch Event
         const { data: eventData } = await supabase
           .from('events')
           .select('*')
@@ -158,46 +167,31 @@ export async function verifyParticipant(
     }
   }
 
-  // Fallback / Mock DB Verification (Guaranteed to work for all seed codes & dynamic teams)
+  // 2. Local / Mock DB Verification (Exact code match)
   const db = getMockDB();
-  let team = db.teams.find(
-    (t) =>
-      t.team_code.toUpperCase() === cleanCode ||
-      t.name.toUpperCase() === cleanCode ||
-      cleanCode.includes(t.team_code.toUpperCase()) ||
-      t.team_code.toUpperCase().includes(cleanCode)
+  const team = db.teams.find(
+    (t) => t.team_code.trim().toUpperCase() === cleanCode
   );
 
-  // If team is not found in local browser store (e.g. created on admin domain or newly issued code),
-  // dynamically auto-register the team with standard starting capital (₹10.00 Cr) and the provided PIN
-  // so participants are NEVER blocked from entering the competition!
+  // If team does NOT exist in the database, reject immediately!
   if (!team) {
-    const rawPrefix = cleanCode.split('-')[0] || 'TEAM';
-    const formattedTeamName = rawPrefix.length > 1 ? `Team ${rawPrefix}` : `Team ${cleanCode}`;
-    const startingCapital = db.events[0]?.starting_capital || 100000000;
-
-    team = {
-      id: `team_${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-      event_id: db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111',
-      name: formattedTeamName,
-      team_code: cleanCode,
-      pin_hash: cleanPin || '4821',
-      cash_balance: startingCapital,
-      starting_wealth: startingCapital,
-      status: 'ACTIVE',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+    return {
+      success: false,
+      error: 'Invalid Team Code. No registered team found with this code. Please check with event administrators.',
     };
-    db.teams.push(team);
-    saveMockDB(db);
   }
 
   if (team.status === 'ELIMINATED') {
     return { success: false, error: 'This team has been eliminated from the competition.' };
   }
 
-  if (team.pin_hash && team.pin_hash !== cleanPin && cleanPin !== '4821') {
-    return { success: false, error: 'Incorrect Team PIN. (Default demo PIN is 4821)' };
+  if (team.status === 'DISABLED') {
+    return { success: false, error: 'This team account is disabled.' };
+  }
+
+  // Strict PIN Verification: must match the team's pin_hash
+  if (!team.pin_hash || team.pin_hash.trim() !== cleanPin) {
+    return { success: false, error: 'Incorrect Team PIN. Please check your 4-digit PIN.' };
   }
 
   const members = db.teamMembers.filter((m) => m.team_id === team.id && m.is_active);
@@ -205,13 +199,13 @@ export async function verifyParticipant(
     (m) =>
       m.normalized_name === normName ||
       normalizeName(m.full_name) === normName ||
-      m.full_name.toLowerCase().includes(rawName.toLowerCase())
+      m.full_name.toLowerCase().trim() === rawName.toLowerCase().trim()
   );
 
-  // If member name isn't registered in mock mode, register them dynamically
+  // If member name isn't registered in team roster, register under this verified team
   if (!matchedMember) {
     const newMember: TeamMember = {
-      id: `m_${Date.now()}`,
+      id: `m_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       team_id: team.id,
       full_name: rawName.trim(),
       normalized_name: normName,
@@ -298,7 +292,7 @@ export async function adminSignIn(
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         const profile: Profile = prof || {
           id: data.user.id,

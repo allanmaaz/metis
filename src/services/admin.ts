@@ -190,7 +190,7 @@ export async function createTeam(data: {
           status: 'ACTIVE',
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (!error && team) {
         // Replace temporary local ID with real Supabase UUID

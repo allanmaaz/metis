@@ -10,7 +10,7 @@ export async function getActiveEvent(): Promise<Event> {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         return data as Event;
