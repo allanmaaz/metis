@@ -3,28 +3,8 @@ import { NewsItem } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
-function getDeletedNewsIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem('metis_deleted_news_ids_v1');
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {}
-  return new Set();
-}
-
-function saveDeletedNewsId(idOrHeadline: string) {
-  try {
-    const set = getDeletedNewsIds();
-    set.add(idOrHeadline);
-    localStorage.setItem('metis_deleted_news_ids_v1', JSON.stringify(Array.from(set)));
-  } catch {}
-}
-
 export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
   const db = getMockDB();
-  const deletedSet = getDeletedNewsIds();
-  const localPublished = db.news.filter(
-    (n) => n.is_published && !deletedSet.has(n.id) && !deletedSet.has(n.headline)
-  );
 
   if (isSupabaseConfigured) {
     try {
@@ -40,54 +20,20 @@ export async function getPublishedNews(eventId?: string): Promise<NewsItem[]> {
 
       const { data, error } = await query;
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         const remoteNews = data as NewsItem[];
-        const remoteHeadlines = new Set(remoteNews.map((n) => n.headline));
-
-        // Auto-sync: if this browser has any news created locally (e.g. "heeeeeeeeeee") missing on Supabase, upload it!
-        const missingLocal = localPublished.filter((ln) => !remoteHeadlines.has(ln.headline));
-        if (missingLocal.length > 0) {
-          const targetEventId = isValidUuid(eventId)
-            ? eventId
-            : (db.events[0]?.id || 'e1111111-1111-1111-1111-111111111111');
-
-          missingLocal.forEach(async (item) => {
-            try {
-              await supabase.from('news').insert({
-                event_id: targetEventId,
-                headline: item.headline,
-                body: item.body,
-                sector: item.sector,
-                published_by: null,
-                is_published: true,
-                published_at: item.published_at,
-              });
-            } catch {}
-          });
-
-          const merged = [...missingLocal, ...remoteNews].filter(
-            (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
-          );
-          db.news = merged;
-          saveMockDB(db);
-          return merged;
-        }
-
-        const filteredRemote = remoteNews.filter(
-          (n) => !deletedSet.has(n.id) && !deletedSet.has(n.headline)
-        );
-        db.news = filteredRemote;
+        db.news = remoteNews;
         saveMockDB(db);
-        return filteredRemote;
+        return remoteNews;
       }
     } catch (err) {
-      // Fallback to local database
+      console.warn('Error loading news from Supabase:', err);
     }
   }
 
-  return localPublished.sort(
-    (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-  );
+  return db.news
+    .filter((n) => n.is_published)
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
 }
 
 export async function publishNews(data: {
@@ -166,16 +112,10 @@ export async function publishNews(data: {
 }
 
 export async function deleteNews(newsId: string): Promise<{ success: boolean; error?: string }> {
-  // 1. Mark in permanent blacklist cache
-  saveDeletedNewsId(newsId);
-
-  // 2. Remove from local DB
+  // 1. Remove from local DB
   const db = getMockDB();
   const targetNews = db.news.find((n) => n.id === newsId);
   const targetHeadline = targetNews?.headline;
-  if (targetHeadline) {
-    saveDeletedNewsId(targetHeadline);
-  }
 
   db.news = db.news.filter((n) => n.id !== newsId);
   db.auditLogs.unshift({

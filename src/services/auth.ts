@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { ParticipantAuthData, Profile, Team, TeamMember } from '../types';
 import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
+import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
 const PARTICIPANT_STORAGE_KEY = 'metis_participant_session_v1';
 const ADMIN_STORAGE_KEY = 'metis_admin_session_v1';
@@ -224,8 +225,12 @@ export async function verifyParticipant(
 
         const sessionToken = `sess_${team.id.slice(0, 8)}_${Date.now()}`;
 
+        // Never leak or persist pin_hash in client storage
+        const safeTeam = { ...team };
+        delete (safeTeam as any).pin_hash;
+
         const authData: ParticipantAuthData = {
-          team,
+          team: safeTeam,
           member: matchedMember || {
             id: `m_${Date.now()}`,
             team_id: team.id,
@@ -335,6 +340,29 @@ export async function transferTraderRole(
   pin: string
 ): Promise<{ success: boolean; error?: string }> {
   const cleanPin = pin.trim();
+
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
+    try {
+      const { data: teamData } = await supabase
+        .from('teams')
+        .select('pin_hash')
+        .eq('id', teamId)
+        .maybeSingle();
+
+      if (teamData?.pin_hash && teamData.pin_hash.trim() !== cleanPin) {
+        return { success: false, error: 'Incorrect Team PIN. Verification failed.' };
+      }
+
+      await supabase.from('team_members').update({ is_trader: false }).eq('team_id', teamId);
+      await supabase.from('team_members').update({ is_trader: true }).eq('id', targetMemberId);
+
+      broadcastRealtimeEvent('TEAM_UPDATED', { teamId, targetMemberId });
+      return { success: true };
+    } catch (err) {
+      console.error('Error transferring trader role on Supabase:', err);
+    }
+  }
+
   const db = getMockDB();
   const team = db.teams.find((t) => t.id === teamId);
 
@@ -349,15 +377,6 @@ export async function transferTraderRole(
     }
   });
   saveMockDB(db);
-
-  if (isSupabaseConfigured) {
-    try {
-      await supabase.from('team_members').update({ is_trader: false }).eq('team_id', teamId);
-      await supabase.from('team_members').update({ is_trader: true }).eq('id', targetMemberId);
-    } catch (err) {
-      console.error('Error transferring trader role on Supabase:', err);
-    }
-  }
 
   return { success: true };
 }
