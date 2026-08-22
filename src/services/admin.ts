@@ -4,52 +4,8 @@ import { normalizeName } from '../lib/formatting';
 import { getMockDB, saveMockDB } from './mockData';
 import { broadcastRealtimeEvent } from '../lib/realtimeBus';
 
-function getDeletedTeamIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem('metis_deleted_team_ids_v1');
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {}
-  return new Set();
-}
-
-function saveDeletedTeamId(idOrCode: string) {
-  try {
-    const set = getDeletedTeamIds();
-    set.add(idOrCode);
-    localStorage.setItem('metis_deleted_team_ids_v1', JSON.stringify(Array.from(set)));
-  } catch {}
-}
-
 export async function getTeams(eventId: string): Promise<Team[]> {
   const db = getMockDB();
-  const deletedSet = getDeletedTeamIds();
-
-  // Clean and deduplicate local teams
-  const seenCodes = new Set<string>();
-  const seenNames = new Set<string>();
-  const uniqueLocalTeams: Team[] = [];
-
-  for (const t of db.teams) {
-    if (
-      (t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1') &&
-      !deletedSet.has(t.id) &&
-      !deletedSet.has(t.team_code)
-    ) {
-      const codeKey = (t.team_code || '').trim().toUpperCase();
-      const nameKey = (t.name || '').trim().toLowerCase();
-      if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
-        if (codeKey) seenCodes.add(codeKey);
-        if (nameKey) seenNames.add(nameKey);
-        uniqueLocalTeams.push(t);
-      }
-    }
-  }
-
-  // Prune any duplicate teams from local storage
-  if (uniqueLocalTeams.length !== db.teams.length) {
-    db.teams = uniqueLocalTeams;
-    saveMockDB(db);
-  }
 
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
@@ -57,37 +13,33 @@ export async function getTeams(eventId: string): Promise<Team[]> {
         .from('teams')
         .select('*')
         .eq('event_id', eventId)
-        .order('created_at', { ascending: true });
+        .order('name', { ascending: true });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         const remoteTeams = data as Team[];
-        const filteredRemote = remoteTeams.filter(
-          (t) => !deletedSet.has(t.id) && !deletedSet.has(t.team_code)
-        );
-
-        // Deduplicate remote teams as well
-        const uniqueRemote: Team[] = [];
-        const rSeenCodes = new Set<string>();
-        const rSeenNames = new Set<string>();
-        for (const rt of filteredRemote) {
-          const codeKey = (rt.team_code || '').trim().toUpperCase();
-          const nameKey = (rt.name || '').trim().toLowerCase();
-          if (!rSeenCodes.has(codeKey) && !rSeenNames.has(nameKey)) {
-            if (codeKey) rSeenCodes.add(codeKey);
-            if (nameKey) rSeenNames.add(nameKey);
-            uniqueRemote.push(rt);
-          }
-        }
-
-        if (uniqueRemote.length > 0) {
-          // Sync unique remote teams into local DB
-          db.teams = uniqueRemote;
-          saveMockDB(db);
-          return uniqueRemote;
-        }
+        db.teams = remoteTeams;
+        saveMockDB(db);
+        return remoteTeams;
       }
     } catch (err) {
       console.error('Error fetching teams:', err);
+    }
+  }
+
+  // Clean and deduplicate local teams
+  const seenCodes = new Set<string>();
+  const seenNames = new Set<string>();
+  const uniqueLocalTeams: Team[] = [];
+
+  for (const t of db.teams) {
+    if (t.event_id === eventId || eventId === 'e1' || t.event_id === 'e1') {
+      const codeKey = (t.team_code || '').trim().toUpperCase();
+      const nameKey = (t.name || '').trim().toLowerCase();
+      if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
+        if (codeKey) seenCodes.add(codeKey);
+        if (nameKey) seenNames.add(nameKey);
+        uniqueLocalTeams.push(t);
+      }
     }
   }
 
@@ -418,17 +370,25 @@ export async function setTeamStatus(
 }
 
 export async function deleteTeam(teamId: string): Promise<{ success: boolean; error?: string }> {
-  // 1. Mark in permanent blacklist cache
-  saveDeletedTeamId(teamId);
-
-  const db = getMockDB();
-  const targetTeam = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
-  const teamCode = targetTeam?.team_code;
-  if (teamCode) {
-    saveDeletedTeamId(teamCode);
+  // 1. Delete from Supabase if configured
+  if (isSupabaseConfigured && isValidUuid(teamId)) {
+    try {
+      await supabase.from('trades').delete().eq('team_id', teamId);
+      await supabase.from('holdings').delete().eq('team_id', teamId);
+      await supabase.from('team_members').delete().eq('team_id', teamId);
+      const { error } = await supabase.from('teams').delete().eq('id', teamId);
+      if (error) {
+        console.error('Error deleting team from Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception deleting team from Supabase:', err);
+    }
   }
 
   // 2. Remove from local DB
+  const db = getMockDB();
+  const targetTeam = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
+  const teamCode = targetTeam?.team_code;
   db.teams = db.teams.filter((t) => t.id !== teamId && t.team_code !== teamCode);
   db.teamMembers = db.teamMembers.filter((m) => m.team_id !== teamId);
   db.holdings = db.holdings.filter((h) => h.team_id !== teamId);

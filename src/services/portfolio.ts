@@ -2,6 +2,10 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { Holding, PortfolioSummary } from '../types';
 import { getMockDB, saveMockDB } from './mockData';
 
+// In-memory cache to prevent momentary network lag from flickering portfolio values
+const portfolioSummaryCache = new Map<string, PortfolioSummary>();
+const teamHoldingsCache = new Map<string, Holding[]>();
+
 export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
   if (isSupabaseConfigured && isValidUuid(teamId)) {
     try {
@@ -15,10 +19,17 @@ export async function getTeamHoldings(teamId: string): Promise<Holding[]> {
         .gt('quantity', 0);
 
       if (!error && data) {
-        return data as Holding[];
+        const holdings = data as Holding[];
+        teamHoldingsCache.set(teamId, holdings);
+        return holdings;
       }
     } catch (err) {
-      // Fallback to local database
+      console.warn('Network error fetching holdings, using cached holdings:', err);
+    }
+
+    // Return cached holdings if available before falling back
+    if (teamHoldingsCache.has(teamId)) {
+      return teamHoldingsCache.get(teamId)!;
     }
   }
 
@@ -38,7 +49,6 @@ export async function getTeamPortfolioSummary(
   let cashBalance = 0;
   let startingWealth = 100000000;
   let holdings: Holding[] = [];
-
   let foundRemote = false;
 
   if (isSupabaseConfigured && isValidUuid(teamId)) {
@@ -56,11 +66,16 @@ export async function getTeamPortfolioSummary(
         foundRemote = true;
       }
     } catch (err) {
-      // Fallback to local database
+      console.warn('Network error fetching portfolio summary:', err);
     }
   }
 
   if (!foundRemote) {
+    // If we have a cached summary from a previous successful fetch for this team, return it!
+    if (portfolioSummaryCache.has(teamId)) {
+      return portfolioSummaryCache.get(teamId)!;
+    }
+
     const db = getMockDB();
     let team = db.teams.find((t) => t.id === teamId || t.id.includes(teamId) || teamId.includes(t.id));
 
@@ -109,7 +124,7 @@ export async function getTeamPortfolioSummary(
   const todayPnl = totalWealth - startingWealth;
   const todayPnlPct = startingWealth > 0 ? (todayPnl / startingWealth) * 100 : 0;
 
-  return {
+  const result: PortfolioSummary = {
     total_invested: totalInvested,
     current_value: currentValue,
     unrealized_pnl: unrealizedPnl,
@@ -121,4 +136,9 @@ export async function getTeamPortfolioSummary(
     today_pnl: todayPnl,
     today_pnl_pct: todayPnlPct,
   };
+
+  // Cache the valid summary
+  portfolioSummaryCache.set(teamId, result);
+
+  return result;
 }

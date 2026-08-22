@@ -2,17 +2,7 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { LeaderboardEntry } from '../types';
 import { getMockDB } from './mockData';
 
-function getDeletedTeamIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem('metis_deleted_team_ids_v1');
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {}
-  return new Set();
-}
-
 export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[]> {
-  const deletedSet = getDeletedTeamIds();
-
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
@@ -21,7 +11,7 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
 
       if (!error && data && data.length > 0) {
         return (data as any[])
-          .filter((row) => !deletedSet.has(row.team_id) && !deletedSet.has(row.team_name))
+          .filter((row) => row.team_status !== 'ELIMINATED')
           .map((row) => ({
             team_id: row.team_id,
             team_name: row.team_name,
@@ -48,13 +38,11 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
 
   for (const t of db.teams) {
     if (
-      (!eventId ||
-        eventId === 'e1' ||
-        t.event_id === eventId ||
-        t.event_id === 'e1' ||
-        t.event_id === 'e1111111-1111-1111-1111-111111111111') &&
-      !deletedSet.has(t.id) &&
-      !deletedSet.has(t.team_code)
+      !eventId ||
+      eventId === 'e1' ||
+      t.event_id === eventId ||
+      t.event_id === 'e1' ||
+      t.event_id === 'e1111111-1111-1111-1111-111111111111'
     ) {
       const codeKey = (t.team_code || '').trim().toUpperCase();
       const nameKey = (t.name || '').trim().toLowerCase();
