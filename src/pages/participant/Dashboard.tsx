@@ -305,8 +305,8 @@ export const Dashboard: React.FC = () => {
               : 'bg-white border border-slate-200/80 shadow-md'
           }`}
         >
-          {/* Ambient Glow Aura */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          {/* Subtle Ambient Radial Glow */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10" />
 
           {/* Header */}
           <div className="flex items-center justify-between gap-2 relative z-10">
@@ -330,42 +330,14 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Main Balance & Area Sparkline */}
-          <div className="relative pt-1 z-10">
-            {/* Smooth Glowing Background Sparkline */}
-            <div className="absolute right-0 bottom-0 w-40 sm:w-56 h-20 pointer-events-none opacity-80">
-              <svg className="w-full h-full" viewBox="0 0 160 60" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="heroWealthGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor={isLoss ? '#F43F5E' : '#FF6B00'}
-                      stopOpacity={0.4}
-                    />
-                    <stop offset="100%" stopColor={isLoss ? '#F43F5E' : '#FF6B00'} stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8 L160,60 L0,60 Z"
-                  fill="url(#heroWealthGrad)"
-                />
-                <path
-                  d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8"
-                  fill="none"
-                  stroke={isLoss ? '#F43F5E' : '#FF6B00'}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="160" cy="8" r="4" fill={isLoss ? '#F43F5E' : '#FF6B00'} />
-              </svg>
-            </div>
-
-            <div className="space-y-2 relative z-10">
+          <div className="relative pt-1 z-10 flex items-end justify-between gap-3">
+            <div className="space-y-2">
               <div className={`text-3xl sm:text-4xl lg:text-[42px] font-black font-display tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isWealthMasked ? '••••••••' : formatCurrency(totalWealth)}
               </div>
 
               {/* P/L Badge + Equivalent */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
                 <div
                   className={`inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-black font-mono shrink-0 border shadow-xs ${
                     isLoss
@@ -382,13 +354,60 @@ export const Dashboard: React.FC = () => {
                     {isLoss ? '-' : '+'}{formatCurrency(Math.abs(pnlVal))} ({formatPercent(pnlPct)})
                   </span>
                 </div>
+
+                {totalWealth >= 100000 && (
+                  <span className="text-xs text-slate-400 font-mono font-medium">
+                    ≈ <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{formatWealth(totalWealth)}</span>
+                  </span>
+                )}
               </div>
+            </div>
+
+            {/* Clean Mini Sparkline on the Right (No Overlap) */}
+            <div className="w-24 sm:w-28 h-10 shrink-0 mb-1">
+              <svg className="w-full h-full" viewBox="0 0 100 36" preserveAspectRatio="none">
+                <path
+                  d={
+                    isLoss
+                      ? 'M0,8 L20,16 L35,12 L50,24 L65,20 L80,28 L100,32'
+                      : 'M0,30 L20,26 L35,28 L50,18 L65,22 L80,10 L100,6'
+                  }
+                  fill="none"
+                  stroke={isLoss ? '#F43F5E' : '#FF6B00'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx="100"
+                  cy={isLoss ? '32' : '6'}
+                  r="3.5"
+                  fill={isLoss ? '#F43F5E' : '#FF6B00'}
+                />
+              </svg>
             </div>
           </div>
 
+          {/* Allocation Progress Bar */}
+          {totalWealth > 0 && (
+            <div className="space-y-1.5 pt-2 relative z-10">
+              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                <div
+                  style={{ width: `${Math.min(100, Math.max(0, (cashBalance / totalWealth) * 100))}%` }}
+                  className="bg-amber-400 h-full transition-all duration-500"
+                  title="Liquid Cash Allocation"
+                />
+                <div
+                  style={{ width: `${Math.min(100, Math.max(0, (portfolioVal / totalWealth) * 100))}%` }}
+                  className="bg-orange-500 h-full transition-all duration-500"
+                  title="Stock Assets Allocation"
+                />
+              </div>
+            </div>
+          )}
+
           {/* 2-Column Available Cash & Portfolio Assets */}
           <div
-            className={`grid grid-cols-2 gap-3 pt-4 border-t relative z-10 ${
+            className={`grid grid-cols-2 gap-3 pt-3 border-t relative z-10 ${
               isDark ? 'border-white/10' : 'border-slate-100'
             }`}
           >
@@ -408,7 +427,10 @@ export const Dashboard: React.FC = () => {
                 {isWealthMasked ? '••••••' : formatCurrency(cashBalance)}
               </div>
               <div className="text-[10px] text-slate-400 font-mono font-medium mt-0.5">
-                {formatWealth(cashBalance)}
+                <span className="text-amber-400 font-bold">
+                  {totalWealth > 0 ? ((cashBalance / totalWealth) * 100).toFixed(1) : '0.0'}%
+                </span>{' '}
+                allocation
               </div>
             </div>
 
@@ -428,7 +450,10 @@ export const Dashboard: React.FC = () => {
                 {isWealthMasked ? '••••••' : formatCurrency(portfolioVal)}
               </div>
               <div className="text-[10px] text-slate-400 font-mono font-medium mt-0.5">
-                {formatWealth(portfolioVal)}
+                <span className="text-orange-400 font-bold">
+                  {totalWealth > 0 ? ((portfolioVal / totalWealth) * 100).toFixed(1) : '0.0'}%
+                </span>{' '}
+                allocation
               </div>
             </div>
           </div>
