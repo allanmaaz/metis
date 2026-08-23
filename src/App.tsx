@@ -12,6 +12,7 @@ import { Market } from './pages/participant/Market';
 import { Portfolio } from './pages/participant/Portfolio';
 import { News } from './pages/participant/News';
 import { Leaderboard } from './pages/participant/Leaderboard';
+import { TradeHistory } from './pages/participant/TradeHistory';
 
 // Admin Pages
 import { AdminLogin } from './pages/admin/Login';
@@ -113,6 +114,7 @@ export function App() {
                   <Route path="/market" element={<Market />} />
                   <Route path="/portfolio" element={<Portfolio />} />
                   <Route path="/news" element={<News />} />
+                  <Route path="/history" element={<TradeHistory />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                 </Route>
 

@@ -150,7 +150,8 @@ export const ParticipantHeader: React.FC = () => {
               { path: '/market', label: 'Market' },
               { path: '/portfolio', label: 'Portfolio' },
               { path: '/news', label: 'News' },
-              { path: '/leaderboard', label: isLeaderboardVisible ? 'Leaderboard' : 'Trade History' },
+              { path: '/history', label: 'Trade History' },
+              ...(isLeaderboardVisible ? [{ path: '/leaderboard', label: 'Leaderboard' }] : []),
             ].map((link) => (
               <NavLink
                 key={link.path}

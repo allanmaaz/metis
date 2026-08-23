@@ -49,11 +49,10 @@ export const ScrollAwareBottomNav: React.FC = () => {
     { label: 'Market', path: '/market', icon: BarChart2 },
     { label: 'Portfolio', path: '/portfolio', icon: Briefcase },
     { label: 'News', path: '/news', icon: FileText, badge: unreadNewsCount },
-    {
-      label: isLeaderboardVisible ? 'Ranks' : 'History',
-      path: '/leaderboard',
-      icon: isLeaderboardVisible ? Trophy : History,
-    },
+    { label: 'History', path: '/history', icon: History },
+    ...(isLeaderboardVisible
+      ? [{ label: 'Ranks', path: '/leaderboard', icon: Trophy }]
+      : []),
   ];
 
   return (
@@ -62,7 +61,7 @@ export const ScrollAwareBottomNav: React.FC = () => {
       aria-label="Participant Bottom Navigation"
     >
       <div
-        className={`pointer-events-auto w-full max-w-lg backdrop-blur-2xl rounded-full p-2 shadow-2xl grid grid-cols-5 gap-1.5 transition-all duration-300 ${
+        className={`pointer-events-auto w-full max-w-lg backdrop-blur-2xl rounded-full p-1.5 shadow-2xl grid ${navItems.length === 6 ? 'grid-cols-6' : 'grid-cols-5'} gap-1 transition-all duration-300 ${
           isDark
             ? 'bg-[#131B2E]/95 border border-white/15 shadow-black/60'
             : 'bg-white/95 border border-slate-200/90 shadow-slate-900/20'
