@@ -19,7 +19,7 @@ import {
   ArrowDownRight,
   Filter,
 } from 'lucide-react';
-import { formatCurrency, formatWealth, formatPercent, formatQuantity, formatClockTime } from '../../lib/formatting';
+import { formatCurrency, formatWealth, formatPercent, formatQuantity, formatClockTime, formatTeamName } from '../../lib/formatting';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import { Link } from 'react-router-dom';
 
@@ -303,7 +303,7 @@ export const Leaderboard: React.FC = () => {
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className={`font-black text-sm tracking-tight truncate whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                          {entry.team_name}
+                          {formatTeamName(entry.team_name)}
                         </span>
                         {isMyTeam && (
                           <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-orange-500 text-white font-mono shrink-0">
