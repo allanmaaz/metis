@@ -57,11 +57,11 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // -------------------------------------------------------------------------
-  // 1. OFFICIAL HIGH-PRECISION VECTOR BRAND MARKS (Zero-lag, 4K Crisp Everywhere)
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // 1. BANKING & FINANCIAL SERVICES
+  // =========================================================================
 
-  // 1. HDFC BANK (Official Royal Blue + Red/White Cross - exactly like design mockup)
+  // HDFC BANK
   if (cleanSymbol === 'HDFCBANK' || cleanSymbol === 'HDFC') {
     return (
       <div
@@ -69,118 +69,17 @@ export const StockLogo: React.FC<StockLogoProps> = ({
         title="HDFC Bank"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Outer Red Cross frame */}
           <rect x="14" y="36" width="72" height="28" fill="#ED1C24" rx="3" />
           <rect x="36" y="14" width="28" height="72" fill="#ED1C24" rx="3" />
-          {/* White inner Cross */}
           <rect x="24" y="42" width="52" height="16" fill="#FFFFFF" rx="2" />
           <rect x="42" y="24" width="16" height="52" fill="#FFFFFF" rx="2" />
-          {/* Center Blue Square */}
           <rect x="36" y="36" width="28" height="28" fill="#004C8F" />
         </svg>
       </div>
     );
   }
 
-  // 2. RELIANCE INDUSTRIES (Official Royal Blue + Signature Red/Orange Flame)
-  if (cleanSymbol === 'RELIANCE' || cleanSymbol === 'RIL') {
-    return (
-      <div
-        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#0A266E] to-[#041542] flex items-center justify-center p-1.5 shadow-sm border border-[#16388A] ${className}`}
-        title="Reliance Industries"
-      >
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Outer Flame (Orange-Red gradient) */}
-          <path
-            d="M50 12 C68 28 78 46 74 66 C70 82 56 88 50 88 C44 88 30 82 26 66 C22 46 32 28 50 12 Z"
-            fill="url(#relianceFlame)"
-          />
-          {/* Inner Core Flame (Cyan Glow) */}
-          <path
-            d="M50 36 C59 47 63 58 60 70 C58 78 52 82 50 82 C48 82 42 78 40 70 C37 58 41 47 50 36 Z"
-            fill="#00E5FF"
-          />
-          <defs>
-            <linearGradient id="relianceFlame" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FF1E00" />
-              <stop offset="55%" stopColor="#FF8000" />
-              <stop offset="100%" stopColor="#FFC800" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-    );
-  }
-
-  // 3. TATA CONSULTANCY SERVICES (TCS) & TATA GROUP
-  if (cleanSymbol === 'TCS' || cleanSymbol === 'TATA' || cleanSymbol === 'TATAMOTORS' || cleanSymbol === 'TATASTEEL' || cleanSymbol === 'TATAPOWER' || cleanSymbol === 'TATACONSUM') {
-    return (
-      <div
-        className={`${currentSize.container} shrink-0 bg-[#00338D] flex items-center justify-center p-1 shadow-sm border border-[#002266] ${className}`}
-        title="Tata Group"
-      >
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <text
-            x="50"
-            y="48"
-            fill="#FFFFFF"
-            fontSize="24"
-            fontFamily="system-ui, -apple-system, sans-serif"
-            fontWeight="900"
-            textAnchor="middle"
-            letterSpacing="2.5"
-          >
-            TATA
-          </text>
-          {cleanSymbol === 'TCS' && (
-            <text
-              x="50"
-              y="74"
-              fill="#00D4FF"
-              fontSize="16"
-              fontFamily="system-ui, -apple-system, sans-serif"
-              fontWeight="900"
-              textAnchor="middle"
-              letterSpacing="3"
-            >
-              TCS
-            </text>
-          )}
-          {cleanSymbol === 'TATAMOTORS' && (
-            <path d="M25 68 Q50 56 75 68" fill="none" stroke="#60A5FA" strokeWidth="4" strokeLinecap="round" />
-          )}
-        </svg>
-      </div>
-    );
-  }
-
-  // 4. INFOSYS (INFY) - Official Signature Infosys Blue Badge
-  if (cleanSymbol === 'INFY' || cleanSymbol === 'INFOSYS') {
-    return (
-      <div
-        className={`${currentSize.container} shrink-0 bg-[#007CC3] flex items-center justify-center p-1 shadow-sm border border-[#00629B] ${className}`}
-        title="Infosys Limited"
-      >
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <text
-            x="50"
-            y="64"
-            fill="#FFFFFF"
-            fontSize="32"
-            fontFamily="system-ui, -apple-system, sans-serif"
-            fontWeight="900"
-            fontStyle="italic"
-            textAnchor="middle"
-            letterSpacing="-0.5"
-          >
-            infosys
-          </text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 5. ICICI BANK (Official Maroon-Orange Flame Swirl)
+  // ICICI BANK
   if (cleanSymbol === 'ICICIBANK' || cleanSymbol === 'ICICI') {
     return (
       <div
@@ -201,7 +100,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 6. STATE BANK OF INDIA (SBIN / SBI - Official Royal Blue + Keyhole Aperture)
+  // STATE BANK OF INDIA (SBIN / SBI)
   if (cleanSymbol === 'SBIN' || cleanSymbol === 'SBI') {
     return (
       <div
@@ -217,45 +116,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 7. BHARTI AIRTEL (Official Red + White Curved 'a' Emblem)
-  if (cleanSymbol === 'BHARTIARTL' || cleanSymbol === 'AIRTEL') {
-    return (
-      <div
-        className={`${currentSize.container} shrink-0 bg-[#E60000] flex items-center justify-center p-1.5 shadow-sm border border-[#B30000] ${className}`}
-        title="Bharti Airtel"
-      >
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path
-            d="M30 68 C28 50 42 30 64 28 C74 26 80 34 76 45 C72 56 56 64 42 64 C35 64 30 60 30 54 C30 46 42 40 58 40"
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-    );
-  }
-
-  // 8. ITC LIMITED (Official Navy & Gold Heraldic Shield)
-  if (cleanSymbol === 'ITC') {
-    return (
-      <div
-        className={`${currentSize.container} shrink-0 bg-[#0B1E40] flex items-center justify-center p-1 shadow-sm border border-[#061024] ${className}`}
-        title="ITC Limited"
-      >
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M20 20 L80 20 L80 50 Q80 80 50 90 Q20 80 20 50 Z" fill="#D4AF37" />
-          <path d="M25 24 L75 24 L75 48 Q75 75 50 84 Q25 75 25 48 Z" fill="#0B1E40" />
-          <text x="50" y="58" fill="#D4AF37" fontSize="22" fontWeight="900" textAnchor="middle">
-            ITC
-          </text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 9. KOTAK MAHINDRA BANK (Official Kotak Red + Infinity Swirl)
+  // KOTAK MAHINDRA BANK
   if (cleanSymbol === 'KOTAKBANK' || cleanSymbol === 'KOTAK') {
     return (
       <div
@@ -282,67 +143,185 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 10. ZOMATO (Official Red Badge + Pure White Typography)
-  if (cleanSymbol === 'ZOMATO') {
+  // AXIS BANK
+  if (cleanSymbol === 'AXISBANK' || cleanSymbol === 'AXIS') {
     return (
       <div
-        className={`${currentSize.container} shrink-0 bg-[#E23744] flex items-center justify-center p-1 shadow-sm border border-[#BA2530] ${className}`}
-        title="Zomato"
+        className={`${currentSize.container} shrink-0 bg-[#97144D] flex items-center justify-center p-1.5 shadow-sm border border-[#7A0D3C] ${className}`}
+        title="Axis Bank"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          <text
-            x="50"
-            y="62"
-            fill="#FFFFFF"
-            fontSize="26"
-            fontFamily="system-ui, -apple-system, sans-serif"
-            fontWeight="900"
-            fontStyle="italic"
-            textAnchor="middle"
-          >
-            zomato
-          </text>
+          <path d="M50 18 L24 78 L42 78 L50 58 L58 78 L76 78 Z" fill="#FFFFFF" />
+          <path d="M50 36 L42 56 L58 56 Z" fill="#97144D" />
         </svg>
       </div>
     );
   }
 
-  // 11. SWIGGY (Official Vibrant Orange + Location Fork)
-  if (cleanSymbol === 'SWIGGY') {
+  // BAJAJ FINANCE / BAJAJ FINSERV
+  if (cleanSymbol === 'BAJFINANCE' || cleanSymbol === 'BAJAJFINSV') {
     return (
       <div
-        className={`${currentSize.container} shrink-0 bg-[#FC8019] flex items-center justify-center p-1.5 shadow-sm border border-[#D96504] ${className}`}
-        title="Swiggy"
+        className={`${currentSize.container} shrink-0 bg-[#003366] flex items-center justify-center p-1.5 shadow-sm border border-[#002244] ${className}`}
+        title="Bajaj Finserv"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M28 20 L58 20 C72 20 80 30 80 40 C80 48 74 54 66 56 C76 58 82 66 82 76 C82 86 72 94 56 94 L28 94 Z" fill="none" stroke="#00A3E0" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M42 20 L42 94" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 2. ENERGY, POWER & OIL
+  // =========================================================================
+
+  // RELIANCE INDUSTRIES
+  if (cleanSymbol === 'RELIANCE' || cleanSymbol === 'RIL') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#0A266E] to-[#041542] flex items-center justify-center p-1.5 shadow-sm border border-[#16388A] ${className}`}
+        title="Reliance Industries"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
           <path
-            d="M50 18 C36 18 26 28 26 42 C26 58 50 82 50 82 C50 82 74 58 74 42 C74 28 64 18 50 18 Z"
-            fill="#FFFFFF"
+            d="M50 12 C68 28 78 46 74 66 C70 82 56 88 50 88 C44 88 30 82 26 66 C22 46 32 28 50 12 Z"
+            fill="url(#relFlame)"
           />
-          <circle cx="50" cy="40" r="10" fill="#FC8019" />
+          <path
+            d="M50 36 C59 47 63 58 60 70 C58 78 52 82 50 82 C48 82 42 78 40 70 C37 58 41 47 50 36 Z"
+            fill="#00E5FF"
+          />
+          <defs>
+            <linearGradient id="relFlame" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FF1E00" />
+              <stop offset="55%" stopColor="#FF8000" />
+              <stop offset="100%" stopColor="#FFC800" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
     );
   }
 
-  // 12. WIPRO (Official Multi-Color Dot Array)
-  if (cleanSymbol === 'WIPRO') {
+  // NTPC (National Thermal Power Corporation)
+  if (cleanSymbol === 'NTPC') {
     return (
       <div
-        className={`${currentSize.container} shrink-0 bg-white flex items-center justify-center p-1 shadow-sm border border-slate-200 ${className}`}
-        title="Wipro"
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#0B2545] to-[#133C55] flex items-center justify-center p-1 shadow-sm border border-[#1D4E89] ${className}`}
+        title="NTPC Limited"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="35" cy="40" r="10" fill="#E60000" />
-          <circle cx="65" cy="40" r="10" fill="#007CC3" />
-          <circle cx="50" cy="65" r="10" fill="#FFB300" />
-          <circle cx="50" cy="45" r="6" fill="#10B981" />
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#FF6B00" strokeWidth="8" />
+          <path d="M30 65 L45 35 L55 35 L70 65" stroke="#FFFFFF" strokeWidth="8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M38 52 L62 52" stroke="#FF6B00" strokeWidth="6" strokeLinecap="round" />
+          <text x="50" y="86" fill="#00E5FF" fontSize="14" fontWeight="900" textAnchor="middle" letterSpacing="1">NTPC</text>
         </svg>
       </div>
     );
   }
 
-  // 13. MARUTI SUZUKI (Official Royal Blue 'S' Mark)
+  // ONGC (Oil & Natural Gas Corporation)
+  if (cleanSymbol === 'ONGC') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#800000] to-[#550000] flex items-center justify-center p-1 shadow-sm border border-[#A00000] ${className}`}
+        title="ONGC Limited"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M50 18 L76 72 L24 72 Z" fill="#FFC800" />
+          <path d="M50 30 L66 66 L34 66 Z" fill="#800000" />
+          <circle cx="50" cy="52" r="8" fill="#FF1E00" />
+          <text x="50" y="88" fill="#FFFFFF" fontSize="15" fontWeight="900" textAnchor="middle" letterSpacing="1">ONGC</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // POWERGRID (Power Grid Corporation of India)
+  if (cleanSymbol === 'POWERGRID') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#0D5C3A] to-[#0A3D27] flex items-center justify-center p-1 shadow-sm border border-[#118050] ${className}`}
+        title="Power Grid Corp"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M50 16 L28 80 L72 80 Z" fill="none" stroke="#FFC800" strokeWidth="6" strokeLinejoin="round" />
+          <path d="M35 55 L65 55 M40 40 L60 40 M45 25 L55 25" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+          <path d="M22 45 L78 45" stroke="#00E5FF" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="50" cy="18" r="5" fill="#FF1E00" />
+        </svg>
+      </div>
+    );
+  }
+
+  // ADANI GREEN ENERGY
+  if (cleanSymbol === 'ADANIGREEN' || cleanSymbol === 'ADANI') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#004B87] via-[#008542] to-[#6EB43F] flex items-center justify-center p-1 shadow-sm border border-emerald-500/40 ${className}`}
+        title="Adani Green Energy"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#FFFFFF" strokeWidth="7" strokeDasharray="50 10" />
+          <path d="M50 25 C65 25 75 40 70 55 C65 70 50 75 45 75 C45 75 42 60 50 50 C58 40 50 25 50 25 Z" fill="#6EB43F" />
+        </svg>
+      </div>
+    );
+  }
+
+  // TATA POWER
+  if (cleanSymbol === 'TATAPOWER') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#00338D] flex items-center justify-center p-1 shadow-sm border border-[#002266] ${className}`}
+        title="Tata Power"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="44" fill="#FFFFFF" fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="1.5">TATA</text>
+          <path d="M48 52 L36 70 L48 70 L44 86 L64 64 L52 64 Z" fill="#FFC800" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 3. AUTOMOTIVE & EV
+  // =========================================================================
+
+  // TATA MOTORS
+  if (cleanSymbol === 'TATAMOTORS') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#00338D] flex items-center justify-center p-1 shadow-sm border border-[#002266] ${className}`}
+        title="Tata Motors"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="44" fill="#FFFFFF" fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="1.5">TATA</text>
+          <ellipse cx="50" cy="68" rx="30" ry="14" fill="none" stroke="#60A5FA" strokeWidth="4" />
+          <path d="M35 68 Q50 58 65 68" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // MAHINDRA & MAHINDRA (M&M)
+  if (cleanSymbol === 'M&M' || cleanSymbol === 'MAHINDRA') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#C8102E] flex items-center justify-center p-1 shadow-sm border border-[#960B21] ${className}`}
+        title="Mahindra & Mahindra"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {/* Twin Peaks Chrome M */}
+          <path d="M22 68 L36 32 L50 54 L64 32 L78 68 L66 68 L58 48 L50 62 L42 48 L34 68 Z" fill="#FFFFFF" />
+        </svg>
+      </div>
+    );
+  }
+
+  // MARUTI SUZUKI
   if (cleanSymbol === 'MARUTI' || cleanSymbol === 'SUZUKI') {
     return (
       <div
@@ -363,7 +342,216 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 14. TITAN (Titan Gold on Luxury Black)
+  // BAJAJ AUTO
+  if (cleanSymbol === 'BAJAJ-AUTO' || cleanSymbol === 'BAJAJAUTO') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#004B87] flex items-center justify-center p-1.5 shadow-sm border border-[#003366] ${className}`}
+        title="Bajaj Auto"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M30 25 L55 25 C68 25 75 34 75 44 C75 52 70 58 60 60 C72 62 78 70 78 80 C78 90 68 95 52 95 L30 95 Z" fill="none" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M42 25 L42 95" stroke="#00A3E0" strokeWidth="8" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // HERO MOTOCORP
+  if (cleanSymbol === 'HEROMOTOCO' || cleanSymbol === 'HERO') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#E31B23] flex items-center justify-center p-1.5 shadow-sm border border-[#B51219] ${className}`}
+        title="Hero MotoCorp"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M28 20 L44 20 L44 48 L64 48 L64 20 L80 20 L80 80 L64 80 L64 58 L44 58 L44 80 L28 80 Z" fill="#FFFFFF" />
+          <path d="M20 50 L44 50 L36 80 L20 80 Z" fill="#000000" opacity="0.3" />
+        </svg>
+      </div>
+    );
+  }
+
+  // EICHER MOTORS (Royal Enfield)
+  if (cleanSymbol === 'EICHERMOT' || cleanSymbol === 'ROYALENFIELD') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-black flex items-center justify-center p-1 shadow-sm border border-amber-500/40 ${className}`}
+        title="Royal Enfield (Eicher)"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#D4AF37" strokeWidth="5" />
+          <path d="M30 40 L50 24 L70 40 L64 65 L36 65 Z" fill="#D4AF37" />
+          <path d="M38 45 L50 35 L62 45 L58 60 L42 60 Z" fill="#000000" />
+          <circle cx="50" cy="48" r="4" fill="#D4AF37" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 4. IT & TECH
+  // =========================================================================
+
+  // TCS
+  if (cleanSymbol === 'TCS' || cleanSymbol === 'TATA') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#00338D] flex items-center justify-center p-1 shadow-sm border border-[#002266] ${className}`}
+        title="Tata Consultancy Services"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="48" fill="#FFFFFF" fontSize="24" fontFamily="system-ui, sans-serif" fontWeight="900" textAnchor="middle" letterSpacing="2.5">TATA</text>
+          <text x="50" y="74" fill="#00D4FF" fontSize="16" fontFamily="system-ui, sans-serif" fontWeight="900" textAnchor="middle" letterSpacing="3">TCS</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // INFOSYS (INFY)
+  if (cleanSymbol === 'INFY' || cleanSymbol === 'INFOSYS') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#007CC3] flex items-center justify-center p-1 shadow-sm border border-[#00629B] ${className}`}
+        title="Infosys Limited"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="64" fill="#FFFFFF" fontSize="30" fontFamily="system-ui, sans-serif" fontWeight="900" fontStyle="italic" textAnchor="middle" letterSpacing="-0.5">infosys</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // WIPRO
+  if (cleanSymbol === 'WIPRO') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-white flex items-center justify-center p-1 shadow-sm border border-slate-200 ${className}`}
+        title="Wipro"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="35" cy="40" r="12" fill="#E60000" />
+          <circle cx="65" cy="40" r="12" fill="#007CC3" />
+          <circle cx="50" cy="65" r="12" fill="#FFB300" />
+          <circle cx="50" cy="45" r="7" fill="#10B981" />
+        </svg>
+      </div>
+    );
+  }
+
+  // HCL TECHNOLOGIES
+  if (cleanSymbol === 'HCLTECH' || cleanSymbol === 'HCL') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#0057B8] flex items-center justify-center p-1 shadow-sm border border-[#00418A] ${className}`}
+        title="HCL Technologies"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="66" fill="#FFFFFF" fontSize="36" fontFamily="system-ui, sans-serif" fontWeight="900" textAnchor="middle" letterSpacing="1">HCL</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // TECH MAHINDRA
+  if (cleanSymbol === 'TECHM') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#E31837] flex items-center justify-center p-1 shadow-sm border border-[#B31028] ${className}`}
+        title="Tech Mahindra"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="38" cy="50" r="16" fill="#FFFFFF" />
+          <circle cx="62" cy="50" r="16" fill="#000000" />
+          <circle cx="50" cy="50" r="10" fill="#E31837" />
+        </svg>
+      </div>
+    );
+  }
+
+  // LTIMINDTREE
+  if (cleanSymbol === 'LTIM') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#002D72] to-[#0072CE] flex items-center justify-center p-1 shadow-sm border border-[#001D4A] ${className}`}
+        title="LTIMindtree"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M25 35 L50 18 L75 35 L75 70 L50 86 L25 70 Z" fill="none" stroke="#FF6B00" strokeWidth="6" />
+          <text x="50" y="60" fill="#FFFFFF" fontSize="20" fontWeight="900" textAnchor="middle">LTIM</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 5. FMCG & CONSUMER
+  // =========================================================================
+
+  // ITC
+  if (cleanSymbol === 'ITC') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#0B1E40] flex items-center justify-center p-1 shadow-sm border border-[#061024] ${className}`}
+        title="ITC Limited"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M20 20 L80 20 L80 50 Q80 80 50 90 Q20 80 20 50 Z" fill="#D4AF37" />
+          <path d="M25 24 L75 24 L75 48 Q75 75 50 84 Q25 75 25 48 Z" fill="#0B1E40" />
+          <text x="50" y="58" fill="#D4AF37" fontSize="22" fontWeight="900" textAnchor="middle">ITC</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // HINDUSTAN UNILEVER (HINDUNILVR / HUL)
+  if (cleanSymbol === 'HINDUNILVR' || cleanSymbol === 'HUL') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-white flex items-center justify-center p-1 shadow-sm border border-slate-200 ${className}`}
+        title="Hindustan Unilever"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M30 25 C30 65 42 80 50 80 C58 80 70 65 70 25 C64 45 58 55 50 55 C42 55 36 45 30 25 Z" fill="#1F36C7" />
+          <circle cx="50" cy="30" r="6" fill="#1F36C7" />
+        </svg>
+      </div>
+    );
+  }
+
+  // NESTLE INDIA
+  if (cleanSymbol === 'NESTLEIND' || cleanSymbol === 'NESTLE') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#005CA9] flex items-center justify-center p-1 shadow-sm border border-[#00437A] ${className}`}
+        title="Nestle India"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M25 65 C40 75 60 75 75 65 C68 58 32 58 25 65 Z" fill="#FFFFFF" />
+          <circle cx="42" cy="48" r="8" fill="#FFFFFF" />
+          <circle cx="58" cy="50" r="6" fill="#FFFFFF" />
+          <path d="M38 35 C45 28 55 28 62 35" stroke="#FFFFFF" strokeWidth="4" fill="none" />
+        </svg>
+      </div>
+    );
+  }
+
+  // BRITANNIA INDUSTRIES
+  if (cleanSymbol === 'BRITANNIA') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#C8102E] flex items-center justify-center p-1 shadow-sm border border-[#990A20] ${className}`}
+        title="Britannia Industries"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M30 35 L40 45 L50 25 L60 45 L70 35 L66 60 L34 60 Z" fill="#FFC800" />
+          <text x="50" y="82" fill="#FFFFFF" fontSize="13" fontWeight="900" textAnchor="middle" letterSpacing="0.5">BRITANNIA</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // TITAN
   if (cleanSymbol === 'TITAN') {
     return (
       <div
@@ -371,23 +559,229 @@ export const StockLogo: React.FC<StockLogoProps> = ({
         title="Titan Company"
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          <text
-            x="50"
-            y="65"
-            fill="#D4AF37"
-            fontSize="36"
-            fontFamily="serif"
-            fontWeight="900"
-            textAnchor="middle"
-          >
-            TITAN
-          </text>
+          <text x="50" y="65" fill="#D4AF37" fontSize="36" fontFamily="serif" fontWeight="900" textAnchor="middle">TITAN</text>
         </svg>
       </div>
     );
   }
 
-  // 15. APPLE (AAPL)
+  // ZOMATO
+  if (cleanSymbol === 'ZOMATO') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#E23744] flex items-center justify-center p-1 shadow-sm border border-[#BA2530] ${className}`}
+        title="Zomato"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="62" fill="#FFFFFF" fontSize="26" fontFamily="system-ui, sans-serif" fontWeight="900" fontStyle="italic" textAnchor="middle">zomato</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // SWIGGY
+  if (cleanSymbol === 'SWIGGY') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#FC8019] flex items-center justify-center p-1.5 shadow-sm border border-[#D96504] ${className}`}
+        title="Swiggy"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M50 18 C36 18 26 28 26 42 C26 58 50 82 50 82 C50 82 74 58 74 42 C74 28 64 18 50 18 Z" fill="#FFFFFF" />
+          <circle cx="50" cy="40" r="10" fill="#FC8019" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 6. PHARMA & HEALTHCARE
+  // =========================================================================
+
+  // SUN PHARMA
+  if (cleanSymbol === 'SUNPHARMA') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#E85D04] to-[#DC2F02] flex items-center justify-center p-1 shadow-sm border border-[#BA2200] ${className}`}
+        title="Sun Pharma"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="24" fill="#FFBA08" />
+          <path d="M50 14 L50 22 M50 78 L50 86 M14 50 L22 50 M78 50 L86 50 M25 25 L31 31 M69 69 L75 75 M25 75 L31 69 M69 31 L75 25" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // DR. REDDY'S LABORATORIES
+  if (cleanSymbol === 'DRREDDY' || cleanSymbol === 'DRREDDYS') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#5B2D90] flex items-center justify-center p-1 shadow-sm border border-[#431F6B] ${className}`}
+        title="Dr. Reddy's"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#FFFFFF" strokeWidth="6" />
+          <path d="M32 50 Q50 30 68 50 Q50 70 32 50" fill="#FFC800" />
+        </svg>
+      </div>
+    );
+  }
+
+  // CIPLA
+  if (cleanSymbol === 'CIPLA') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#0B2545] flex items-center justify-center p-1 shadow-sm border border-[#133C55] ${className}`}
+        title="Cipla Limited"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M50 20 L58 42 L80 50 L58 58 L50 80 L42 58 L20 50 L42 42 Z" fill="#FF6B00" />
+          <circle cx="50" cy="50" r="8" fill="#FFFFFF" />
+        </svg>
+      </div>
+    );
+  }
+
+  // APOLLO HOSPITALS
+  if (cleanSymbol === 'APOLLOHOSP' || cleanSymbol === 'APOLLO') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#004B87] flex items-center justify-center p-1 shadow-sm border border-[#003366] ${className}`}
+        title="Apollo Hospitals"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#FF6B00" strokeWidth="6" />
+          <path d="M50 26 L50 74 M26 50 L74 50" stroke="#FFFFFF" strokeWidth="10" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // DIVI'S LABORATORIES
+  if (cleanSymbol === 'DIVISLAB' || cleanSymbol === 'DIVIS') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#006699] to-[#003366] flex items-center justify-center p-1 shadow-sm border border-[#004C73] ${className}`}
+        title="Divi's Laboratories"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="35" cy="35" r="12" fill="#00D4FF" />
+          <circle cx="65" cy="45" r="10" fill="#FFB300" />
+          <circle cx="45" cy="70" r="14" fill="#FFFFFF" />
+          <line x1="35" y1="35" x2="65" y2="45" stroke="#FFFFFF" strokeWidth="4" />
+          <line x1="65" y1="45" x2="45" y2="70" stroke="#FFFFFF" strokeWidth="4" />
+          <line x1="35" y1="35" x2="45" y2="70" stroke="#FFFFFF" strokeWidth="4" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 7. METALS, INFRASTRUCTURE & TELECOM
+  // =========================================================================
+
+  // TATA STEEL
+  if (cleanSymbol === 'TATASTEEL') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#00338D] flex items-center justify-center p-1 shadow-sm border border-[#002266] ${className}`}
+        title="Tata Steel"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="44" fill="#FFFFFF" fontSize="22" fontWeight="900" textAnchor="middle" letterSpacing="1.5">TATA</text>
+          <path d="M26 62 L74 62 M26 76 L74 76 M36 62 L36 76 M50 62 L50 76 M64 62 L64 76" stroke="#00D4FF" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // JSW STEEL
+  if (cleanSymbol === 'JSWSTEEL' || cleanSymbol === 'JSW') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#002D62] flex items-center justify-center p-1 shadow-sm border border-[#001D40] ${className}`}
+        title="JSW Steel"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M20 30 L80 30 L65 75 L35 75 Z" fill="#D9222A" />
+          <text x="50" y="60" fill="#FFFFFF" fontSize="22" fontWeight="900" textAnchor="middle">JSW</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // LARSEN & TOUBRO (LT / L&T)
+  if (cleanSymbol === 'LT' || cleanSymbol === 'L&T') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#002664] flex items-center justify-center p-1 shadow-sm border border-[#001840] ${className}`}
+        title="Larsen & Toubro"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#FFCC00" strokeWidth="6" />
+          <text x="50" y="62" fill="#FFFFFF" fontSize="26" fontWeight="900" textAnchor="middle" letterSpacing="1">L&T</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // ADANI PORTS
+  if (cleanSymbol === 'ADANIPORTS') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-gradient-to-br from-[#004B87] to-[#00284D] flex items-center justify-center p-1 shadow-sm border border-[#003B6B] ${className}`}
+        title="Adani Ports"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M20 65 Q50 45 80 65" fill="none" stroke="#00A3E0" strokeWidth="8" strokeLinecap="round" />
+          <path d="M50 20 L50 65 M35 35 L50 20 L65 35" stroke="#FFFFFF" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  // ULTRATECH CEMENT
+  if (cleanSymbol === 'ULTRACEMCO' || cleanSymbol === 'ULTRATECH') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#FFD100] flex items-center justify-center p-1 shadow-sm border border-[#CCA700] ${className}`}
+        title="UltraTech Cement"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path d="M25 25 L75 25 L75 75 L25 75 Z" fill="#000000" />
+          <path d="M35 35 L65 35 L65 65 L35 65 Z" fill="#FFD100" />
+          <text x="50" y="58" fill="#000000" fontSize="16" fontWeight="900" textAnchor="middle">ULTRA</text>
+        </svg>
+      </div>
+    );
+  }
+
+  // BHARTI AIRTEL
+  if (cleanSymbol === 'BHARTIARTL' || cleanSymbol === 'AIRTEL') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-[#E60000] flex items-center justify-center p-1.5 shadow-sm border border-[#B30000] ${className}`}
+        title="Bharti Airtel"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <path
+            d="M30 68 C28 50 42 30 64 28 C74 26 80 34 76 45 C72 56 56 64 42 64 C35 64 30 60 30 54 C30 46 42 40 58 40"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 8. GLOBAL GIANTS
+  // =========================================================================
+
+  // APPLE (AAPL)
   if (cleanSymbol === 'AAPL' || cleanSymbol === 'APPLE') {
     return (
       <div
@@ -401,7 +795,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 16. TESLA (TSLA)
+  // TESLA (TSLA)
   if (cleanSymbol === 'TSLA' || cleanSymbol === 'TESLA') {
     return (
       <div
@@ -416,7 +810,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 17. NVIDIA (NVDA)
+  // NVIDIA (NVDA)
   if (cleanSymbol === 'NVDA' || cleanSymbol === 'NVIDIA') {
     return (
       <div
@@ -430,7 +824,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 18. GOOGLE (GOOGL / GOOG)
+  // GOOGLE (GOOGL / GOOG)
   if (cleanSymbol === 'GOOGL' || cleanSymbol === 'GOOG' || cleanSymbol === 'GOOGLE') {
     return (
       <div
@@ -447,7 +841,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // 19. MICROSOFT (MSFT)
+  // MICROSOFT (MSFT)
   if (cleanSymbol === 'MSFT' || cleanSymbol === 'MICROSOFT') {
     return (
       <div
@@ -464,9 +858,25 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // -------------------------------------------------------------------------
-  // 2. SECTOR-TAILORED GRADIENT BADGES (For Custom Event Stocks: NOVA, MEDIX, etc.)
-  // -------------------------------------------------------------------------
+  // AMAZON (AMZN)
+  if (cleanSymbol === 'AMZN' || cleanSymbol === 'AMAZON') {
+    return (
+      <div
+        className={`${currentSize.container} shrink-0 bg-black flex items-center justify-center p-1.5 shadow-sm border border-slate-700 ${className}`}
+        title="Amazon"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <text x="50" y="48" fill="#FFFFFF" fontSize="24" fontWeight="900" textAnchor="middle">amazon</text>
+          <path d="M25 64 Q50 82 75 64" fill="none" stroke="#FF9900" strokeWidth="6" strokeLinecap="round" />
+          <polygon points="75,64 78,54 68,58" fill="#FF9900" />
+        </svg>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // 9. SECTOR-TAILORED GRADIENT BADGES (For Custom Event Stocks: NOVA, MEDIX, etc.)
+  // =========================================================================
   if (sector.includes('EV') || sector.includes('Auto') || cleanSymbol === 'NOVA') {
     return (
       <div
@@ -555,9 +965,9 @@ export const StockLogo: React.FC<StockLogoProps> = ({
     );
   }
 
-  // -------------------------------------------------------------------------
-  // 3. DYNAMIC MONOGRAM FALLBACK
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // 10. DYNAMIC MONOGRAM FALLBACK
+  // =========================================================================
   const initials = cleanSymbol.slice(0, 3) || 'STK';
 
   return (
