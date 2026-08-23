@@ -78,6 +78,10 @@ export const Portfolio: React.FC = () => {
   const totalPnL = summary?.today_pnl ?? 0;
   const pnlPct = summary?.today_pnl_pct ?? 0;
   const isProfitable = totalPnL >= 0;
+  const rawTeamName = participant?.team.name || 'Team 1';
+  const teamDisplayName = rawTeamName.toLowerCase().startsWith('team')
+    ? 'Team ' + rawTeamName.replace(/^team\s*/i, '').trim()
+    : `Team ${rawTeamName}`;
 
   return (
     <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-12 md:gap-6">
@@ -90,7 +94,7 @@ export const Portfolio: React.FC = () => {
               ASSET ALLOCATION
             </span>
             <span className="text-xs font-bold text-orange-500 font-mono">
-              Team {participant?.team.name}
+              {teamDisplayName}
             </span>
           </div>
           <h1 className={`text-2xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -113,28 +117,21 @@ export const Portfolio: React.FC = () => {
 
         {/* Summary Wealth Card */}
         <div
-          className={`p-5 rounded-3xl space-y-4 border ${
+          className={`p-5 sm:p-6 rounded-3xl space-y-4 border ${
             isDark
               ? 'bg-[#131B2E] border-white/5 shadow-md'
               : 'bg-white border-slate-200/80 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
-                Total Team Wealth
-              </span>
-              <div className={`text-2xl sm:text-3xl font-black font-display mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {formatCurrency(totalWealth)}
-              </div>
-              <div className="text-[11px] text-slate-400 font-mono font-medium mt-0.5">
-                Equivalent: {formatWealth(totalWealth)}
-              </div>
-            </div>
+          {/* Top Row: Label & P&L Badge */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">
+              TOTAL TEAM WEALTH
+            </span>
 
             {/* P&L Badge */}
             <div
-              className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-xl border ${
+              className={`inline-flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl border font-mono shrink-0 ${
                 isProfitable
                   ? isDark
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -144,29 +141,42 @@ export const Portfolio: React.FC = () => {
                   : 'bg-rose-50 text-rose-600 border-rose-200'
               }`}
             >
-              {isProfitable ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+              {isProfitable ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
               <span>{isProfitable ? '+' : '-'}{formatCurrency(Math.abs(summary?.today_pnl || 0))} ({formatPercent(pnlPct)})</span>
             </div>
           </div>
 
+          {/* Main Figure & Equivalent */}
+          <div className="space-y-1">
+            <div className={`text-2xl sm:text-3xl lg:text-4xl font-black font-display tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              {formatCurrency(totalWealth)}
+            </div>
+            <div className="text-xs text-slate-400 font-mono font-medium flex items-center gap-1.5 pt-1">
+              <span>Equivalent:</span>
+              <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                {formatWealth(totalWealth)}
+              </span>
+            </div>
+          </div>
+
           {/* 2-Column Cash & Portfolio Grid */}
-          <div className={`grid grid-cols-2 gap-3 pt-2 border-t ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-            <div className={`p-3 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
+          <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
               <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
                 <Wallet className="w-3.5 h-3.5 text-orange-500" />
                 <span>Available Cash</span>
               </div>
-              <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {formatCurrency(cashBalance)}
               </div>
             </div>
 
-            <div className={`p-3 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50 border-slate-200/70'}`}>
               <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
                 <Coins className="w-3.5 h-3.5 text-orange-500" />
                 <span>Invested Value</span>
               </div>
-              <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {formatCurrency(portfolioVal)}
               </div>
             </div>
