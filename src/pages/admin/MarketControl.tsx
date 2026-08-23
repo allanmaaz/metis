@@ -101,9 +101,6 @@ export const AdminMarketControl: React.FC = () => {
             <Power className="w-7 h-7 text-orange-500" />
             Master Market Control
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Global market sessions, emergency controls, and participant visibility settings.
-          </p>
         </div>
 
         {/* Quick Leaderboard Visibility Toggle */}

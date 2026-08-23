@@ -80,9 +80,6 @@ export const AdminLeaderboard: React.FC = () => {
             <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-500 shrink-0" />
             <span>Official Event Leaderboard</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time standings across all competing teams in {event?.name || 'METIS'}.
-          </p>
         </div>
 
         {/* Controls: Ranking Metric Selector + Participant Visibility Toggle */}
