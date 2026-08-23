@@ -199,122 +199,154 @@ export const Dashboard: React.FC = () => {
   const isLoss = pnlVal < 0;
 
   return (
-    <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-12 md:gap-6">
-      {/* LEFT COLUMN: Team, Market Status, Total Wealth & Breaking Wire */}
-      <div className="md:col-span-5 space-y-3.5">
-        {/* Trade Success / Error Feedback Toast */}
-        {tradeMessage && (
-          <div
-            className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm ${
-              tradeMessage.type === 'success'
-                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>{tradeMessage.text}</span>
-          </div>
-        )}
-
-        {/* 2. Unified Live Market Pill Strip */}
+    <div className="space-y-4 max-w-6xl mx-auto pb-6">
+      {/* Trade Success / Error Feedback Toast */}
+      {tradeMessage && (
         <div
-          className={`px-4 py-3 rounded-2xl flex items-center justify-between border transition-colors ${
-            isDark
-              ? 'bg-[#131B2E] border-white/5 shadow-xs'
-              : 'bg-white border-slate-200/80 shadow-xs'
+          className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm ${
+            tradeMessage.type === 'success'
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
           }`}
         >
-          {/* Left: Live Status Pill */}
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isSessionOpen(session)
-                  ? 'bg-emerald-500 animate-pulse'
-                  : session?.status === 'PAUSED'
-                  ? 'bg-amber-500 animate-pulse'
-                  : session?.status === 'FROZEN'
-                  ? 'bg-cyan-400'
-                  : 'bg-rose-500'
-              }`}
-            />
-            <span
-              className={`text-xs font-black uppercase tracking-wide font-mono ${
-                isSessionOpen(session)
-                  ? 'text-emerald-500'
-                  : session?.status === 'PAUSED'
-                  ? 'text-amber-500'
-                  : session?.status === 'FROZEN'
-                  ? 'text-cyan-400'
-                  : 'text-rose-500'
-              }`}
-            >
-              MARKET {isSessionOpen(session) ? 'OPEN' : (session?.status === 'PAUSED' ? 'PAUSED' : (session?.status === 'FROZEN' ? 'FROZEN' : 'CLOSED'))}
-            </span>
-          </div>
+          <ShieldCheck className="w-4 h-4" />
+          <span>{tradeMessage.text}</span>
+        </div>
+      )}
 
-          {/* Right: Session Countdown / Status */}
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5" />
+      {/* 2-COLUMN DASHBOARD GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+        {/* LEFT COLUMN: Hero Portfolio & Status (5 Cols) */}
+        <div className="md:col-span-5 space-y-4">
+        {/* 1. Market Session Status Card */}
+        <div
+          className={`p-4 rounded-3xl border backdrop-blur-xl transition-all relative overflow-hidden ${
+            isSessionOpen(session)
+              ? isDark
+                ? 'bg-gradient-to-r from-emerald-950/40 via-[#131B2E] to-[#131B2E] border-emerald-500/30 shadow-lg shadow-emerald-500/5'
+                : 'bg-gradient-to-r from-emerald-50 to-white border-emerald-200 shadow-xs'
+              : isDark
+              ? 'bg-gradient-to-r from-rose-950/30 via-[#131B2E] to-[#131B2E] border-rose-500/20 shadow-md'
+              : 'bg-gradient-to-r from-rose-50/70 to-white border-rose-200/80 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3 relative z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative flex items-center justify-center shrink-0">
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    isSessionOpen(session)
+                      ? 'bg-emerald-400 animate-ping opacity-75'
+                      : session?.status === 'PAUSED'
+                      ? 'bg-amber-400 animate-ping opacity-75'
+                      : 'bg-rose-500'
+                  }`}
+                />
+                <span
+                  className={`w-2.5 h-2.5 rounded-full absolute ${
+                    isSessionOpen(session)
+                      ? 'bg-emerald-500 shadow-sm shadow-emerald-400'
+                      : session?.status === 'PAUSED'
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
+                />
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`font-black text-xs font-mono tracking-wider uppercase ${
+                      isSessionOpen(session)
+                        ? 'text-emerald-400'
+                        : session?.status === 'PAUSED'
+                        ? 'text-amber-400'
+                        : 'text-rose-400'
+                    }`}
+                  >
+                    MARKET {isSessionOpen(session) ? 'OPEN' : (session?.status === 'PAUSED' ? 'PAUSED' : (session?.status === 'FROZEN' ? 'FROZEN' : 'CLOSED'))}
+                  </span>
+                  {isSessionOpen(session) && (
+                    <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      LIVE TRADING
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                  {isSessionOpen(session) ? 'Instant order matching enabled' : 'Orders paused until next session'}
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col text-right">
-              <span className="text-[9px] text-slate-400 font-medium">
-                {isSessionOpen(session) ? (session?.ends_at ? 'Round closes in' : 'Round type') : 'Session Status'}
-              </span>
-              <span className={`text-xs font-black font-mono ${isSessionOpen(session) ? 'text-orange-500' : 'text-slate-400'}`}>
-                {isSessionOpen(session)
-                  ? (session?.ends_at ? timer.formatted : 'No limit (∞)')
-                  : (session?.status === 'PAUSED' ? 'Paused' : (session?.status === 'FROZEN' ? 'Frozen' : 'Closed'))}
-              </span>
+
+            {/* Right: Session Countdown / Status */}
+            <div className="flex items-center gap-2.5 shrink-0 pl-2 border-l border-white/5">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/20">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col text-right font-mono">
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                  {isSessionOpen(session) ? (session?.ends_at ? 'Round Closes' : 'Duration') : 'Status'}
+                </span>
+                <span className={`text-xs font-black ${isSessionOpen(session) ? 'text-orange-400' : 'text-slate-300'}`}>
+                  {isSessionOpen(session)
+                    ? (session?.ends_at ? timer.formatted : '∞ Unlimited')
+                    : (session?.status === 'PAUSED' ? 'Paused' : (session?.status === 'FROZEN' ? 'Frozen' : 'Closed'))}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 3. Hero Total Wealth Card */}
+        {/* 2. Hero Total Wealth Card */}
         <div
-          className={`p-5 sm:p-6 rounded-3xl space-y-4 relative overflow-hidden transition-colors ${
+          className={`p-5 sm:p-6 rounded-3xl space-y-4 relative overflow-hidden transition-all backdrop-blur-xl ${
             isDark
-              ? 'bg-[#131B2E] border border-white/5 shadow-lg'
-              : 'bg-white border border-slate-200/80 shadow-sm'
+              ? 'bg-gradient-to-b from-[#162036]/90 to-[#0F1728]/95 border border-white/10 shadow-2xl'
+              : 'bg-white border border-slate-200/80 shadow-md'
           }`}
         >
+          {/* Ambient Glow Aura */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+
           {/* Header */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-mono">
-                TOTAL WEALTH
+          <div className="flex items-center justify-between gap-2 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 font-mono">
+                TOTAL PORTFOLIO WEALTH
               </span>
               <button
                 onClick={() => setIsWealthMasked(!isWealthMasked)}
-                className="text-slate-400 hover:text-slate-600 ml-0.5 cursor-pointer"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                title={isWealthMasked ? 'Show Balance' : 'Hide Balance'}
               >
                 {isWealthMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
             </div>
 
-            <span className="text-xs font-bold text-orange-500 font-mono">
-              {teamDisplayName}
-            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 font-mono font-black text-[11px]">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{teamDisplayName}</span>
+            </div>
           </div>
 
-          {/* Value + Sparkline Background */}
-          <div className="relative">
-            {/* Subtle Glowing Wave Sparkline */}
-            <div className="absolute right-0 bottom-0 w-36 sm:w-48 h-16 pointer-events-none opacity-85">
+          {/* Main Balance & Area Sparkline */}
+          <div className="relative pt-1 z-10">
+            {/* Smooth Glowing Background Sparkline */}
+            <div className="absolute right-0 bottom-0 w-40 sm:w-56 h-20 pointer-events-none opacity-80">
               <svg className="w-full h-full" viewBox="0 0 160 60" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="heroWealthGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="0%"
                       stopColor={isLoss ? '#F43F5E' : '#FF6B00'}
-                      stopOpacity={isDark ? 0.35 : 0.25}
+                      stopOpacity={0.4}
                     />
                     <stop offset="100%" stopColor={isLoss ? '#F43F5E' : '#FF6B00'} stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path
                   d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8 L160,60 L0,60 Z"
-                  fill="url(#chartGrad)"
+                  fill="url(#heroWealthGrad)"
                 />
                 <path
                   d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8"
@@ -323,26 +355,26 @@ export const Dashboard: React.FC = () => {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />
-                <circle cx="160" cy="8" r="3.5" fill={isLoss ? '#F43F5E' : '#FF6B00'} />
+                <circle cx="160" cy="8" r="4" fill={isLoss ? '#F43F5E' : '#FF6B00'} />
               </svg>
             </div>
 
-            <div className="space-y-1.5 relative z-10">
-              <div className={`text-2xl sm:text-3xl lg:text-4xl font-black font-display tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <div className="space-y-2 relative z-10">
+              <div className={`text-3xl sm:text-4xl lg:text-[42px] font-black font-display tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isWealthMasked ? '••••••••' : formatCurrency(totalWealth)}
               </div>
 
-              {/* P/L Pill & Equivalent */}
+              {/* P/L Badge + Equivalent */}
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <div
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black font-mono shrink-0 border ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-black font-mono shrink-0 border shadow-xs ${
                     isLoss
                       ? isDark
-                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                        : 'bg-rose-50 text-rose-600 border border-rose-200'
+                        ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                        : 'bg-rose-50 text-rose-600 border-rose-200'
                       : isDark
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                      : 'bg-emerald-50 text-emerald-600 border-emerald-200'
                   }`}
                 >
                   {isLoss ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
@@ -350,106 +382,114 @@ export const Dashboard: React.FC = () => {
                     {isLoss ? '-' : '+'}{formatCurrency(Math.abs(pnlVal))} ({formatPercent(pnlPct)})
                   </span>
                 </div>
-
-                <div className="text-xs text-slate-400 font-mono font-medium">
-                  Equivalent: <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{formatWealth(totalWealth)}</span>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* 2-Column Available Cash & Portfolio Value */}
+          {/* 2-Column Available Cash & Portfolio Assets */}
           <div
-            className={`grid grid-cols-2 gap-3 pt-3 border-t ${
-              isDark ? 'border-white/5' : 'border-slate-100'
+            className={`grid grid-cols-2 gap-3 pt-4 border-t relative z-10 ${
+              isDark ? 'border-white/10' : 'border-slate-100'
             }`}
           >
-            {/* Cash */}
+            {/* Cash Balance */}
             <div
-              className={`p-3.5 rounded-2xl border transition-colors ${
+              className={`p-3.5 rounded-2xl border transition-all ${
                 isDark
-                  ? 'bg-[#1E293B]/60 border-white/5'
+                  ? 'bg-[#18233C]/70 border-white/5 hover:border-white/15'
                   : 'bg-slate-50 border-slate-200/70'
               }`}
             >
               <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400 font-mono">
-                <Wallet className="w-3.5 h-3.5 text-orange-500" />
-                <span>Available Cash</span>
+                <Wallet className="w-3.5 h-3.5 text-amber-400" />
+                <span>Liquid Cash</span>
               </div>
-              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <div className={`text-base sm:text-lg font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isWealthMasked ? '••••••' : formatCurrency(cashBalance)}
+              </div>
+              <div className="text-[10px] text-slate-400 font-mono font-medium mt-0.5">
+                {formatWealth(cashBalance)}
               </div>
             </div>
 
             {/* Portfolio Value */}
             <div
-              className={`p-3.5 rounded-2xl border transition-colors ${
+              className={`p-3.5 rounded-2xl border transition-all ${
                 isDark
-                  ? 'bg-[#1E293B]/60 border-white/5'
+                  ? 'bg-[#18233C]/70 border-white/5 hover:border-white/15'
                   : 'bg-slate-50 border-slate-200/70'
               }`}
             >
               <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400 font-mono">
                 <BarChart2 className="w-3.5 h-3.5 text-orange-500" />
-                <span>Portfolio Value</span>
+                <span>Stock Assets</span>
               </div>
-              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <div className={`text-base sm:text-lg font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isWealthMasked ? '••••••' : formatCurrency(portfolioVal)}
               </div>
+              <div className="text-[10px] text-slate-400 font-mono font-medium mt-0.5">
+                {formatWealth(portfolioVal)}
+              </div>
             </div>
           </div>
         </div>
 
-      {/* 4. Latest News Wire Banner */}
-      <Link
-        to="/news"
-        className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 border transition-colors ${
-          isDark
-            ? 'bg-[#131B2E] border-white/5 hover:bg-[#1E293B]'
-            : 'bg-white border-slate-200/80 hover:bg-slate-50 shadow-xs'
-        }`}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
-            <Radio className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-orange-500 text-white font-mono">
-                LATEST WIRE
-              </span>
-              {latestNews && (
-                <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
-                  {latestNews.sector}
+        {/* 3. Latest News Wire Ticker */}
+        <Link
+          to="/news"
+          className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 border transition-all backdrop-blur-md ${
+            isDark
+              ? 'bg-[#131B2E]/90 border-white/5 hover:bg-[#1A253E] hover:border-orange-500/30'
+              : 'bg-white border-slate-200/80 hover:bg-slate-50 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center shrink-0">
+              <Radio className="w-4 h-4 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-orange-500 text-white font-mono">
+                  LATEST WIRE
                 </span>
-              )}
+                {latestNews && (
+                  <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/15 text-slate-300 font-mono">
+                    {latestNews.sector}
+                  </span>
+                )}
+              </div>
+              <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {latestNews ? latestNews.headline : 'No breaking market events published yet.'}
+              </p>
             </div>
-            <p className={`text-xs font-extrabold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {latestNews ? latestNews.headline : 'No breaking news published yet. Check back soon!'}
-            </p>
           </div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-      </Link>
-    </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+        </Link>
+      </div>
 
-    {/* RIGHT COLUMN: Market Watchlist */}
-    <div className="md:col-span-7 space-y-3.5">
-      {/* 5. Market Watchlist */}
-      <div className="space-y-3">
+      {/* RIGHT COLUMN: Market Watchlist (7 Cols) */}
+      <div className="md:col-span-7 space-y-3.5">
+        {/* Watchlist Header */}
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-orange-500" />
-            <h3 className={`text-xs font-black tracking-wide uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <h3 className={`text-xs font-black tracking-wider uppercase font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
               Market Watchlist
             </h3>
+            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+              {stocks.length} Assets
+            </span>
           </div>
-          <Link to="/market" className="text-xs font-bold text-orange-500 hover:text-orange-400">
-            View All ({stocks.length || 5}) ›
+          <Link
+            to="/market"
+            className="text-xs font-black text-orange-500 hover:text-orange-400 flex items-center gap-1 font-mono transition-colors"
+          >
+            <span>View All Market Board</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Stock Cards List */}
+        {/* Luxury Stock Cards List */}
         <div className="space-y-3">
           {pulsedStocks.slice(0, 5).map((stock) => {
             const holding = holdings.find((h) => h.stock_id === stock.id);
@@ -470,15 +510,15 @@ export const Dashboard: React.FC = () => {
             return (
               <div
                 key={stock.id}
-                className={`p-4 rounded-3xl border transition-all space-y-3 ${
+                className={`p-4 sm:p-4.5 rounded-3xl border transition-all duration-300 hover:-translate-y-0.5 space-y-3.5 ${
                   isDark
-                    ? 'bg-[#131B2E] border-white/5 shadow-md'
-                    : 'bg-white border-slate-200/80 shadow-xs'
+                    ? 'bg-gradient-to-b from-[#141C2E]/95 to-[#0E1524]/95 border-white/[0.08] hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5'
+                    : 'bg-white border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md'
                 }`}
               >
-                {/* Header: Logo + Symbol + Sector + Change % */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                {/* Top Row: Logo + Symbol + Sector + Sparkline */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <StockLogo
                       symbol={stock.symbol}
                       name={stock.company_name}
@@ -486,62 +526,89 @@ export const Dashboard: React.FC = () => {
                       size="md"
                     />
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-black text-sm tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-black text-base tracking-tight font-display ${isDark ? 'text-white' : 'text-slate-900'}`}>
                           {stock.symbol}
                         </span>
-                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
+                        <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
                           {stock.sector}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-400 font-medium truncate">
+                      <div className="text-xs text-slate-400 font-medium truncate mt-0.5">
                         {stock.company_name}
                       </div>
                     </div>
                   </div>
 
-                  <div
-                    className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-black font-mono shrink-0 ${
-                      isUp
-                        ? isDark
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                        : isDark
-                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                        : 'bg-rose-50 text-rose-600 border border-rose-200'
-                    }`}
-                  >
-                    {isUp ? '↗' : '↘'} {pct}%
+                  {/* Sparkline Graph with Glowing End Point */}
+                  <div className="w-24 sm:w-28 h-9 shrink-0">
+                    <svg className="w-full h-full" viewBox="0 0 100 36" preserveAspectRatio="none">
+                      <path
+                        d={
+                          isUp
+                            ? 'M0,30 L20,26 L35,28 L50,18 L65,22 L80,10 L100,6'
+                            : 'M0,8 L20,16 L35,12 L50,24 L65,20 L80,28 L100,32'
+                        }
+                        fill="none"
+                        stroke={isUp ? '#10B981' : '#F43F5E'}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                      <circle
+                        cx="100"
+                        cy={isUp ? '6' : '32'}
+                        r="3.5"
+                        fill={isUp ? '#10B981' : '#F43F5E'}
+                      />
+                    </svg>
                   </div>
                 </div>
 
-                {/* Price + High/Low/Owned + Jagged Mini Sparkline */}
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <div
-                      className={`text-xl font-black font-mono transition-colors duration-1000 ease-out flex items-center gap-1.5 ${
-                        flash === 'up'
-                          ? 'text-emerald-400'
-                          : flash === 'down'
-                          ? 'text-rose-400'
-                          : isDark
-                          ? 'text-white'
-                          : 'text-slate-900'
-                      }`}
-                    >
-                      <span>{formattedPrice}</span>
-                      {isMarketOpen && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50 inline-block shrink-0" title="Live Market Active" />
-                      )}
+                {/* Bottom Row: Price & Owned + Tactile Buy / Sell Pill Buttons */}
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`text-xl sm:text-2xl font-black font-mono tracking-tight transition-colors duration-1000 ease-out flex items-center gap-1.5 ${
+                          flash === 'up'
+                            ? 'text-emerald-400'
+                            : flash === 'down'
+                            ? 'text-rose-400'
+                            : isDark
+                            ? 'text-white'
+                            : 'text-slate-900'
+                        }`}
+                      >
+                        <span>{formattedPrice}</span>
+                        {isMarketOpen && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50 inline-block shrink-0" title="Live Active" />
+                        )}
+                      </div>
+
+                      {/* % Change Pill */}
+                      <div
+                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] font-black font-mono shrink-0 border ${
+                          isUp
+                            ? isDark
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : isDark
+                            ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                            : 'bg-rose-50 text-rose-600 border-rose-200'
+                        }`}
+                      >
+                        {isUp ? '↗ +' : '↘ '}{pct}%
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5 flex-wrap">
                       <span>H: ₹{Math.round(stock.high_price).toLocaleString('en-IN')}</span>
                       <span>·</span>
                       <span>L: ₹{Math.round(stock.low_price).toLocaleString('en-IN')}</span>
                       {ownedQty > 0 && (
                         <>
                           <span>·</span>
-                          <span className="text-orange-500 font-bold">
+                          <span className="text-orange-400 font-bold">
                             Owned: {ownedQty.toLocaleString('en-IN')}
                           </span>
                         </>
@@ -549,56 +616,28 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Jagged Sparkline */}
-                  <div className="w-24 h-10">
-                    <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <path
-                        d={
-                          isUp
-                            ? 'M0,35 L20,30 L35,33 L50,22 L65,26 L80,14 L100,8'
-                            : 'M0,10 L20,18 L35,14 L50,26 L65,22 L80,32 L100,36'
-                        }
-                        fill="none"
-                        stroke={isUp ? '#10B981' : '#F43F5E'}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <circle
-                        cx="100"
-                        cy={isUp ? '8' : '36'}
-                        r="3"
-                        fill={isUp ? '#10B981' : '#F43F5E'}
-                      />
-                    </svg>
-                  </div>
-                </div>
+                  {/* Tactile Buy / Sell Pill Action Buttons */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleBuy(stock)}
+                      disabled={!isMarketOpen || !isTrader}
+                      title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+                      className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-black text-xs font-mono tracking-wide bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-xs shadow-emerald-500/25 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <span>BUY</span>
+                    </button>
 
-                {/* BUY / SELL Action Buttons */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    onClick={() => handleBuy(stock)}
-                    disabled={!isMarketOpen || !isTrader}
-                    title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
-                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
-                      isDark
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs shadow-emerald-600/20'
-                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                    }`}
-                  >
-                    <span>{isTrader ? '↗ BUY' : '↗ BUY (VIEW)'}</span>
-                  </button>
-                  <button
-                    onClick={() => handleSell(stock)}
-                    disabled={!isMarketOpen || !isTrader || ownedQty === 0}
-                    title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
-                    className={`py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-35 disabled:cursor-not-allowed ${
-                      isDark
-                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs shadow-rose-600/20'
-                        : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                    }`}
-                  >
-                    <span>{isTrader ? '↘ SELL' : '↘ SELL (VIEW)'}</span>
-                  </button>
+                    <button
+                      onClick={() => handleSell(stock)}
+                      disabled={!isMarketOpen || !isTrader || ownedQty === 0}
+                      title={!isTrader ? 'Only your team\'s designated primary trader can execute trades' : undefined}
+                      className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-black text-xs font-mono tracking-wide bg-gradient-to-r from-rose-500/20 to-rose-600/20 hover:from-rose-500 hover:to-rose-600 text-rose-400 hover:text-white border border-rose-500/30 hover:border-transparent active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ArrowDownRight className="w-3.5 h-3.5" />
+                      <span>SELL</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
