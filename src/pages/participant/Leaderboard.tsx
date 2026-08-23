@@ -53,6 +53,7 @@ export const Leaderboard: React.FC = () => {
   );
 
   const isLeaderboardVisible = event?.is_leaderboard_visible !== false;
+  const currentMetric = event?.leaderboard_metric || 'PORTFOLIO_VALUE';
   const qualificationCutoff = event?.qualification_count || participant?.event.qualification_count || 5;
 
   // If Admin has hidden the leaderboard, smoothly redirect to Trade History
@@ -63,17 +64,25 @@ export const Leaderboard: React.FC = () => {
   return (
     <div className="space-y-4 max-w-4xl mx-auto pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className={`text-xl sm:text-2xl font-black font-display tracking-tight flex items-center gap-2 whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
             <span>Live Standings</span>
           </h2>
+          <div className="text-[11px] text-slate-400 font-mono font-medium mt-0.5">
+            Ranked by: <span className="font-bold text-orange-500">{currentMetric === 'PORTFOLIO_VALUE' ? 'Portfolio Asset Value' : 'Total Combined Wealth'}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-          <Radio className="w-3 h-3 animate-pulse" />
-          <span>LIVE</span>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+            {currentMetric === 'PORTFOLIO_VALUE' ? 'Portfolio Mode' : 'Wealth Mode'}
+          </span>
+          <div className="flex items-center gap-1 text-[10px] font-black font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+            <Radio className="w-3 h-3 animate-pulse" />
+            <span>LIVE</span>
+          </div>
         </div>
       </div>
 
@@ -96,6 +105,8 @@ export const Leaderboard: React.FC = () => {
             const isMyTeam = entry.team_id === participant?.team.id;
             const isEliminated = entry.team_status === 'ELIMINATED';
             const isCutoffLine = entry.rank === qualificationCutoff && index < entries.length - 1;
+
+            const primaryValue = currentMetric === 'PORTFOLIO_VALUE' ? entry.portfolio_value : entry.total_wealth;
 
             return (
               <React.Fragment key={entry.team_id}>
@@ -147,31 +158,24 @@ export const Leaderboard: React.FC = () => {
                           </span>
                         )}
                       </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        Cash: {formatWealth(entry.cash_balance)}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Wealth & Return */}
+                  {/* Primary Value & Sub-Stats */}
                   <div className="text-right shrink-0">
-                    <div className={`font-black text-sm font-mono whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {formatCurrency(entry.total_wealth)}
+                    <div className={`font-black text-sm sm:text-base font-mono whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {formatCurrency(primaryValue)}
                     </div>
-                    <div
-                      className={`text-[10px] font-bold font-mono flex items-center justify-end gap-1 whitespace-nowrap ${
-                        entry.today_pnl_pct > 0
-                          ? 'text-emerald-500'
-                          : entry.today_pnl_pct < 0
-                          ? 'text-rose-500'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {entry.today_pnl_pct > 0 ? (
-                        <TrendingUp className="w-3 h-3" />
-                      ) : entry.today_pnl_pct < 0 ? (
-                        <TrendingDown className="w-3 h-3" />
-                      ) : (
-                        <Minus className="w-3 h-3" />
+                    <div className="text-[10px] font-bold font-mono text-slate-400 flex items-center justify-end gap-1 whitespace-nowrap mt-0.5">
+                      <span>({formatWealth(primaryValue)})</span>
+                      {currentMetric === 'TOTAL_WEALTH' && (
+                        <span className={entry.today_pnl_pct >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                          · {formatPercent(entry.today_pnl_pct)}
+                        </span>
                       )}
-                      <span>{formatPercent(entry.today_pnl_pct)} ({formatWealth(entry.total_wealth)})</span>
                     </div>
                   </div>
                 </div>

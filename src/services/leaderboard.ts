@@ -2,7 +2,12 @@ import { supabase, isSupabaseConfigured, isValidUuid } from '../lib/supabase';
 import { LeaderboardEntry } from '../types';
 import { getMockDB } from './mockData';
 
-export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[]> {
+export async function getLeaderboard(
+  eventId: string,
+  metric: 'PORTFOLIO_VALUE' | 'TOTAL_WEALTH' = 'PORTFOLIO_VALUE'
+): Promise<LeaderboardEntry[]> {
+  let list: LeaderboardEntry[] = [];
+
   if (isSupabaseConfigured && isValidUuid(eventId)) {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
@@ -10,7 +15,7 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
       });
 
       if (!error && data && data.length > 0) {
-        return (data as any[])
+        list = (data as any[])
           .filter((row) => row.team_status !== 'ELIMINATED')
           .map((row) => ({
             team_id: row.team_id,
@@ -30,63 +35,71 @@ export async function getLeaderboard(eventId: string): Promise<LeaderboardEntry[
     }
   }
 
-  // Fallback Dynamic Calculation - Match all valid active teams (deduplicated)
-  const db = getMockDB();
-  const seenCodes = new Set<string>();
-  const seenNames = new Set<string>();
-  const uniqueTeams = [];
+  if (list.length === 0) {
+    // Fallback Dynamic Calculation - Match all valid active teams (deduplicated)
+    const db = getMockDB();
+    const seenCodes = new Set<string>();
+    const seenNames = new Set<string>();
+    const uniqueTeams = [];
 
-  for (const t of db.teams) {
-    if (
-      !eventId ||
-      eventId === 'e1' ||
-      t.event_id === eventId ||
-      t.event_id === 'e1' ||
-      t.event_id === 'e1111111-1111-1111-1111-111111111111'
-    ) {
-      const codeKey = (t.team_code || '').trim().toUpperCase();
-      const nameKey = (t.name || '').trim().toLowerCase();
-      if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
-        if (codeKey) seenCodes.add(codeKey);
-        if (nameKey) seenNames.add(nameKey);
-        uniqueTeams.push(t);
+    for (const t of db.teams) {
+      if (
+        !eventId ||
+        eventId === 'e1' ||
+        t.event_id === eventId ||
+        t.event_id === 'e1' ||
+        t.event_id === 'e1111111-1111-1111-1111-111111111111'
+      ) {
+        const codeKey = (t.team_code || '').trim().toUpperCase();
+        const nameKey = (t.name || '').trim().toLowerCase();
+        if (!seenCodes.has(codeKey) && !seenNames.has(nameKey)) {
+          if (codeKey) seenCodes.add(codeKey);
+          if (nameKey) seenNames.add(nameKey);
+          uniqueTeams.push(t);
+        }
       }
     }
+
+    list = uniqueTeams.map((team) => {
+      const teamHoldings = db.holdings.filter((h) => h.team_id === team.id);
+      const portfolioVal = teamHoldings.reduce((sum, h) => {
+        const stock = db.stocks.find((s) => s.id === h.stock_id && s.is_active);
+        return sum + h.quantity * (stock?.current_price || 0);
+      }, 0);
+
+      const totalWealth = team.cash_balance + portfolioVal;
+      const startWealth = team.starting_wealth || 100000000;
+      const todayPnl = totalWealth - startWealth;
+      const todayPnlPct = startWealth > 0 ? (todayPnl / startWealth) * 100 : 0;
+
+      return {
+        team_id: team.id,
+        team_name: team.name,
+        team_status: team.status,
+        cash_balance: team.cash_balance,
+        portfolio_value: portfolioVal,
+        total_wealth: totalWealth,
+        starting_wealth: startWealth,
+        today_pnl: todayPnl,
+        today_pnl_pct: todayPnlPct,
+        rank: 1,
+      };
+    });
   }
 
-  const calculated = uniqueTeams.map((team) => {
-    const teamHoldings = db.holdings.filter((h) => h.team_id === team.id);
-    const portfolioVal = teamHoldings.reduce((sum, h) => {
-      const stock = db.stocks.find((s) => s.id === h.stock_id && s.is_active);
-      return sum + h.quantity * (stock?.current_price || 0);
-    }, 0);
+  // Sort according to metric preference
+  if (metric === 'PORTFOLIO_VALUE') {
+    // Sort by Portfolio Value DESC, tie-break by total wealth
+    list.sort((a, b) => b.portfolio_value - a.portfolio_value || b.total_wealth - a.total_wealth);
+  } else {
+    // Sort by Total Wealth DESC
+    list.sort((a, b) => b.total_wealth - a.total_wealth);
+  }
 
-    const totalWealth = team.cash_balance + portfolioVal;
-    const startWealth = team.starting_wealth || 100000000;
-    const todayPnl = totalWealth - startWealth;
-    const todayPnlPct = startWealth > 0 ? (todayPnl / startWealth) * 100 : 0;
-
-    return {
-      team_id: team.id,
-      team_name: team.name,
-      team_status: team.status,
-      cash_balance: team.cash_balance,
-      portfolio_value: portfolioVal,
-      total_wealth: totalWealth,
-      starting_wealth: startWealth,
-      today_pnl: todayPnl,
-      today_pnl_pct: todayPnlPct,
-      rank: 1,
-    };
-  });
-
-  // Sort DESC by total wealth
-  calculated.sort((a, b) => b.total_wealth - a.total_wealth);
-
-  // Assign ranks
-  calculated.forEach((item, idx) => {
+  // Assign clean sequential ranks
+  list.forEach((item, idx) => {
     item.rank = idx + 1;
   });
 
-  return calculated;
+  return list;
 }

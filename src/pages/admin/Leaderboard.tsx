@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getActiveEvent, setLeaderboardVisibility } from '../../services/event';
+import { getActiveEvent, setLeaderboardVisibility, setLeaderboardMetric } from '../../services/event';
 import { getLeaderboard } from '../../services/leaderboard';
 import { Event, LeaderboardEntry } from '../../types';
 import { formatCurrency, formatWealth, formatPercent, formatTeamName } from '../../lib/formatting';
-import { Trophy, Crown, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
+import { Trophy, Crown, TrendingUp, TrendingDown, Minus, Eye, EyeOff, Briefcase, Wallet } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const AdminLeaderboard: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [isToggling, setIsToggling] = useState(false);
+  const [isSettingMetric, setIsSettingMetric] = useState(false);
 
   const loadLeaderboard = useCallback(async () => {
     try {
       const activeEvent = await getActiveEvent();
       setEvent(activeEvent);
-      const list = await getLeaderboard(activeEvent.id);
+      const metric = activeEvent.leaderboard_metric || 'PORTFOLIO_VALUE';
+      const list = await getLeaderboard(activeEvent.id, metric);
       setEntries(list);
     } catch (err) {
       console.error('Error loading leaderboard:', err);
@@ -36,6 +38,7 @@ export const AdminLeaderboard: React.FC = () => {
   );
 
   const isVisibleForParticipants = event?.is_leaderboard_visible !== false;
+  const currentMetric = event?.leaderboard_metric || 'PORTFOLIO_VALUE';
 
   const handleToggleVisibility = async () => {
     if (!event || isToggling) return;
@@ -51,12 +54,27 @@ export const AdminLeaderboard: React.FC = () => {
     }
   };
 
+  const handleSelectMetric = async (metric: 'PORTFOLIO_VALUE' | 'TOTAL_WEALTH') => {
+    if (!event || isSettingMetric || currentMetric === metric) return;
+    setIsSettingMetric(true);
+    try {
+      await setLeaderboardMetric(event.id, metric);
+      setEvent((prev) => prev ? { ...prev, leaderboard_metric: metric } : prev);
+      const list = await getLeaderboard(event.id, metric);
+      setEntries(list);
+    } catch (err) {
+      console.error('Error setting leaderboard metric:', err);
+    } finally {
+      setIsSettingMetric(false);
+    }
+  };
+
   const cutoff = event?.qualification_count || 5;
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header with Participant Visibility Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header with Metric Selector & Visibility Toggle */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight flex items-center gap-2.5 whitespace-nowrap">
             <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-amber-500 shrink-0" />
@@ -67,8 +85,42 @@ export const AdminLeaderboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Visibility Toggle Control Button */}
-        <div className="flex items-center gap-3">
+        {/* Controls: Ranking Metric Selector + Participant Visibility Toggle */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+          {/* Ranking Metric Selector */}
+          <div className="flex items-center gap-1 p-1 bg-white border border-slate-200/90 rounded-2xl shadow-xs text-xs font-mono">
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 px-2">
+              Rank Basis:
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSelectMetric('PORTFOLIO_VALUE')}
+              disabled={isSettingMetric}
+              className={`px-3 py-1.5 rounded-xl font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentMetric === 'PORTFOLIO_VALUE'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Portfolio Value</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectMetric('TOTAL_WEALTH')}
+              disabled={isSettingMetric}
+              className={`px-3 py-1.5 rounded-xl font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentMetric === 'TOTAL_WEALTH'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>Total Wealth</span>
+            </button>
+          </div>
+
+          {/* Visibility Toggle Control Button */}
           <button
             type="button"
             onClick={handleToggleVisibility}
@@ -82,17 +134,14 @@ export const AdminLeaderboard: React.FC = () => {
             {isVisibleForParticipants ? (
               <>
                 <Eye className="w-4 h-4 text-emerald-600" />
-                <span>Participants: LEADERBOARD VISIBLE</span>
+                <span>Participants: VISIBLE</span>
               </>
             ) : (
               <>
                 <EyeOff className="w-4 h-4 text-rose-600" />
-                <span>Participants: HIDDEN (Trade History Mode)</span>
+                <span>Participants: HIDDEN</span>
               </>
             )}
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-lg bg-white/80 border border-current shadow-xs">
-              {isVisibleForParticipants ? 'Click to Hide' : 'Click to Show'}
-            </span>
           </button>
         </div>
       </div>
@@ -242,8 +291,12 @@ export const AdminLeaderboard: React.FC = () => {
                 <th className="py-3.5 px-6 text-center whitespace-nowrap">Rank</th>
                 <th className="py-3.5 px-6 whitespace-nowrap min-w-[140px]">Team Name</th>
                 <th className="py-3.5 px-6 text-right whitespace-nowrap">Cash Balance</th>
-                <th className="py-3.5 px-6 text-right whitespace-nowrap">Portfolio Value</th>
-                <th className="py-3.5 px-6 text-right whitespace-nowrap">Total Wealth</th>
+                <th className={`py-3.5 px-6 text-right whitespace-nowrap ${currentMetric === 'PORTFOLIO_VALUE' ? 'text-orange-500 font-black' : ''}`}>
+                  Portfolio Value {currentMetric === 'PORTFOLIO_VALUE' && '★ (Ranked)'}
+                </th>
+                <th className={`py-3.5 px-6 text-right whitespace-nowrap ${currentMetric === 'TOTAL_WEALTH' ? 'text-orange-500 font-black' : ''}`}>
+                  Total Wealth {currentMetric === 'TOTAL_WEALTH' && '★ (Ranked)'}
+                </th>
                 <th className="py-3.5 px-6 text-right whitespace-nowrap">Today's P/L</th>
                 <th className="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
               </tr>

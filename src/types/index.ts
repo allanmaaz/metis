@@ -26,6 +26,7 @@ export interface Event {
   starting_capital: number;
   qualification_count: number;
   is_leaderboard_visible?: boolean;
+  leaderboard_metric?: 'PORTFOLIO_VALUE' | 'TOTAL_WEALTH';
   created_at: string;
   started_at: string | null;
   ended_at: string | null;

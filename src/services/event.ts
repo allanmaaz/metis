@@ -28,20 +28,23 @@ export async function getActiveEvent(): Promise<Event> {
     event = db.events[0];
   }
 
-  // Parse leaderboard visibility if stored in description
+  // Parse leaderboard visibility & metric if stored in description
   if (event && event.description) {
     try {
       if (event.description.startsWith('{') && event.description.endsWith('}')) {
         const parsed = JSON.parse(event.description);
         event.is_leaderboard_visible = parsed.leaderboard_visible !== false;
+        event.leaderboard_metric = parsed.leaderboard_metric || 'PORTFOLIO_VALUE';
         event.description = parsed.text || parsed.description || event.description;
       }
     } catch {
-      // Plain text description, default to visible
+      // Plain text description, default to visible and portfolio value
       event.is_leaderboard_visible = true;
+      event.leaderboard_metric = 'PORTFOLIO_VALUE';
     }
   } else if (event) {
     event.is_leaderboard_visible = true;
+    event.leaderboard_metric = 'PORTFOLIO_VALUE';
   }
 
   return event;
@@ -64,6 +67,7 @@ export async function setLeaderboardVisibility(
       const meta = JSON.stringify({
         text: currentDesc.startsWith('{') ? (JSON.parse(currentDesc).text || currentDesc) : currentDesc,
         leaderboard_visible: visible,
+        leaderboard_metric: event?.leaderboard_metric || 'PORTFOLIO_VALUE',
       });
 
       await supabase
@@ -75,10 +79,44 @@ export async function setLeaderboardVisibility(
     }
   }
 
-  broadcastRealtimeEvent('LEADERBOARD_UPDATED', { is_leaderboard_visible: visible });
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', { is_leaderboard_visible: visible, leaderboard_metric: event?.leaderboard_metric || 'PORTFOLIO_VALUE' });
   broadcastRealtimeEvent('MARKET_SESSION_CHANGED', { is_leaderboard_visible: visible });
 
   return { success: true, is_leaderboard_visible: visible };
+}
+
+export async function setLeaderboardMetric(
+  eventId: string,
+  metric: 'PORTFOLIO_VALUE' | 'TOTAL_WEALTH'
+): Promise<{ success: boolean; leaderboard_metric: 'PORTFOLIO_VALUE' | 'TOTAL_WEALTH'; error?: string }> {
+  const db = getMockDB();
+  const event = db.events.find((e) => e.id === eventId || eventId === 'e1') || db.events[0];
+  if (event) {
+    event.leaderboard_metric = metric;
+    saveMockDB(db);
+  }
+
+  if (isSupabaseConfigured) {
+    try {
+      const currentDesc = event?.description || 'The Strategic Market Challenge — Live Virtual Stock Trading Arena';
+      const meta = JSON.stringify({
+        text: currentDesc.startsWith('{') ? (JSON.parse(currentDesc).text || currentDesc) : currentDesc,
+        leaderboard_visible: event?.is_leaderboard_visible !== false,
+        leaderboard_metric: metric,
+      });
+
+      await supabase
+        .from('events')
+        .update({ description: meta })
+        .eq('id', eventId);
+    } catch (err: any) {
+      console.warn('Error setting leaderboard metric on Supabase:', err);
+    }
+  }
+
+  broadcastRealtimeEvent('LEADERBOARD_UPDATED', { leaderboard_metric: metric });
+
+  return { success: true, leaderboard_metric: metric };
 }
 
 export async function closeEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
