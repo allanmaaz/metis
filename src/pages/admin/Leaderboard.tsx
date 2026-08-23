@@ -4,6 +4,7 @@ import { getLeaderboard } from '../../services/leaderboard';
 import { Event, LeaderboardEntry } from '../../types';
 import { formatCurrency, formatWealth, formatPercent, formatTeamName } from '../../lib/formatting';
 import { Trophy, Crown, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
+import { useRealtimeSubscription } from '../../lib/realtimeBus';
 
 export const AdminLeaderboard: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -26,6 +27,13 @@ export const AdminLeaderboard: React.FC = () => {
     const interval = setInterval(loadLeaderboard, 3000);
     return () => clearInterval(interval);
   }, [loadLeaderboard]);
+
+  // Instant sub-second real-time sync
+  useRealtimeSubscription(
+    ['TRADE_EXECUTED', 'PORTFOLIO_CHANGED', 'TEAM_UPDATED', 'STOCK_PRICE_UPDATED', 'LEADERBOARD_UPDATED', 'MARKET_SESSION_CHANGED'],
+    loadLeaderboard,
+    800
+  );
 
   const isVisibleForParticipants = event?.is_leaderboard_visible !== false;
 
