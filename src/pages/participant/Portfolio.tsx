@@ -6,6 +6,7 @@ import { getTeamTrades, sellStock } from '../../services/trade';
 import { Holding, PortfolioSummary, Trade } from '../../types';
 import { formatCurrency, formatWealth, formatPercent, formatClockTime } from '../../lib/formatting';
 import { SellModal } from '../../components/market/SellModal';
+import { StockLogo } from '../../components/common/StockLogo';
 import {
   Briefcase,
   TrendingUp,
@@ -218,21 +219,29 @@ export const Portfolio: React.FC = () => {
                 return (
                   <div
                     key={holding.id}
-                    className={`p-3.5 rounded-2xl border flex items-center justify-between gap-2 ${
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
                       isDark ? 'bg-[#1E293B]/60 border-white/5' : 'bg-slate-50/70 border-slate-200/60'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`font-black text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                          {holding.stock.symbol}
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-400">
-                          {holding.quantity.toLocaleString('en-IN')} shares
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                        Avg: {formatCurrency(holding.average_cost)} · Cur: {formatCurrency(holding.stock.current_price)}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <StockLogo
+                        symbol={holding.stock.symbol}
+                        name={holding.stock.company_name}
+                        sector={holding.stock.sector}
+                        size="md"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            {holding.stock.symbol}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">
+                            {holding.quantity.toLocaleString('en-IN')} shares
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          Avg: {formatCurrency(holding.average_cost)} · Cur: {formatCurrency(holding.stock.current_price)}
+                        </div>
                       </div>
                     </div>
 

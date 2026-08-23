@@ -13,6 +13,7 @@ import {
 import { formatCurrency, formatWealth, formatQuantity, formatClockTime } from '../../lib/formatting';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import { Link } from 'react-router-dom';
+import { StockLogo } from '../../components/common/StockLogo';
 
 export const TradeHistory: React.FC = () => {
   const { participant } = useAuth();
@@ -170,6 +171,12 @@ export const TradeHistory: React.FC = () => {
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
+                      <StockLogo
+                        symbol={t.stock?.symbol}
+                        name={t.stock?.company_name}
+                        sector={t.stock?.sector}
+                        size="xs"
+                      />
                       <span className={`font-black text-base font-display ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {t.stock?.symbol || 'STOCK'}
                       </span>

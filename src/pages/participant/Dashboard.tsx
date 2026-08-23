@@ -9,6 +9,7 @@ import { buyStock, sellStock } from '../../services/trade';
 import { Stock, MarketSession, PortfolioSummary, NewsItem, Holding } from '../../types';
 import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
+import { StockLogo } from '../../components/common/StockLogo';
 import { formatWealth, formatCurrency, formatPercent, formatClockTime, formatTeamName } from '../../lib/formatting';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
@@ -475,34 +476,43 @@ export const Dashboard: React.FC = () => {
                     : 'bg-white border-slate-200/80 shadow-xs'
                 }`}
               >
-                {/* Header: Symbol + Sector + Change % */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-black text-sm tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {stock.symbol}
-                    </span>
-                    <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 font-mono">
-                      {stock.sector}
-                    </span>
+                {/* Header: Logo + Symbol + Sector + Change % */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <StockLogo
+                      symbol={stock.symbol}
+                      name={stock.company_name}
+                      sector={stock.sector}
+                      size="md"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`font-black text-sm tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          {stock.symbol}
+                        </span>
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
+                          {stock.sector}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-medium truncate">
+                        {stock.company_name}
+                      </div>
+                    </div>
                   </div>
 
                   <div
-                    className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] font-bold font-mono ${
+                    className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-black font-mono shrink-0 ${
                       isUp
                         ? isDark
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-emerald-50 text-emerald-600'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                         : isDark
-                        ? 'bg-rose-500/15 text-rose-400'
-                        : 'bg-rose-50 text-rose-600'
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                        : 'bg-rose-50 text-rose-600 border border-rose-200'
                     }`}
                   >
                     {isUp ? '↗' : '↘'} {pct}%
                   </div>
-                </div>
-
-                <div className="text-[11px] text-slate-400 -mt-1 font-medium truncate">
-                  {stock.company_name}
                 </div>
 
                 {/* Price + High/Low/Owned + Jagged Mini Sparkline */}

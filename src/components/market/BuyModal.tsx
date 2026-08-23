@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { formatCurrency, formatQuantity } from '../../lib/formatting';
 import { AlertCircle, Wallet, ShoppingCart } from 'lucide-react';
+import { StockLogo } from '../common/StockLogo';
 
 interface BuyModalProps {
   isOpen: boolean;
@@ -67,9 +68,12 @@ export const BuyModal: React.FC<BuyModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-400 font-extrabold">BUY</span>
-          <span>{stock.symbol}</span>
+        <div className="flex items-center gap-2.5">
+          <StockLogo symbol={stock.symbol} name={stock.company_name} sector={stock.sector} size="md" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-emerald-400 font-extrabold font-mono">BUY</span>
+            <span className="font-black font-display text-white">{stock.symbol}</span>
+          </div>
         </div>
       }
       subtitle={stock.company_name}

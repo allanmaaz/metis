@@ -3,6 +3,7 @@ import { Stock } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { formatCurrency, formatPercent } from '../../lib/formatting';
 import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { StockLogo } from '../common/StockLogo';
 
 interface StockCardProps {
   stock: Stock;
@@ -61,23 +62,37 @@ export const StockCard: React.FC<StockCardProps> = ({
       }`}
     >
       <div className="space-y-2">
-        {/* Header: Symbol + Sector + Change % Badge */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className={`font-black text-base tracking-tight ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}
-            >
-              {stock.symbol}
-            </span>
-            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 font-mono">
-              {stock.sector}
-            </span>
+        {/* Header: Logo + Symbol + Sector + Change % Badge */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <StockLogo
+              symbol={stock.symbol}
+              name={stock.company_name}
+              sector={stock.sector}
+              size="md"
+            />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`font-black text-base tracking-tight ${
+                    isDark ? 'text-white' : 'text-slate-900'
+                  }`}
+                >
+                  {stock.symbol}
+                </span>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 font-mono">
+                  {stock.sector}
+                </span>
+              </div>
+              {/* Company Name */}
+              <div className="text-xs text-slate-400 font-medium truncate">
+                {stock.company_name}
+              </div>
+            </div>
           </div>
 
           <div
-            className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-xl text-[11px] font-bold font-mono ${
+            className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-xl text-[11px] font-black font-mono shrink-0 ${
               isUp
                 ? isDark
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -97,11 +112,6 @@ export const StockCard: React.FC<StockCardProps> = ({
               {pct}%
             </span>
           </div>
-        </div>
-
-        {/* Company Name */}
-        <div className="text-xs text-slate-400 font-medium truncate">
-          {stock.company_name}
         </div>
 
         {/* Price + High/Low/Owned + Sparkline Chart */}

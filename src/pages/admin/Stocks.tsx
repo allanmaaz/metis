@@ -16,6 +16,7 @@ import {
   PieChart,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
+import { StockLogo } from '../../components/common/StockLogo';
 
 export const AdminStocks: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -167,9 +168,12 @@ export const AdminStocks: React.FC = () => {
                 {/* Top Row: Asset + Current Price */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center border border-orange-200/60 shadow-xs shrink-0 font-mono">
-                      {stock.symbol.slice(0, 3)}
-                    </div>
+                    <StockLogo
+                      symbol={stock.symbol}
+                      name={stock.company_name}
+                      sector={stock.sector}
+                      size="md"
+                    />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="font-extrabold text-base text-slate-900 font-mono">
@@ -288,9 +292,12 @@ export const AdminStocks: React.FC = () => {
                     {/* Asset & Sector */}
                     <td className="py-3.5 px-4 align-middle">
                       <div className="flex items-center gap-2.5 font-sans min-w-0">
-                        <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center border border-orange-200/60 shadow-xs shrink-0 font-mono">
-                          {stock.symbol.slice(0, 3)}
-                        </div>
+                        <StockLogo
+                          symbol={stock.symbol}
+                          name={stock.company_name}
+                          sector={stock.sector}
+                          size="md"
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-extrabold text-sm text-slate-900 font-mono">

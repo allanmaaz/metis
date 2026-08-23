@@ -8,6 +8,7 @@ import {
 } from '../../data/realWorldStocks';
 import { formatCurrency } from '../../lib/formatting';
 import { Sparkles, Building2, Search, ChevronDown, ChevronUp, Check, Plus } from 'lucide-react';
+import { StockLogo } from '../common/StockLogo';
 
 interface CreateStockModalProps {
   isOpen: boolean;
@@ -154,9 +155,18 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
             className="w-full rounded-2xl p-3.5 bg-slate-900 border border-slate-700/80 hover:border-orange-500/60 transition-all cursor-pointer flex items-center justify-between gap-3 shadow-xs"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-400 font-mono font-black text-xs flex items-center justify-center border border-orange-500/20 shrink-0">
-                {selectedStockSymbol === 'CUSTOM' ? '+' : (symbol.slice(0, 3) || 'STK')}
-              </div>
+              {selectedStockSymbol === 'CUSTOM' ? (
+                <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-400 font-mono font-black text-xs flex items-center justify-center border border-orange-500/20 shrink-0">
+                  +
+                </div>
+              ) : (
+                <StockLogo
+                  symbol={symbol}
+                  name={companyName}
+                  sector={currentSelectedPreset?.sector}
+                  size="sm"
+                />
+              )}
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-black text-white font-mono truncate">
@@ -256,9 +266,12 @@ export const CreateStockModal: React.FC<CreateStockModalProps> = ({
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="w-7 h-7 rounded-lg bg-white/5 text-slate-200 text-[10px] font-black flex items-center justify-center shrink-0">
-                            {preset.symbol.slice(0, 3)}
-                          </span>
+                          <StockLogo
+                            symbol={preset.symbol}
+                            name={preset.name}
+                            sector={preset.sector}
+                            size="sm"
+                          />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="font-black text-white">{preset.symbol}</span>

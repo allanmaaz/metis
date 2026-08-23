@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { formatCurrency, formatQuantity } from '../../lib/formatting';
 import { AlertCircle, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { StockLogo } from '../common/StockLogo';
 
 interface SellModalProps {
   isOpen: boolean;
@@ -67,9 +68,12 @@ export const SellModal: React.FC<SellModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2">
-          <span className="text-rose-400 font-extrabold">SELL</span>
-          <span>{stock.symbol}</span>
+        <div className="flex items-center gap-2.5">
+          <StockLogo symbol={stock.symbol} name={stock.company_name} sector={stock.sector} size="md" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-rose-400 font-extrabold font-mono">SELL</span>
+            <span className="font-black font-display text-white">{stock.symbol}</span>
+          </div>
         </div>
       }
       subtitle={stock.company_name}

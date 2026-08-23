@@ -14,6 +14,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
+import { StockLogo } from '../../components/common/StockLogo';
 
 export const AdminTrades: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
@@ -217,10 +218,13 @@ export const AdminTrades: React.FC = () => {
 
                       {/* Stock */}
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center font-mono font-black text-[10px] shadow-xs">
-                            {(t.stock?.symbol || 'STK').slice(0, 3)}
-                          </div>
+                        <div className="flex items-center gap-2.5">
+                          <StockLogo
+                            symbol={t.stock?.symbol}
+                            name={t.stock?.company_name}
+                            sector={t.stock?.sector}
+                            size="sm"
+                          />
                           <div>
                             <div className="font-black text-sm text-slate-900 font-display">
                               {t.stock?.symbol || 'STOCK'}

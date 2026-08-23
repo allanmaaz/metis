@@ -4,6 +4,7 @@ import { Stock } from '../../types';
 import { getStockHoldingDistribution, StockHoldingDistribution } from '../../services/stock';
 import { formatCurrency, formatPercent, formatWealth } from '../../lib/formatting';
 import { PieChart, Users, TrendingUp, TrendingDown, Minus, Briefcase, Layers, RefreshCw } from 'lucide-react';
+import { StockLogo } from '../common/StockLogo';
 
 interface StockHoldingsModalProps {
   stock: Stock | null;
@@ -23,10 +24,10 @@ export const StockHoldingsModal: React.FC<StockHoldingsModalProps> = ({
     if (!stock) return;
     setIsLoading(true);
     try {
-      const res = await getStockHoldingDistribution(stock.id);
-      setData(res);
+      const dist = await getStockHoldingDistribution(stock.id);
+      setData(dist);
     } catch (err) {
-      console.error('Error fetching stock holding distribution:', err);
+      console.error('Failed to load stock holdings:', err);
     } finally {
       setIsLoading(false);
     }
@@ -48,9 +49,12 @@ export const StockHoldingsModal: React.FC<StockHoldingsModalProps> = ({
       title={
         <div className="flex items-center justify-between gap-3 pr-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-2xl bg-orange-500/10 text-orange-400 font-mono font-black text-xs flex items-center justify-center border border-orange-500/20 shadow-xs shrink-0">
-              {stock.symbol.slice(0, 3)}
-            </div>
+            <StockLogo
+              symbol={stock.symbol}
+              name={stock.company_name}
+              sector={stock.sector}
+              size="md"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black text-white font-mono">{stock.symbol}</span>
