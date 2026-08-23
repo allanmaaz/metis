@@ -20,10 +20,70 @@ interface StockLogoProps {
 }
 
 // -------------------------------------------------------------
-// Real Company Official Domain Mapping
+// Verified Authentic Official Corporate Logos (High-Res CDN / Wikimedia Assets)
+// -------------------------------------------------------------
+const OFFICIAL_BRAND_LOGOS: Record<string, string> = {
+  // Reliance Industries (Official Blue & Red Flame Logo)
+  'RELIANCE': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/99/Reliance_Industries_Logo.svg/120px-Reliance_Industries_Logo.svg.png',
+  'RIL': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/99/Reliance_Industries_Logo.svg/120px-Reliance_Industries_Logo.svg.png',
+
+  // Infosys (Official Corporate Signature Logo)
+  'INFY': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Infosys_logo.svg/120px-Infosys_logo.svg.png',
+  'INFOSYS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Infosys_logo.svg/120px-Infosys_logo.svg.png',
+
+  // HDFC Bank (Official Blue and Red Square Emblem)
+  'HDFCBANK': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/HDFC_Bank_Logo.svg/120px-HDFC_Bank_Logo.svg.png',
+  'HDFC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/HDFC_Bank_Logo.svg/120px-HDFC_Bank_Logo.svg.png',
+
+  // Tata Consultancy Services & Tata Group
+  'TCS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Tata_Consultancy_Services_Logo.svg/120px-Tata_Consultancy_Services_Logo.svg.png',
+  'TATAMOTORS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/120px-Tata_logo.svg.png',
+  'TATASTEEL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/120px-Tata_logo.svg.png',
+  'TATAPOWER': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/120px-Tata_logo.svg.png',
+  'TATACONSUM': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/120px-Tata_logo.svg.png',
+
+  // ICICI Bank
+  'ICICIBANK': 'https://upload.wikimedia.org/wikipedia/en/thumb/c/c5/ICICI_Bank_Logo.svg/120px-ICICI_Bank_Logo.svg.png',
+  'ICICI': 'https://upload.wikimedia.org/wikipedia/en/thumb/c/c5/ICICI_Bank_Logo.svg/120px-ICICI_Bank_Logo.svg.png',
+
+  // State Bank of India
+  'SBIN': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/SBI-logo.svg/120px-SBI-logo.svg.png',
+  'SBI': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/SBI-logo.svg/120px-SBI-logo.svg.png',
+
+  // Other Major Indian Corporates
+  'KOTAKBANK': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/39/Kotak_Mahindra_Bank_logo.svg/120px-Kotak_Mahindra_Bank_logo.svg.png',
+  'AXISBANK': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Axis_Bank_logo.svg/120px-Axis_Bank_logo.svg.png',
+  'BAJFINANCE': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Bajaj_Finserv_Logo.svg/120px-Bajaj_Finserv_Logo.svg.png',
+  'BAJAJFINSV': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Bajaj_Finserv_Logo.svg/120px-Bajaj_Finserv_Logo.svg.png',
+  'BHARTIARTL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Bharti_Airtel_Logo.svg/120px-Bharti_Airtel_Logo.svg.png',
+  'AIRTEL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Bharti_Airtel_Logo.svg/120px-Bharti_Airtel_Logo.svg.png',
+  'ITC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/ITC_Limited_Logo.svg/120px-ITC_Limited_Logo.svg.png',
+  'WIPRO': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Wipro_Primary_Logo_Color_RGB.svg/120px-Wipro_Primary_Logo_Color_RGB.svg.png',
+  'HCLTECH': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/HCL_Tech_logo.svg/120px-HCL_Tech_logo.svg.png',
+  'LT': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Larsen%26Toubro_logo.svg/120px-Larsen%26Toubro_logo.svg.png',
+  'MARUTI': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Maruti_Suzuki_logo.svg/120px-Maruti_Suzuki_logo.svg.png',
+  'TITAN': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/06/Titan_Company_Logo.svg/120px-Titan_Company_Logo.svg.png',
+  'ZOMATO': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Zomato_logo.png/120px-Zomato_logo.png',
+  'SWIGGY': 'https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Swiggy_logo.svg/120px-Swiggy_logo.svg.png',
+  'HINDUNILVR': 'https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Hindustan_Unilever_Logo.svg/120px-Hindustan_Unilever_Logo.svg.png',
+  'SUNPHARMA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Sun_Pharma_logo.svg/120px-Sun_Pharma_logo.svg.png',
+  'CIPLA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Cipla_logo.svg/120px-Cipla_logo.svg.png',
+
+  // Global Giants
+  'AAPL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/120px-Apple_logo_black.svg.png',
+  'MSFT': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_%282012%29.svg/120px-Microsoft_logo_%282012%29.svg.png',
+  'GOOGL': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/120px-Google_2015_logo.svg.png',
+  'GOOG': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/120px-Google_2015_logo.svg.png',
+  'NVDA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Nvidia_logo.svg/120px-Nvidia_logo.svg.png',
+  'TSLA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tesla_logo.png/120px-Tesla_logo.png',
+  'AMZN': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/120px-Amazon_logo.svg.png',
+  'META': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Meta_Platforms_Inc._logo.svg/120px-Meta_Platforms_Inc._logo.svg.png',
+};
+
+// -------------------------------------------------------------
+// Real Corporate Website Domains (Tier 2 Icon Fallback)
 // -------------------------------------------------------------
 const REAL_COMPANY_DOMAINS: Record<string, string> = {
-  // Banking & Financial Services
   'HDFCBANK': 'hdfcbank.com',
   'HDFC': 'hdfcbank.com',
   'ICICIBANK': 'icicibank.com',
@@ -34,13 +94,6 @@ const REAL_COMPANY_DOMAINS: Record<string, string> = {
   'AXISBANK': 'axisbank.com',
   'BAJFINANCE': 'bajajfinserv.in',
   'BAJAJFINSV': 'bajajfinserv.in',
-  'INDUSINDBK': 'indusind.com',
-  'PNB': 'pnbindia.in',
-  'BANKBARODA': 'bankofbaroda.in',
-  'YESBANK': 'yesbank.in',
-  'IDFCFIRSTB': 'idfcfirstbank.com',
-
-  // IT, Tech & Software
   'TCS': 'tcs.com',
   'INFY': 'infosys.com',
   'INFOSYS': 'infosys.com',
@@ -48,25 +101,9 @@ const REAL_COMPANY_DOMAINS: Record<string, string> = {
   'HCLTECH': 'hcltech.com',
   'TECHM': 'techmahindra.com',
   'LTIM': 'ltimindtree.com',
-  'PERSISTENT': 'persistent.com',
-  'COFORGE': 'coforge.com',
-  'MPHASIS': 'mphasis.com',
-  'ORCL': 'oracle.com',
-  'ACCENTURE': 'accenture.com',
-
-  // Automotive & EV
   'TATAMOTORS': 'tatamotors.com',
   'M&M': 'mahindra.com',
   'MARUTI': 'marutisuzuki.com',
-  'BAJAJ-AUTO': 'bajajauto.com',
-  'HEROMOTOCO': 'heromotocorp.com',
-  'EICHERMOT': 'eicher.in',
-  'TVSMOTOR': 'tvsmotor.com',
-  'ASHOKLEY': 'ashokleyland.com',
-  'BOSCHLTD': 'bosch.in',
-  'MRF': 'mrftyres.com',
-
-  // Energy, Power, Oil & Gas
   'RELIANCE': 'ril.com',
   'RIL': 'ril.com',
   'ADANIGREEN': 'adanigreenenergy.com',
@@ -76,12 +113,6 @@ const REAL_COMPANY_DOMAINS: Record<string, string> = {
   'NTPC': 'ntpc.co.in',
   'ONGC': 'ongcindia.com',
   'POWERGRID': 'powergrid.in',
-  'IOC': 'iocl.com',
-  'BPCL': 'bharatpetroleum.in',
-  'COALINDIA': 'coalindia.in',
-  'GAIL': 'gailonline.com',
-
-  // FMCG, Retail & Consumer
   'ITC': 'itcportal.com',
   'HINDUNILVR': 'hul.co.in',
   'NESTLEIND': 'nestle.in',
@@ -89,98 +120,21 @@ const REAL_COMPANY_DOMAINS: Record<string, string> = {
   'TITAN': 'titancompany.in',
   'ZOMATO': 'zomato.com',
   'SWIGGY': 'swiggy.com',
-  'NYKAA': 'nykaa.com',
-  'PAYTM': 'paytm.com',
-  'DMART': 'dmartindia.com',
-  'DABUR': 'dabur.com',
-  'MARICO': 'marico.com',
-  'GODREJCP': 'godrejcp.com',
-  'ASIANPAINT': 'asianpaints.com',
-  'BERGEPAINT': 'bergerpaints.com',
-  'PIDILITIND': 'pidilite.com',
-  'TRENT': 'trentlimited.com',
-  'TATACONSUM': 'tataconsumer.com',
-
-  // Telecom & Media
-  'BHARTIARTL': 'airtel.in',
-  'AIRTEL': 'airtel.in',
-  'IDEA': 'myvi.in',
-  'ZEEL': 'zee.com',
-  'PVRINOX': 'pvrcinemas.com',
-
-  // Pharma & Healthcare
   'SUNPHARMA': 'sunpharma.com',
   'DRREDDY': 'drreddys.com',
   'CIPLA': 'cipla.com',
   'APOLLOHOSP': 'apollohospitals.com',
-  'DIVISLAB': 'divislabs.com',
-  'LUPIN': 'lupin.com',
-  'BIOCON': 'biocon.com',
-  'MANKIND': 'mankindpharma.com',
-  'MAXHEALTH': 'maxhealthcare.in',
-  'TORNTPHARM': 'torrentpharma.com',
-
-  // Metals, Infrastructure & Cement
   'TATASTEEL': 'tatasteel.com',
   'JSWSTEEL': 'jsw.in',
-  'HINDALCO': 'hindalco.com',
   'LT': 'larsentoubro.com',
-  'ULTRACEMCO': 'ultratechcement.com',
-  'GRASIM': 'grasim.com',
-  'VEDL': 'vedantalimited.com',
-  'JINDALSTEL': 'jindalsteelpower.com',
-  'SHREECEM': 'shreecement.com',
-  'AMBUJACEM': 'ambujacement.com',
-
-  // Global Giants
+  'BHARTIARTL': 'airtel.in',
   'NVDA': 'nvidia.com',
   'AAPL': 'apple.com',
   'MSFT': 'microsoft.com',
   'GOOGL': 'google.com',
-  'GOOG': 'google.com',
   'TSLA': 'tesla.com',
   'AMZN': 'amazon.com',
   'META': 'meta.com',
-  'NFLX': 'netflix.com',
-  'AMD': 'amd.com',
-  'INTC': 'intel.com',
-  'BABA': 'alibaba.com',
-};
-
-// -------------------------------------------------------------
-// Direct High-Resolution Official Brand Assets / CDN URLs
-// -------------------------------------------------------------
-const DIRECT_BRAND_LOGOS: Record<string, string> = {
-  'HDFCBANK': 'https://companiesmarketcap.com/img/company-logos/64/HDB.webp',
-  'HDFC': 'https://companiesmarketcap.com/img/company-logos/64/HDB.webp',
-  'RELIANCE': 'https://companiesmarketcap.com/img/company-logos/64/RELIANCE.NS.webp',
-  'RIL': 'https://companiesmarketcap.com/img/company-logos/64/RELIANCE.NS.webp',
-  'TCS': 'https://companiesmarketcap.com/img/company-logos/64/TCS.NS.webp',
-  'INFY': 'https://companiesmarketcap.com/img/company-logos/64/INFY.webp',
-  'INFOSYS': 'https://companiesmarketcap.com/img/company-logos/64/INFY.webp',
-  'ICICIBANK': 'https://companiesmarketcap.com/img/company-logos/64/IBN.webp',
-  'SBIN': 'https://companiesmarketcap.com/img/company-logos/64/SBIN.NS.webp',
-  'SBI': 'https://companiesmarketcap.com/img/company-logos/64/SBIN.NS.webp',
-  'TATAMOTORS': 'https://companiesmarketcap.com/img/company-logos/64/TTM.webp',
-  'BHARTIARTL': 'https://companiesmarketcap.com/img/company-logos/64/BHARTIARTL.NS.webp',
-  'ITC': 'https://companiesmarketcap.com/img/company-logos/64/ITC.NS.webp',
-  'KOTAKBANK': 'https://companiesmarketcap.com/img/company-logos/64/KOTAKBANK.NS.webp',
-  'LT': 'https://companiesmarketcap.com/img/company-logos/64/LT.NS.webp',
-  'WIPRO': 'https://companiesmarketcap.com/img/company-logos/64/WIT.webp',
-  'MARUTI': 'https://companiesmarketcap.com/img/company-logos/64/MARUTI.NS.webp',
-  'TITAN': 'https://companiesmarketcap.com/img/company-logos/64/TITAN.NS.webp',
-  'ZOMATO': 'https://companiesmarketcap.com/img/company-logos/64/ZOMATO.NS.webp',
-  'HINDUNILVR': 'https://companiesmarketcap.com/img/company-logos/64/HINDUNILVR.NS.webp',
-  'SUNPHARMA': 'https://companiesmarketcap.com/img/company-logos/64/SUNPHARMA.NS.webp',
-  'TATASTEEL': 'https://companiesmarketcap.com/img/company-logos/64/TATASTEEL.NS.webp',
-  'AAPL': 'https://companiesmarketcap.com/img/company-logos/64/AAPL.webp',
-  'MSFT': 'https://companiesmarketcap.com/img/company-logos/64/MSFT.webp',
-  'GOOGL': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
-  'GOOG': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
-  'NVDA': 'https://companiesmarketcap.com/img/company-logos/64/NVDA.webp',
-  'TSLA': 'https://companiesmarketcap.com/img/company-logos/64/TSLA.webp',
-  'AMZN': 'https://companiesmarketcap.com/img/company-logos/64/AMZN.webp',
-  'META': 'https://companiesmarketcap.com/img/company-logos/64/META.webp',
 };
 
 export const StockLogo: React.FC<StockLogoProps> = ({
@@ -197,21 +151,21 @@ export const StockLogo: React.FC<StockLogoProps> = ({
 
   // Dimensions
   const sizeMap = {
-    xs: { container: 'w-5 h-5 rounded-md text-[9px]', img: 'w-4 h-4', icon: 'w-3 h-3' },
-    sm: { container: 'w-7 h-7 rounded-lg text-[10px]', img: 'w-5 h-5', icon: 'w-3.5 h-3.5' },
-    md: { container: 'w-9 h-9 rounded-xl text-xs', img: 'w-7 h-7', icon: 'w-4 h-4' },
-    lg: { container: 'w-11 h-11 rounded-2xl text-sm', img: 'w-9 h-9', icon: 'w-5 h-5' },
-    xl: { container: 'w-14 h-14 rounded-2xl text-base', img: 'w-11 h-11', icon: 'w-7 h-7' },
+    xs: { container: 'w-5 h-5 rounded-md', img: 'w-3.5 h-3.5', icon: 'w-3 h-3' },
+    sm: { container: 'w-7 h-7 rounded-lg', img: 'w-5 h-5', icon: 'w-3.5 h-3.5' },
+    md: { container: 'w-9 h-9 rounded-xl', img: 'w-6 h-6', icon: 'w-4 h-4' },
+    lg: { container: 'w-11 h-11 rounded-2xl', img: 'w-8 h-8', icon: 'w-5 h-5' },
+    xl: { container: 'w-14 h-14 rounded-2xl', img: 'w-10 h-10', icon: 'w-7 h-7' },
   };
 
   const currentSize = sizeMap[size] || sizeMap.md;
 
-  // Determine Real Logo Candidates
+  // Build candidate URL list
+  const verifiedUrl = OFFICIAL_BRAND_LOGOS[cleanSymbol] || logoUrl;
   const domain = REAL_COMPANY_DOMAINS[cleanSymbol];
-  const directUrl = DIRECT_BRAND_LOGOS[cleanSymbol] || logoUrl;
 
   const candidateUrls: string[] = [];
-  if (directUrl) candidateUrls.push(directUrl);
+  if (verifiedUrl) candidateUrls.push(verifiedUrl);
   if (domain) {
     candidateUrls.push(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
     candidateUrls.push(`https://icons.duckduckgo.com/ip3/${domain}.ico`);
@@ -219,17 +173,17 @@ export const StockLogo: React.FC<StockLogoProps> = ({
 
   const currentLogoSrc = candidateUrls[imgErrorIndex];
 
-  // If a real logo URL is available and hasn't failed all sources
+  // If a real logo URL is available
   if (currentLogoSrc) {
     return (
       <div
-        className={`${currentSize.container} shrink-0 bg-white dark:bg-slate-900/90 flex items-center justify-center p-1 shadow-xs border border-slate-200/80 dark:border-white/10 overflow-hidden ${className}`}
+        className={`${currentSize.container} shrink-0 bg-white flex items-center justify-center p-1 shadow-xs border border-slate-200/80 dark:border-white/20 overflow-hidden ${className}`}
         title={name || cleanSymbol}
       >
         <img
           src={currentLogoSrc}
           alt={name || cleanSymbol}
-          className={`${currentSize.img} object-contain rounded-sm transition-opacity duration-200`}
+          className={`${currentSize.img} object-contain transition-opacity duration-200`}
           loading="lazy"
           onError={() => {
             setImgErrorIndex((prev) => prev + 1);
@@ -240,7 +194,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
   }
 
   // -------------------------------------------------------------
-  // SECTOR-TAILORED BADGES (For Custom / Simulated Stocks: NOVA, MEDIX, GREENX, etc.)
+  // SECTOR-TAILORED BADGES (For Custom Event Stocks: NOVA, MEDIX, etc.)
   // -------------------------------------------------------------
   if (sector.includes('EV') || sector.includes('Auto') || cleanSymbol === 'NOVA') {
     return (
@@ -337,7 +291,7 @@ export const StockLogo: React.FC<StockLogoProps> = ({
 
   return (
     <div
-      className={`${currentSize.container} shrink-0 bg-gradient-to-br from-slate-800 to-slate-950 text-white font-mono font-black flex items-center justify-center tracking-tighter shadow-xs border border-slate-700/80 ${className}`}
+      className={`${currentSize.container} shrink-0 bg-gradient-to-br from-slate-800 to-slate-950 text-white font-mono font-black text-xs flex items-center justify-center tracking-tighter shadow-xs border border-slate-700/80 ${className}`}
       title={name || cleanSymbol}
     >
       {initials}
