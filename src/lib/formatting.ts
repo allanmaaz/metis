@@ -118,3 +118,18 @@ export function normalizeName(name: string): string {
     .toLowerCase()
     .replace(/\s+/g, ' ');
 }
+
+/**
+ * Cleanly formats a team name avoiding duplicate "Team team X" prefixes
+ * Example: "team 8" -> "Team 8", "Team 8" -> "Team 8", "Alpha" -> "Team Alpha"
+ */
+export function formatTeamName(name?: string | null): string {
+  if (!name) return 'Team Alpha';
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase().startsWith('team')) {
+    const withoutTeam = trimmed.replace(/^team\s*/i, '').trim();
+    return withoutTeam ? `Team ${withoutTeam}` : 'Team';
+  }
+  return `Team ${trimmed}`;
+}
+

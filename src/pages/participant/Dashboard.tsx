@@ -9,7 +9,7 @@ import { buyStock, sellStock } from '../../services/trade';
 import { Stock, MarketSession, PortfolioSummary, NewsItem, Holding } from '../../types';
 import { BuyModal } from '../../components/market/BuyModal';
 import { SellModal } from '../../components/market/SellModal';
-import { formatWealth, formatCurrency, formatPercent, formatClockTime } from '../../lib/formatting';
+import { formatWealth, formatCurrency, formatPercent, formatClockTime, formatTeamName } from '../../lib/formatting';
 import { useMarketTimer } from '../../hooks/useMarketTimer';
 import { useRealtimeSubscription } from '../../lib/realtimeBus';
 import {
@@ -188,11 +188,7 @@ export const Dashboard: React.FC = () => {
     return res;
   };
 
-  const teamDisplayName = participant?.team?.name
-    ? participant.team.name.startsWith('Team')
-      ? participant.team.name
-      : `Team ${participant.team.name}`
-    : 'Team Alpha';
+  const teamDisplayName = formatTeamName(participant?.team?.name);
 
   const totalWealth = summary?.total_wealth ?? (participant?.team?.cash_balance ?? 100000000);
   const cashBalance = summary?.cash_balance ?? (participant?.team?.cash_balance ?? 100000000);
@@ -219,187 +215,189 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
-      {/* 1. Market Status & Session Countdown Card (2-Column Pill) */}
-      <div
-        className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-colors ${
-          isDark
-            ? 'bg-[#131B2E] border border-white/5 shadow-md'
-            : 'bg-white border border-slate-200/80 shadow-xs'
-        }`}
-      >
-        {/* Left: Live Status Pill */}
-        <div className="flex items-center gap-2">
-          <span
-            className={`w-2.5 h-2.5 rounded-full ${
-              isSessionOpen(session)
-                ? 'bg-emerald-500 animate-pulse'
-                : session?.status === 'PAUSED'
-                ? 'bg-amber-500 animate-pulse'
-                : session?.status === 'FROZEN'
-                ? 'bg-cyan-400'
-                : 'bg-rose-500'
-            }`}
-          />
-          <span
-            className={`text-xs font-black uppercase tracking-wide font-mono ${
-              isSessionOpen(session)
-                ? 'text-emerald-500'
-                : session?.status === 'PAUSED'
-                ? 'text-amber-500'
-                : session?.status === 'FROZEN'
-                ? 'text-cyan-400'
-                : 'text-rose-500'
-            }`}
-          >
-            MARKET {isSessionOpen(session) ? 'OPEN' : (session?.status === 'PAUSED' ? 'PAUSED' : (session?.status === 'FROZEN' ? 'FROZEN' : 'CLOSED'))}
-          </span>
-        </div>
-
-        {/* Right: Session Countdown / Status */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
-            <Clock className="w-3.5 h-3.5" />
-          </div>
-          <div className="flex flex-col text-right">
-            <span className="text-[9px] text-slate-400 font-medium">
-              {isSessionOpen(session) ? (session?.ends_at ? 'Round closes in' : 'Round type') : 'Session Status'}
-            </span>
-            <span className={`text-xs font-black font-mono ${isSessionOpen(session) ? 'text-orange-500' : 'text-slate-400'}`}>
-              {isSessionOpen(session)
-                ? (session?.ends_at ? timer.formatted : 'No limit (∞)')
-                : (session?.status === 'PAUSED' ? 'Paused' : (session?.status === 'FROZEN' ? 'Frozen' : 'Closed'))}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Hero Total Wealth Card */}
-      <div
-        className={`p-5 rounded-3xl space-y-4 relative overflow-hidden transition-colors ${
-          isDark
-            ? 'bg-[#131B2E] border border-white/5 shadow-lg'
-            : 'bg-white border border-slate-200/80 shadow-sm'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-              TOTAL WEALTH
-            </span>
-            <button
-              onClick={() => setIsWealthMasked(!isWealthMasked)}
-              className="text-slate-400 hover:text-slate-600 ml-0.5 cursor-pointer"
-            >
-              {isWealthMasked ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-            </button>
-          </div>
-
-          <span className="text-xs font-bold text-orange-500">
-            {teamDisplayName}
-          </span>
-        </div>
-
-        {/* Value + Sparkline */}
-        <div className="flex items-center justify-between gap-2 relative">
-          <div className="space-y-1.5 z-10">
-            <div className={`text-2xl sm:text-3xl font-black font-display tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••••••' : formatCurrency(totalWealth)}
-            </div>
-
-            {/* P/L Pill */}
-            <div
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono ${
-                isLoss
-                  ? isDark
-                    ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                    : 'bg-rose-50 text-rose-600 border border-rose-200'
-                  : isDark
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-              }`}
-            >
-              {isLoss ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
-              <span>
-                {isLoss ? '-' : '+'}{formatCurrency(Math.abs(pnlVal))} ({Number(pnlPct).toFixed(2)}%)
-              </span>
-            </div>
-
-            <div className="text-[11px] text-slate-400 font-mono font-medium">
-              Equivalent: {formatWealth(totalWealth)}
-            </div>
-          </div>
-
-          {/* Glowing Wave Sparkline */}
-          <div className="w-36 sm:w-44 h-16 pointer-events-none">
-            <svg className="w-full h-full" viewBox="0 0 160 60" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor={isLoss ? '#F43F5E' : '#FF6B00'}
-                    stopOpacity={isDark ? 0.35 : 0.25}
-                  />
-                  <stop offset="100%" stopColor={isLoss ? '#F43F5E' : '#FF6B00'} stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8 L160,60 L0,60 Z"
-                fill="url(#chartGrad)"
-              />
-              <path
-                d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8"
-                fill="none"
-                stroke={isLoss ? '#F43F5E' : '#FF6B00'}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle cx="160" cy="8" r="3.5" fill={isLoss ? '#F43F5E' : '#FF6B00'} />
-            </svg>
-          </div>
-        </div>
-
-        {/* 2-Column Available Cash & Portfolio Value */}
+        {/* 2. Unified Live Market Pill Strip */}
         <div
-          className={`grid grid-cols-2 gap-3 pt-3 border-t ${
-            isDark ? 'border-white/5' : 'border-slate-100'
+          className={`px-4 py-3 rounded-2xl flex items-center justify-between border transition-colors ${
+            isDark
+              ? 'bg-[#131B2E] border-white/5 shadow-xs'
+              : 'bg-white border-slate-200/80 shadow-xs'
           }`}
         >
-          {/* Cash */}
-          <div
-            className={`p-3 rounded-2xl border transition-colors ${
-              isDark
-                ? 'bg-[#1E293B]/60 border-white/5'
-                : 'bg-slate-50 border-slate-200/70'
-            }`}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-              <Wallet className="w-3.5 h-3.5 text-orange-500" />
-              <span>Available Cash</span>
-            </div>
-            <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••' : formatCurrency(cashBalance)}
-            </div>
+          {/* Left: Live Status Pill */}
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isSessionOpen(session)
+                  ? 'bg-emerald-500 animate-pulse'
+                  : session?.status === 'PAUSED'
+                  ? 'bg-amber-500 animate-pulse'
+                  : session?.status === 'FROZEN'
+                  ? 'bg-cyan-400'
+                  : 'bg-rose-500'
+              }`}
+            />
+            <span
+              className={`text-xs font-black uppercase tracking-wide font-mono ${
+                isSessionOpen(session)
+                  ? 'text-emerald-500'
+                  : session?.status === 'PAUSED'
+                  ? 'text-amber-500'
+                  : session?.status === 'FROZEN'
+                  ? 'text-cyan-400'
+                  : 'text-rose-500'
+              }`}
+            >
+              MARKET {isSessionOpen(session) ? 'OPEN' : (session?.status === 'PAUSED' ? 'PAUSED' : (session?.status === 'FROZEN' ? 'FROZEN' : 'CLOSED'))}
+            </span>
           </div>
 
-          {/* Portfolio Value */}
-          <div
-            className={`p-3 rounded-2xl border transition-colors ${
-              isDark
-                ? 'bg-[#1E293B]/60 border-white/5'
-                : 'bg-slate-50 border-slate-200/70'
-            }`}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400">
-              <Clock className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Portfolio Value</span>
+          {/* Right: Session Countdown / Status */}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5" />
             </div>
-            <div className={`text-sm font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {isWealthMasked ? '••••' : formatCurrency(portfolioVal)}
+            <div className="flex flex-col text-right">
+              <span className="text-[9px] text-slate-400 font-medium">
+                {isSessionOpen(session) ? (session?.ends_at ? 'Round closes in' : 'Round type') : 'Session Status'}
+              </span>
+              <span className={`text-xs font-black font-mono ${isSessionOpen(session) ? 'text-orange-500' : 'text-slate-400'}`}>
+                {isSessionOpen(session)
+                  ? (session?.ends_at ? timer.formatted : 'No limit (∞)')
+                  : (session?.status === 'PAUSED' ? 'Paused' : (session?.status === 'FROZEN' ? 'Frozen' : 'Closed'))}
+              </span>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* 3. Hero Total Wealth Card */}
+        <div
+          className={`p-5 sm:p-6 rounded-3xl space-y-4 relative overflow-hidden transition-colors ${
+            isDark
+              ? 'bg-[#131B2E] border border-white/5 shadow-lg'
+              : 'bg-white border border-slate-200/80 shadow-sm'
+          }`}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-mono">
+                TOTAL WEALTH
+              </span>
+              <button
+                onClick={() => setIsWealthMasked(!isWealthMasked)}
+                className="text-slate-400 hover:text-slate-600 ml-0.5 cursor-pointer"
+              >
+                {isWealthMasked ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            <span className="text-xs font-bold text-orange-500 font-mono">
+              {teamDisplayName}
+            </span>
+          </div>
+
+          {/* Value + Sparkline Background */}
+          <div className="relative">
+            {/* Subtle Glowing Wave Sparkline */}
+            <div className="absolute right-0 bottom-0 w-36 sm:w-48 h-16 pointer-events-none opacity-85">
+              <svg className="w-full h-full" viewBox="0 0 160 60" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor={isLoss ? '#F43F5E' : '#FF6B00'}
+                      stopOpacity={isDark ? 0.35 : 0.25}
+                    />
+                    <stop offset="100%" stopColor={isLoss ? '#F43F5E' : '#FF6B00'} stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8 L160,60 L0,60 Z"
+                  fill="url(#chartGrad)"
+                />
+                <path
+                  d="M0,45 L15,40 L30,48 L45,35 L60,42 L75,28 L90,34 L105,22 L120,28 L135,16 L150,10 L160,8"
+                  fill="none"
+                  stroke={isLoss ? '#F43F5E' : '#FF6B00'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="160" cy="8" r="3.5" fill={isLoss ? '#F43F5E' : '#FF6B00'} />
+              </svg>
+            </div>
+
+            <div className="space-y-1.5 relative z-10">
+              <div className={`text-2xl sm:text-3xl lg:text-4xl font-black font-display tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {isWealthMasked ? '••••••••' : formatCurrency(totalWealth)}
+              </div>
+
+              {/* P/L Pill & Equivalent */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <div
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black font-mono shrink-0 border ${
+                    isLoss
+                      ? isDark
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                        : 'bg-rose-50 text-rose-600 border border-rose-200'
+                      : isDark
+                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                  }`}
+                >
+                  {isLoss ? <ArrowDownRight className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
+                  <span>
+                    {isLoss ? '-' : '+'}{formatCurrency(Math.abs(pnlVal))} ({formatPercent(pnlPct)})
+                  </span>
+                </div>
+
+                <div className="text-xs text-slate-400 font-mono font-medium">
+                  Equivalent: <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{formatWealth(totalWealth)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Available Cash & Portfolio Value */}
+          <div
+            className={`grid grid-cols-2 gap-3 pt-3 border-t ${
+              isDark ? 'border-white/5' : 'border-slate-100'
+            }`}
+          >
+            {/* Cash */}
+            <div
+              className={`p-3.5 rounded-2xl border transition-colors ${
+                isDark
+                  ? 'bg-[#1E293B]/60 border-white/5'
+                  : 'bg-slate-50 border-slate-200/70'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400 font-mono">
+                <Wallet className="w-3.5 h-3.5 text-orange-500" />
+                <span>Available Cash</span>
+              </div>
+              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {isWealthMasked ? '••••••' : formatCurrency(cashBalance)}
+              </div>
+            </div>
+
+            {/* Portfolio Value */}
+            <div
+              className={`p-3.5 rounded-2xl border transition-colors ${
+                isDark
+                  ? 'bg-[#1E293B]/60 border-white/5'
+                  : 'bg-slate-50 border-slate-200/70'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase text-slate-400 font-mono">
+                <BarChart2 className="w-3.5 h-3.5 text-orange-500" />
+                <span>Portfolio Value</span>
+              </div>
+              <div className={`text-base font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {isWealthMasked ? '••••••' : formatCurrency(portfolioVal)}
+              </div>
+            </div>
+          </div>
+        </div>
 
       {/* 4. Latest News Wire Banner */}
       <Link
